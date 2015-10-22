@@ -12,6 +12,7 @@ TODO:
 - avoid stat in recurse
 - multiple -t
 - don't default to ./ prefix
+- %m %y
 */
 
 #define _GNU_SOURCE
@@ -46,7 +47,15 @@ struct expr *e;
 void *root = NULL; // tree
 static int prune;
 
-int maxlinks, maxsize, uwid = 8, gwid = 8;
+void *users;
+void *groups;
+
+struct idmap {
+	long id;
+	char *name;
+};
+
+int maxlinks, maxsize, uwid, gwid;
 
 struct fileinfo {
 	char *fpath;
@@ -531,6 +540,75 @@ order(const void *a, const void *b)
 	return strcmp(fa->fpath, fb->fpath);
 }
 
+int
+idorder(const void *a, const void *b)
+{
+	struct idmap *ia = (struct idmap *) a;
+	struct idmap *ib = (struct idmap *) b;
+
+	if (ia->id == ib->id)
+		return 0;
+	else if (ia->id < ib->id)
+		return -1;
+	else
+		return 1;
+}
+
+char *
+groupname(gid_t gid)
+{
+	struct idmap key, **result;
+	key.id = gid;
+	key.name = 0;
+
+	if (!(result = tfind(&key, &groups, idorder))) {
+		struct group *g = getgrgid(gid);
+		if (g) {
+			struct idmap *newkey = malloc (sizeof (struct idmap));
+			newkey->id = gid;
+			newkey->name = strdup(g->gr_name);
+			if (strlen(g->gr_name) > gwid)
+				gwid = strlen(g->gr_name);
+			tsearch(newkey, &groups, idorder);
+			return newkey->name;
+		}
+	}
+
+	return (*result)->name;
+}
+
+char *
+username(uid_t uid)
+{
+	struct idmap key, **result;
+	key.id = uid;
+	key.name = 0;
+
+	if (!(result = tfind(&key, &users, idorder))) {
+		struct passwd *p = getpwuid(uid);
+		if (p) {
+			struct idmap *newkey = malloc (sizeof (struct idmap));
+			newkey->id = uid;
+			newkey->name = strdup(p->pw_name);
+			if (strlen(p->pw_name) > uwid)
+				uwid = strlen(p->pw_name);
+			tsearch(newkey, &users, idorder);
+			return newkey->name;
+		}
+	}
+
+	return (*result)->name;
+}
+
+int
+intlen(int i)
+{
+	int s;
+	for (s = 1; i > 9; i /= 10)
+		s++;
+	return s;
+}
+
 void
 print(const void *nodep, const VISIT which, const int depth)
 {
@@ -603,9 +681,9 @@ print(const void *nodep, const VISIT which, const int depth)
 
 				case 'g':
 					{
-						struct group *g = getgrgid(fi->sb.st_gid);
-						if (g) {
-							printf("%*s", -gwid, g->gr_name);
+						char *s = groupname(fi->sb.st_gid);
+						if (s) {
+							printf("%*s", -gwid, s);
 							break;
 						}
 						/* FALLTHRU */
@@ -616,9 +694,9 @@ print(const void *nodep, const VISIT which, const int depth)
 
 				case 'u':
 					{
-						struct passwd *p = getpwuid(fi->sb.st_uid);
-						if (p) {
-							printf("%*s", -uwid, p->pw_name);
+						char *s = username(fi->sb.st_uid);
+						if (s) {
+							printf("%*s", -uwid, s);
 							break;
 						}
 						/* FALLTHRU */
@@ -636,15 +714,6 @@ print(const void *nodep, const VISIT which, const int depth)
 			}
 		}
 	}
-}
-
-int
-intlen (int i)
-{
-  int s;
-  for (s = 1; i > 9; i /= 10)
-	  s++;
-  return s;
 }
 
 int
