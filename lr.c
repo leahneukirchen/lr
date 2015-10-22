@@ -11,6 +11,7 @@ TODO:
 - error handling? keep going
 - avoid stat in recurse
 - multiple -t
+- don't default to ./ prefix
 */
 
 #define _XOPEN_SOURCE 700
@@ -73,6 +74,7 @@ enum op {
 	EXPR_GT,
 	EXPR_GLOB,
 	EXPR_PRUNE,
+	EXPR_TYPE,
 };
 
 enum prop {
@@ -91,13 +93,23 @@ enum prop {
 	PROP_SIZE,
 //	PROP_TARGET
 //	PROP_TOTAL
-//	PROP_TYPE,
+};
+
+enum filetype {
+	TYPE_BLOCK = 'b',
+	TYPE_CHAR = 'c',
+	TYPE_DIR = 'd',
+	TYPE_FIFO = 'p',
+	TYPE_REGULAR = 'f',
+	TYPE_SOCKET = 's',
+	TYPE_SYMLINK = 'l',
 };
 
 struct expr {
 	enum op op;
 	union {
 		enum prop prop;
+		enum filetype filetype;
 		struct expr *expr;
 		char *string;
 		long num;
@@ -191,6 +203,36 @@ parse_inner()
 }
 
 struct expr *
+parse_type()
+{
+	if (token("type")) {
+		if(token("==")) {  // TODO !=
+			struct expr *e = malloc (sizeof (struct expr));
+			e->op = EXPR_TYPE;
+			if (token("b"))
+				e->a.filetype = TYPE_BLOCK;
+			else if (token("c"))
+				e->a.filetype = TYPE_CHAR;
+			else if (token("d"))
+				e->a.filetype = TYPE_DIR;
+			else if (token("p"))
+				e->a.filetype = TYPE_FIFO;
+			else if (token("f"))
+				e->a.filetype = TYPE_REGULAR;
+			else if (token("l"))
+				e->a.filetype = TYPE_SYMLINK;
+			else if (token("s"))
+				e->a.filetype = TYPE_SOCKET;
+			else
+				return 0;  // TODO ERROR
+			return e;
+		}
+	}
+
+	return parse_inner();
+}
+
+struct expr *
 parse_cmp()
 {
 	enum prop prop;
@@ -215,7 +257,7 @@ parse_cmp()
 	else if (token("size"))
 		prop = PROP_SIZE;
 	else
-		return parse_inner();
+		return parse_type();
 	
 	op = parse_op();
 	if (!op)
@@ -338,7 +380,18 @@ eval(struct expr *e, struct fileinfo *fi)
 		case EXPR_GT: return v > e->b.num;
 		}
 	}
-	
+	case EXPR_TYPE:
+	{
+		switch (e->a.filetype) {
+		case TYPE_BLOCK: return S_ISBLK(fi->sb.st_mode);
+		case TYPE_CHAR: return S_ISCHR(fi->sb.st_mode);
+		case TYPE_DIR: return S_ISDIR(fi->sb.st_mode);
+		case TYPE_FIFO: return S_ISFIFO(fi->sb.st_mode);
+		case TYPE_REGULAR: return S_ISREG(fi->sb.st_mode);
+		case TYPE_SOCKET: return S_ISSOCK(fi->sb.st_mode);
+		case TYPE_SYMLINK: return S_ISLNK(fi->sb.st_mode);
+		}
+	}
 	}
 
 	return 0;
