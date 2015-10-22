@@ -24,6 +24,8 @@ TODO:
 #include <dirent.h>
 #include <errno.h>
 #include <fnmatch.h>
+#include <grp.h>
+#include <pwd.h>
 #include <search.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -598,6 +600,33 @@ print(const void *nodep, const VISIT which, const int depth)
 					printf("%s", buf);
 					break;
 					}
+
+				case 'g':
+					{
+						struct group *g = getgrgid(fi->sb.st_gid);
+						if (g) {
+							printf("%*s", -gwid, g->gr_name);
+							break;
+						}
+						/* FALLTHRU */
+					}
+				case 'G':
+					printf("%*ld", gwid, fi->sb.st_gid);
+					break;
+
+				case 'u':
+					{
+						struct passwd *p = getpwuid(fi->sb.st_uid);
+						if (p) {
+							printf("%*s", -uwid, p->pw_name);
+							break;
+						}
+						/* FALLTHRU */
+					}
+				case 'U':
+					printf("%*ld", uwid, fi->sb.st_uid);
+					break;
+
 				default:
 					putchar('%');
 					putchar(*s);
