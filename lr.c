@@ -642,7 +642,10 @@ print(const void *nodep, const VISIT which, const int depth)
 				case 'D': printf("%ld", fi->sb.st_dev); break;
 				case 'i': printf("%ld", fi->sb.st_ino); break;
 				case 'p': printf("%s", fi->fpath); break;
-				case 'l': printf("%s", readlin(fi->fpath, "")); break;
+				case 'l':
+					if (S_ISLNK(fi->sb.st_mode))
+						printf("%s", readlin(fi->fpath, ""));
+					break;
 				case 'n': printf("%*ld", intlen(maxlinks), fi->sb.st_nlink); break;
 				case 'F':
 					if (S_ISDIR(fi->sb.st_mode)) {
