@@ -1,16 +1,15 @@
 // lr - a better recursive ls/find
 /*
-##% gcc -O0 -Wall -g -o $STEM $FILE -Wno-switch -Wextra -Wwrite-strings
+##% gcc -Os -Wall -g -o $STEM $FILE -Wno-switch -Wextra -Wwrite-strings
 */
 
 /*
 TODO:
-- for -maxdepth etc we need to add prune to nftw
-- when not sorting, don't block
 - expression parsing
 - %NNx formatting strings
 - dynamic columns? i'd rather not (easy to compute for all but names...)
 - error handling? keep going
+- avoid stat in recurse
 */
 
 #define _XOPEN_SOURCE 700
@@ -28,8 +27,6 @@ TODO:
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-
-#define PRUNE -100
 
 int dflag = 0;
 int Hflag = 0;
@@ -92,6 +89,7 @@ enum prop {
 	PROP_PATH,
 	PROP_SIZE,
 //	PROP_TARGET
+//	PROP_TOTAL
 //	PROP_TYPE,
 };
 
@@ -497,23 +495,14 @@ recurse(char *path, struct history *h)
         struct stat st;
         struct history new;
         int r;
-//        struct FTW lev;
 
-        if ((Lflag || (Hflag && h)) ? stat(path, &st) : lstat(path, &st) < 0) {
-		// rewrite this? lstat to look up broken link?
-                if ((Lflag || (Hflag && h)) && errno==ENOENT && !lstat(path, &st))
-                        ; //type = FTW_SLN;
-                else if (errno != EACCES) return -1;
-                // else type = FTW_NS;
-        } else if (S_ISDIR(st.st_mode)) {
-//                if (access(path, R_OK) < 0) type = FTW_DNR;
-//                else if (flags & FTW_DEPTH) type = FTW_DP;
-//                else type = FTW_D;
-        } else if (S_ISLNK(st.st_mode)) {
-//                if (flags & FTW_PHYS) type = FTW_SL;
-//                else type = FTW_SLN;
-        } else {
-//                type = FTW_F;
+	int resolve = Lflag || (Hflag && h);
+
+        if (resolve ? stat(path, &st) : lstat(path, &st) < 0) {
+                if (resolve && errno == ENOENT && !lstat(path, &st))
+                        ;
+                else if (errno != EACCES)
+			return -1;
         }
 
         if (xflag && h && st.st_dev != h->dev)
