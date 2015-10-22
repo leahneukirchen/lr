@@ -63,8 +63,7 @@ struct fileinfo {
 */
 
 enum op {
-	EXPR_UNDEF,
-	EXPR_OR,
+	EXPR_OR = 1,
 	EXPR_AND,
 	EXPR_NOT,
 	EXPR_LT,
@@ -78,8 +77,7 @@ enum op {
 };
 
 enum prop {
-	PROP_UNDEF,
-	PROP_ATIME,
+	PROP_ATIME = 1,
 	PROP_CTIME,
 	PROP_DEPTH,
 	PROP_DEV,
