@@ -44,6 +44,8 @@ struct expr *e;
 void *root = NULL; // tree
 static int prune;
 
+int maxlinks, maxsize, uwid = 8, gwid = 8;
+
 struct fileinfo {
 	char *fpath;
 	int depth;
@@ -553,7 +555,7 @@ print(const void *nodep, const VISIT which, const int depth)
 			} else if (*s == '%') {
 				switch (*++s) {
 				case '%': putchar('%'); break;
-				case 's': printf("%ld", fi->sb.st_size); break;
+				case 's': printf("%*ld", intlen(maxsize), fi->sb.st_size); break;
 				case 'b': printf("%ld", fi->sb.st_blocks); break;
 				case 'k': printf("%ld", fi->sb.st_blocks/2); break;
 				case 'd': printf("%d", fi->depth); break;
@@ -561,7 +563,7 @@ print(const void *nodep, const VISIT which, const int depth)
 				case 'i': printf("%ld", fi->sb.st_ino); break;
 				case 'p': printf("%s", fi->fpath); break;
 				case 'l': printf("%s", readlin(fi->fpath, "")); break;
-				case 'n': printf("%ld", fi->sb.st_nlink); break;
+				case 'n': printf("%*ld", intlen(maxlinks), fi->sb.st_nlink); break;
 				case 'F':
 					if (S_ISDIR(fi->sb.st_mode)) {
 						putchar('/');
@@ -608,6 +610,15 @@ print(const void *nodep, const VISIT which, const int depth)
 }
 
 int
+intlen (int i)
+{
+  int s;
+  for (s = 1; i > 9; i /= 10)
+	  s++;
+  return s;
+}
+
+int
 callback(const char *fpath, const struct stat *sb, int depth)
 {
 	struct fileinfo *fi = malloc (sizeof (struct fileinfo));
@@ -623,6 +634,11 @@ callback(const char *fpath, const struct stat *sb, int depth)
 	else
 		// add to the tree, note that this will elimnate duplicate files
 		tsearch(fi, &root, order);
+
+	if (fi->sb.st_nlink > maxlinks)
+		maxlinks = fi->sb.st_nlink;
+	if (fi->sb.st_size > maxsize)
+		maxsize = fi->sb.st_size;
 
 	return 0;
 }
