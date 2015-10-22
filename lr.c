@@ -10,6 +10,7 @@ TODO:
 - dynamic columns? i'd rather not (easy to compute for all but names...)
 - error handling? keep going
 - avoid stat in recurse
+- multiple -t
 */
 
 #define _XOPEN_SOURCE 700
@@ -165,6 +166,7 @@ parse_op()
 }
 
 struct expr *parse_cmp();
+struct expr *parse_or();
 
 struct expr *
 parse_inner()
@@ -179,10 +181,13 @@ parse_inner()
 		not->op = EXPR_NOT;
 		not->a.expr = e;
 		return not;
+	} else if (token("(")) {
+		struct expr *e = parse_or();
+		if (token(")"))
+			return e;
+		return 0; // TODO ERROR;
 	} else
 		return 0;
-	// TODO negation
-	// TODO ( expr )
 }
 
 struct expr *
@@ -354,7 +359,7 @@ readlin(const char *p, const char *alt)
 	if (r < 0)
 		return alt;
 	b[r] = 0;
-	return readlin(b, b);
+	return b;
 }
 
 #define CMP(a, b) if ((a) == (b)) break; else if ((a) < (b)) return -1; else return 1
