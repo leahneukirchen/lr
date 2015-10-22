@@ -164,6 +164,8 @@ parse_op()
 	return 0;
 }
 
+struct expr *parse_cmp();
+
 struct expr *
 parse_inner()
 {
@@ -171,6 +173,12 @@ parse_inner()
 		struct expr *e = malloc (sizeof (struct expr));
 		e->op = EXPR_PRUNE;
 		return e;
+	} else if (token("!")) {
+		struct expr *e = parse_cmp();
+		struct expr *not = malloc (sizeof (struct expr));
+		not->op = EXPR_NOT;
+		not->a.expr = e;
+		return not;
 	} else
 		return 0;
 	// TODO negation
