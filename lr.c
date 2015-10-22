@@ -36,6 +36,7 @@ int Hflag = 0;
 int Lflag = 0;
 int xflag = 0;
 int Uflag = 0;
+int lflag = 0;
 
 char *format;
 char *ordering;
@@ -560,8 +561,6 @@ print(const void *nodep, const VISIT which, const int depth)
 				case 'i': printf("%ld", fi->sb.st_ino); break;
 				case 'p': printf("%s", fi->fpath); break;
 				case 'l': printf("%s", readlin(fi->fpath, "")); break;
-				case 'L': if (S_ISLNK(fi->sb.st_mode))
-						printf(" -> "); break;
 				case 'n': printf("%ld", fi->sb.st_nlink); break;
 				case 'F':
 					if (S_ISDIR(fi->sb.st_mode)) {
@@ -571,7 +570,10 @@ print(const void *nodep, const VISIT which, const int depth)
 					} else if (S_ISFIFO(fi->sb.st_mode)) {
 						putchar('|');
 					} else if (S_ISLNK(fi->sb.st_mode)) {
-						putchar('@');
+						if (lflag)
+							printf(" -> ");
+						else
+							putchar('@');
 					} else if (fi->sb.st_mode & S_IXUSR) {
 						putchar('*');
 					}
@@ -726,7 +728,7 @@ main(int argc, char *argv[])
 	format = "%p\\n";
 	ordering = "n";
 
-	while ((c = getopt(argc, argv, "df:t:o:xLHUl0")) != -1)
+	while ((c = getopt(argc, argv, "df:t:o:xLFHUl0")) != -1)
 		switch(c) {
 		case 'd': dflag++; break;
 		case 'f': format = optarg; break;
@@ -738,9 +740,10 @@ main(int argc, char *argv[])
 		case 'U': Uflag++; break;
 		case '0': format = "%p\\0"; break;
 		case 'l':
-			// todo: print symlinks
+			lflag++;
 			// "%M %2n %u %g %9s %TY-%Tm-%Td %TH:%TM %p%F\n"; break;
-			format = "%M %n %u %g %s %MY-%Mm-%Md %MH:%MM %p%F%L%l\n"; break;
+			format = "%M %n %u %g %s %MY-%Mm-%Md %MH:%MM %p%F%l\n"; break;
+		case 'F': format = "%p%F\\n"; break;
 		default:
 			fprintf(stderr, "Usage: %s [-oxL] PATH...\n", argv[0]);
 			exit(2);
