@@ -14,7 +14,7 @@ TODO:
 - don't default to ./ prefix
 */
 
-#define _XOPEN_SOURCE 700
+#define _GNU_SOURCE
 
 #include <sys/param.h>
 #include <sys/stat.h>
@@ -23,6 +23,7 @@ TODO:
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
+#include <fnmatch.h>
 #include <search.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -71,7 +72,10 @@ enum op {
 	EXPR_EQ,
 	EXPR_GE,
 	EXPR_GT,
+	EXPR_STREQ,
+	EXPR_STREQI,
 	EXPR_GLOB,
+	EXPR_GLOBI,
 	EXPR_PRUNE,
 	EXPR_TYPE,
 };
@@ -89,7 +93,7 @@ enum prop {
 	PROP_NAME,
 	PROP_PATH,
 	PROP_SIZE,
-//	PROP_TARGET
+	PROP_TARGET
 //	PROP_TOTAL
 };
 
@@ -230,6 +234,60 @@ parse_type()
 	return parse_inner();
 }
 
+int
+parse_string(char **s)
+{
+	if (*pos == '"') {
+		pos++;
+		char *e = strchr(pos, '"');
+		*s = strndup(pos, e - pos);
+		pos += e - pos + 1;
+		ws();
+		return 1;
+	}
+
+	return 0;
+}
+
+struct expr *
+parse_strcmp()
+{
+	enum prop prop;
+	enum op op;
+
+	if (token("name"))
+		prop = PROP_NAME;
+	else if (token("path"))
+		prop = PROP_PATH;
+	else if (token("target"))
+		prop = PROP_TARGET;
+	else
+		return parse_type();
+
+	if (token("==="))
+		op = EXPR_STREQI;
+	else if (token("=="))
+		op = EXPR_STREQ;
+	else if (token("~~~"))
+		op = EXPR_GLOBI;
+	else if (token("~~"))
+		op = EXPR_GLOB;
+	else
+		return 0; // TODO ERROR
+	// TODO =~ =~~ regex
+
+	char *s;
+	if (parse_string(&s)) {
+		struct expr *e = malloc(sizeof (struct expr));
+		e->op = op;
+		e->a.prop = prop;
+		e->b.string = s;
+		return e;
+	}
+
+	return 0; // TODO ERROR
+}
+
 struct expr *
 parse_cmp()
 {
@@ -255,7 +313,7 @@ parse_cmp()
 	else if (token("size"))
 		prop = PROP_SIZE;
 	else
-		return parse_type();
+		return parse_strcmp();
 	
 	op = parse_op();
 	if (!op)
@@ -336,6 +394,24 @@ parse_expr(char *s)
 	return parse_or();
 }
 
+const char *
+basenam(const char *s)
+{
+	char *r = strrchr(s, '/');
+	return r ? r + 1 : s;
+}
+
+const char *
+readlin(const char *p, const char *alt)
+{
+	static char b[PATH_MAX];
+	int r = readlink(p, b, sizeof b - 1);
+	if (r < 0)
+		return alt;
+	b[r] = 0;
+	return b;
+}
+
 int
 eval(struct expr *e, struct fileinfo *fi)
 {
@@ -390,27 +466,32 @@ eval(struct expr *e, struct fileinfo *fi)
 		case TYPE_SYMLINK: return S_ISLNK(fi->sb.st_mode);
 		}
 	}
+	case EXPR_STREQ:
+	case EXPR_STREQI:
+	case EXPR_GLOB:
+	case EXPR_GLOBI:
+	{
+		const char *s = "";
+		switch(e->a.prop) {
+		case PROP_NAME: s = basenam(fi->fpath); break;
+		case PROP_PATH: s = fi->fpath; break;
+		case PROP_TARGET: s = readlin(fi->fpath, ""); break;
+		}
+		switch (e->op) {
+		case EXPR_STREQ:
+			return strcmp(e->b.string, s) == 0;
+		case EXPR_STREQI:
+			return strcasecmp(e->b.string, s) == 0;
+		case EXPR_GLOB:
+			return fnmatch(e->b.string, s, FNM_PATHNAME) == 0;
+		case EXPR_GLOBI:
+			return fnmatch(e->b.string, s,
+			    FNM_PATHNAME | FNM_CASEFOLD) == 0;
+		}
+	}
 	}
 
 	return 0;
-}
-
-const char *
-basenam(const char *s)
-{
-	char *r = strrchr(s, '/');
-	return r ? r + 1 : s;
-}
-
-const char *
-readlin(const char *p, const char *alt)
-{
-	static char b[PATH_MAX];
-	int r = readlink(p, b, sizeof b - 1);
-	if (r < 0)
-		return alt;
-	b[r] = 0;
-	return b;
 }
 
 #define CMP(a, b) if ((a) == (b)) break; else if ((a) < (b)) return -1; else return 1
