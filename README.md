@@ -3,6 +3,33 @@
 `lr` is a new tool for generating file listings, which includes the
 best features of `ls(1)`, `find(1)` and `du(1)`.
 
+## Benefits
+
+Over find:
+* friendly and logical C-style filter syntax
+* getopt is used, can mix filters and arguments in any order
+* can sort
+* compute directory sizes
+* can strip leading `./`
+
+Over ls:
+* sorts over all files, not per directory
+* copy & paste file names from the output since they are relative to pwd
+* ISO dates
+* powerful filters
+
+## Rosetta stone
+
+* `ls`: `lr -1 | column`
+* `find .`: `lr` (or `lr -U` for speed.)
+* `ls -l`: `lr -1r`
+* `ls -ltrc`: `lr -l1oc`
+* `find . -name '*.c'`: `lr -t 'name ~~ "*.c"'`
+* `find . -regex 'c$': `lr -t 'path =~ "c$"'`
+* `find -L /proc/*/fd -maxdepth 1 -type f -links 0 -printf '%b %p\n'`:
+`lr -UL1 -t 'type == f && links == 0' -f '%b %p\n' /proc/*/fd`
+* `find "${@:-.}" -name HEAD -execdir sh -c 'git rev-parse --resolve-git-dir . >/dev/null 2>/dev/null && pwd' ';'`: `lr -0t 'name == "HEAD"' "$@" | xapply -fz 'cd %Q[1/-$] && git rev-parse --resolve-git-dir . >/dev/null && pwd' - 2>/dev/null`
+
 ## Usage:
 
 	lr [-0|-F|-l|-f FMT] [-D] [-H|-L] [-1Qdsx] [-U|-o ORD] [-t TEST]* PATH...
@@ -57,6 +84,8 @@ Sort order is string consisting of the following letters.
 Uppercase letters reverse sorting.
 E.g. `Sn` sorts first by size, smallest last, and then by name (in
 case sizes are equal).
+
+Default: `n`.
 
 * `a`: atime.
 * `c`: ctime.
