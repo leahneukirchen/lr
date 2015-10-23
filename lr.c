@@ -46,6 +46,12 @@ struct expr *e;
 void *root = NULL; // tree
 static int prune;
 
+char default_ordering[] = "n";
+char default_format[] = "%p\\n";
+char type_format[] = "%p%F\\n";
+char long_format[] = "%M %n %u %g %s %TY-%Tm-%Td %TH:%TM %p%F%l\n";
+char zero_format[] = "%p\\0";
+
 void *users;
 void *groups;
 
@@ -54,7 +60,9 @@ struct idmap {
 	char *name;
 };
 
-int maxlinks, maxsize, uwid, gwid;
+off_t maxsize;
+nlink_t maxlinks;
+int uwid, gwid;
 
 struct fileinfo {
 	char *fpath;
@@ -221,6 +229,7 @@ parse_inner()
 		if (token(")"))
 			return e;
 		parse_error("missing )");
+		return 0;
 	} else
 		return 0;
 }
@@ -320,6 +329,7 @@ parse_strcmp()
 	}
 
 	parse_error("invalid string");
+	return 0;
 }
 
 struct expr *
@@ -592,7 +602,7 @@ groupname(gid_t gid)
 			struct idmap *newkey = malloc (sizeof (struct idmap));
 			newkey->id = gid;
 			newkey->name = strdup(g->gr_name);
-			if (strlen(g->gr_name) > gwid)
+			if ((int) strlen(g->gr_name) > gwid)
 				gwid = strlen(g->gr_name);
 			tsearch(newkey, &groups, idorder);
 			return newkey->name;
@@ -615,7 +625,7 @@ username(uid_t uid)
 			struct idmap *newkey = malloc (sizeof (struct idmap));
 			newkey->id = uid;
 			newkey->name = strdup(p->pw_name);
-			if (strlen(p->pw_name) > uwid)
+			if ((int) strlen(p->pw_name) > uwid)
 				uwid = strlen(p->pw_name);
 			tsearch(newkey, &users, idorder);
 			return newkey->name;
@@ -655,6 +665,8 @@ print_mode(int mode)
 void
 print(const void *nodep, const VISIT which, const int depth)
 {
+	(void) depth;
+
 	if (which == postorder || which == leaf) {
 		struct fileinfo *fi = *(struct fileinfo **) nodep;
 //		printf("%d %s\n", depth, fi->fpath);
@@ -748,7 +760,7 @@ print(const void *nodep, const VISIT which, const int depth)
 						/* FALLTHRU */
 					}
 				case 'G':
-					printf("%*ld", gwid, fi->sb.st_gid);
+					printf("%*ld", gwid, (long) fi->sb.st_gid);
 					break;
 
 				case 'u':
@@ -761,7 +773,7 @@ print(const void *nodep, const VISIT which, const int depth)
 						/* FALLTHRU */
 					}
 				case 'U':
-					printf("%*ld", uwid, fi->sb.st_uid);
+					printf("%*ld", uwid, (long) fi->sb.st_uid);
 					break;
 
 				default:
@@ -898,8 +910,8 @@ main(int argc, char *argv[])
 	int i;
 	char c;
 
-	format = "%p\\n";
-	ordering = "n";
+	format = default_format;
+	ordering = default_ordering;
 	argv0 = argv[0];
 
 	while ((c = getopt(argc, argv, "df:t:o:xLFHUl0s")) != -1)
@@ -912,13 +924,12 @@ main(int argc, char *argv[])
 		case 'H': Hflag++; break;
 		case 'L': Lflag++; break;
 		case 'U': Uflag++; break;
-		case '0': format = "%p\\0"; break;
+		case '0': format = zero_format; break;
 		case 's': sflag++; break;
 		case 'l':
 			lflag++;
-			// "%M %2n %u %g %9s %TY-%Tm-%Td %TH:%TM %p%F\n"; break;
-			format = "%M %n %u %g %s %TY-%Tm-%Td %TH:%TM %p%F%l\n"; break;
-		case 'F': format = "%p%F\\n"; break;
+			format = long_format; break;
+		case 'F': format = type_format; break;
 		default:
 			fprintf(stderr, "Usage: %s [-oxL] PATH...\n", argv0);
 			exit(2);
