@@ -50,7 +50,7 @@
 #include <time.h>
 #include <unistd.h>
 
-static int dflag;
+static int Dflag;
 static int Hflag;
 static int Lflag;
 static int xflag;
@@ -503,9 +503,9 @@ parse_or()
 }
 
 static struct expr *
-parse_expr(char *s)
+parse_expr(const char *s)
 {
-	pos = s;
+	pos = (char *) s;
 	struct expr *e = parse_or();
 	if (*pos)
 		parse_error("trailing garbage");
@@ -940,7 +940,7 @@ recurse(char *path, struct history *h)
 	entries = 0;
 	new.total = st.st_blocks/2;
         
-        if (!dflag) {
+        if (!Dflag) {
 		prune = 0;
 		r = callback(path, &st, new.level, 0, 0);
 		if (prune)
@@ -984,7 +984,7 @@ recurse(char *path, struct history *h)
         }
 
         path[l] = 0;
-        if (dflag && (r=callback(path, &st, new.level, entries, new.total)))
+        if (Dflag && (r=callback(path, &st, new.level, entries, new.total)))
                 return r;
 
         return 0;
@@ -1013,22 +1013,22 @@ main(int argc, char *argv[])
 	ordering = default_ordering;
 	argv0 = argv[0];
 
-	while ((c = getopt(argc, argv, "df:t:o:xLFHUl0s")) != -1)
+	while ((c = getopt(argc, argv, "01DFHLUdf:lo:st:x")) != -1)
 		switch(c) {
-		case 'd': dflag++; break;
-		case 'f': format = optarg; break;
-		case 'o': ordering = optarg; break;
-		case 't': expr = chain(expr, EXPR_AND, parse_expr(optarg)); break;
-		case 'x': xflag++; break;
+		case '0': format = zero_format; break;
+		case '1': expr = chain(expr, EXPR_AND, parse_expr("depth == 0 || prune")); break;
+		case 'D': Dflag++; break;
+		case 'F': format = type_format; break;
 		case 'H': Hflag++; break;
 		case 'L': Lflag++; break;
 		case 'U': Uflag++; break;
-		case '0': format = zero_format; break;
+		case 'd': expr = chain(expr, EXPR_AND, parse_expr("type == d && prune || print")); break;
+		case 'f': format = optarg; break;
+		case 'l': lflag++; format = long_format; break;
+		case 'o': ordering = optarg; break;
 		case 's': sflag++; break;
-		case 'l':
-			lflag++;
-			format = long_format; break;
-		case 'F': format = type_format; break;
+		case 't': expr = chain(expr, EXPR_AND, parse_expr(optarg)); break;
+		case 'x': xflag++; break;
 		default:
 			fprintf(stderr, "Usage: %s [-oxL] PATH...\n", argv0);
 			exit(2);
