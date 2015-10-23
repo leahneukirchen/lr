@@ -168,7 +168,7 @@ parse_error(const char *msg)
 static struct expr *
 mkexpr(enum op op)
 {
-	struct expr *e = malloc (sizeof (struct expr));
+	struct expr *e = malloc(sizeof (struct expr));
 	if (!e)
 		parse_error("out of memory");
 	e->op = op;
@@ -200,16 +200,16 @@ parse_num(long *r)
 	if (isdigit(*pos)) {
 		int64_t n;
 
-		for (n = 0; isdigit(*pos) && n <= INT64_MAX/10 - 10; pos++)
-			n = 10*n + (*pos - '0');
+		for (n = 0; isdigit(*pos) && n <= INT64_MAX / 10 - 10; pos++)
+			n = 10 * n + (*pos - '0');
 		if (isdigit(*pos))
 			parse_error("number too big");
 		if (token("c"))      ;
 		else if (token("b")) n *= 512L;
 		else if (token("k")) n *= 1024L;
-		else if (token("M")) n *= 1024L*1024;
-		else if (token("G")) n *= 1024L*1024*1024;
-		else if (token("T")) n *= 1024L*1024*1024*1024;
+		else if (token("M")) n *= 1024L * 1024;
+		else if (token("G")) n *= 1024L * 1024 * 1024;
+		else if (token("T")) n *= 1024L * 1024 * 1024 * 1024;
 		ws();
 		*r = n;
 		return 1;
@@ -290,7 +290,7 @@ static struct expr *
 parse_type()
 {
 	if (token("type")) {
-		if(token("==")) {  // TODO !=
+		if (token("==")) {  // TODO !=
 			struct expr *e = mkexpr(EXPR_TYPE);
 			if (token("b"))
 				e->a.filetype = TYPE_BLOCK;
@@ -371,10 +371,10 @@ parse_strcmp()
 		struct expr *e = mkexpr(op);
 		e->a.prop = prop;
 		if (op == EXPR_REGEX) {
-			e->b.regex = malloc (sizeof (regex_t));
+			e->b.regex = malloc(sizeof (regex_t));
 			regcomp(e->b.regex, s, REG_EXTENDED | REG_NOSUB);
 		} else if (op == EXPR_REGEXI) {
-			e->b.regex = malloc (sizeof (regex_t));
+			e->b.regex = malloc(sizeof (regex_t));
 			regcomp(e->b.regex, s, REG_EXTENDED | REG_NOSUB | REG_ICASE);
 		} else {
 			e->b.string = s;
@@ -447,7 +447,7 @@ parse_cmp()
 		prop = PROP_UID;
 	else
 		return parse_strcmp();
-	
+
 	op = parse_op();
 	if (!op)
 		parse_error("invalid comparison");
@@ -495,7 +495,7 @@ parse_and()
 		struct expr *e2 = parse_cmp();
 		r = chain(r, EXPR_AND, e2);
 	}
-	
+
 	return r;
 }
 
@@ -510,14 +510,14 @@ parse_or()
 		struct expr *e2 = parse_and();
 		r = chain(r, EXPR_OR, e2);
 	}
-	
+
 	return r;
 }
 
 static struct expr *
 parse_expr(const char *s)
 {
-	pos = (char *) s;
+	pos = (char *)s;
 	struct expr *e = parse_or();
 	if (*pos)
 		parse_error("trailing garbage");
@@ -545,8 +545,8 @@ readlin(const char *p, const char *alt)
 int
 idorder(const void *a, const void *b)
 {
-	struct idmap *ia = (struct idmap *) a;
-	struct idmap *ib = (struct idmap *) b;
+	struct idmap *ia = (struct idmap *)a;
+	struct idmap *ib = (struct idmap *)b;
 
 	if (ia->id == ib->id)
 		return 0;
@@ -574,10 +574,10 @@ groupname(gid_t gid)
 	if (!(result = tfind(&key, &groups, idorder))) {
 		struct group *g = getgrgid(gid);
 		if (g) {
-			struct idmap *newkey = malloc (sizeof (struct idmap));
+			struct idmap *newkey = malloc(sizeof (struct idmap));
 			newkey->id = gid;
 			newkey->name = strdup(g->gr_name);
-			if ((int) strlen(g->gr_name) > gwid)
+			if ((int)strlen(g->gr_name) > gwid)
 				gwid = strlen(g->gr_name);
 			tsearch(newkey, &groups, idorder);
 			return newkey->name;
@@ -597,10 +597,10 @@ username(uid_t uid)
 	if (!(result = tfind(&key, &users, idorder))) {
 		struct passwd *p = getpwuid(uid);
 		if (p) {
-			struct idmap *newkey = malloc (sizeof (struct idmap));
+			struct idmap *newkey = malloc(sizeof (struct idmap));
 			newkey->id = uid;
 			newkey->name = strdup(p->pw_name);
-			if ((int) strlen(p->pw_name) > uwid)
+			if ((int)strlen(p->pw_name) > uwid)
 				uwid = strlen(p->pw_name);
 			tsearch(newkey, &users, idorder);
 			return newkey->name;
@@ -632,8 +632,7 @@ eval(struct expr *e, struct fileinfo *fi)
 	case EXPR_GE:
 	case EXPR_GT:
 	case EXPR_ALLSET:
-	case EXPR_ANYSET:
-	{
+	case EXPR_ANYSET: {
 		long v = 0;
 		switch (e->a.prop) {
 		case PROP_ATIME: v = fi->sb.st_atime; break;
@@ -664,8 +663,7 @@ eval(struct expr *e, struct fileinfo *fi)
 		case EXPR_ANYSET: return (v & e->b.num) > 0;
 		}
 	}
-	case EXPR_TYPE:
-	{
+	case EXPR_TYPE:	{
 		switch (e->a.filetype) {
 		case TYPE_BLOCK: return S_ISBLK(fi->sb.st_mode);
 		case TYPE_CHAR: return S_ISCHR(fi->sb.st_mode);
@@ -681,8 +679,7 @@ eval(struct expr *e, struct fileinfo *fi)
 	case EXPR_GLOB:
 	case EXPR_GLOBI:
 	case EXPR_REGEX:
-	case EXPR_REGEXI:
-	{
+	case EXPR_REGEXI: {
 		const char *s = "";
 		switch(e->a.prop) {
 		case PROP_GROUP: s = groupname(fi->sb.st_gid); break;
@@ -717,8 +714,8 @@ eval(struct expr *e, struct fileinfo *fi)
 int
 order(const void *a, const void *b)
 {
-	struct fileinfo *fa = (struct fileinfo *) a;
-	struct fileinfo *fb = (struct fileinfo *) b;
+	struct fileinfo *fa = (struct fileinfo *)a;
+	struct fileinfo *fb = (struct fileinfo *)b;
 	char *s;
 
 	for (s = ordering; *s; s++) {
@@ -775,10 +772,10 @@ print_mode(int mode)
 void
 print(const void *nodep, const VISIT which, const int depth)
 {
-	(void) depth;
+	(void)depth;
 
 	if (which == postorder || which == leaf) {
-		struct fileinfo *fi = *(struct fileinfo **) nodep;
+		struct fileinfo *fi = *(struct fileinfo **)nodep;
 
 		char *s;
 		for (s = format; *s; s++) {
@@ -801,16 +798,16 @@ print(const void *nodep, const VISIT which, const int depth)
 				case '%': putchar('%'); break;
 				case 's': printf("%*ld", intlen(maxsize), fi->sb.st_size); break;
 				case 'b': printf("%ld", fi->sb.st_blocks); break;
-				case 'k': printf("%ld", fi->sb.st_blocks/2); break;
+				case 'k': printf("%ld", fi->sb.st_blocks / 2); break;
 				case 'd': printf("%d", fi->depth); break;
 				case 'D': printf("%ld", fi->sb.st_dev); break;
 				case 'i': printf("%ld", fi->sb.st_ino); break;
-				case 'I':
-					{
+				case 'I': {
 					int i;
-					for (i=0; i<fi->depth; i++) printf(" ");
-					}
+					for (i=0; i<fi->depth; i++)
+						printf(" ");
 					break;
+				}
 				case 'p': printf("%s",
 					    sflag && strncmp(fi->fpath, "./", 2) == 0 ?
 					    fi->fpath+2 : fi->fpath);
@@ -839,12 +836,12 @@ print(const void *nodep, const VISIT which, const int depth)
 				case 'f': printf("%s", basenam(fi->fpath)); break;
 				case 'A':
 				case 'C':
-				case 'T':
-					{
+				case 'T': {
 					char tfmt[3] = "%\0\0";
 					char buf[256];
 					s++;
-					if (!*s) break;
+					if (!*s)
+						break;
 					tfmt[1] = *s;
 					strftime(buf, sizeof buf, tfmt,
 					    localtime(
@@ -853,46 +850,39 @@ print(const void *nodep, const VISIT which, const int depth)
 					    &fi->sb.st_mtime));
 					printf("%s", buf);
 					break;
-					}
-
-				case 'm':
-					printf("%04o", fi->sb.st_mode & 07777);
-					break;
-				case 'M':
-					print_mode(fi->sb.st_mode);
-					break;
+				}
+				case 'm': printf("%04o", fi->sb.st_mode & 07777); break;
+				case 'M': print_mode(fi->sb.st_mode); break;
 				case 'y':
 					putchar("0pcCd?bBf?l?s???"[(fi->sb.st_mode >> 12) & 0x0f]);
 					break;
 
-				case 'g':
-					{
-						char *s = groupname(fi->sb.st_gid);
-						if (s) {
-							printf("%*s", -gwid, s);
-							break;
-						}
-						/* FALLTHRU */
+				case 'g': {
+					char *s = groupname(fi->sb.st_gid);
+					if (s) {
+						printf("%*s", -gwid, s);
+						break;
 					}
+					/* FALLTHRU */
+				}
 				case 'G':
-					printf("%*ld", gwid, (long) fi->sb.st_gid);
+					printf("%*ld", gwid, (long)fi->sb.st_gid);
 					break;
 
-				case 'u':
-					{
-						char *s = username(fi->sb.st_uid);
-						if (s) {
-							printf("%*s", -uwid, s);
-							break;
-						}
-						/* FALLTHRU */
+				case 'u': {
+					char *s = username(fi->sb.st_uid);
+					if (s) {
+						printf("%*s", -uwid, s);
+						break;
 					}
+					/* FALLTHRU */
+				}
 				case 'U':
-					printf("%*ld", uwid, (long) fi->sb.st_uid);
+					printf("%*ld", uwid, (long)fi->sb.st_uid);
 					break;
 
 				case 'e':
-					printf("%ld", (long) fi->entries);
+					printf("%ld", (long)fi->entries);
 					break;
 				case 't':
 					printf("%ld", fi->total);
@@ -912,12 +902,12 @@ print(const void *nodep, const VISIT which, const int depth)
 int
 callback(const char *fpath, const struct stat *sb, int depth, int entries, off_t total)
 {
-	struct fileinfo *fi = malloc (sizeof (struct fileinfo));
+	struct fileinfo *fi = malloc(sizeof (struct fileinfo));
 	fi->fpath = strdup(fpath);
 	fi->depth = depth;
 	fi->entries = entries;
 	fi->total = total;
-	memcpy((char *) &fi->sb, (char *) sb, sizeof (struct stat));
+	memcpy((char *)&fi->sb, (char *)sb, sizeof (struct stat));
 
 	if (expr && !eval(expr, fi))
 		return 0;
@@ -937,42 +927,42 @@ callback(const char *fpath, const struct stat *sb, int depth, int entries, off_t
 }
 
 // lifted from musl nftw.
-struct history
-{
-        struct history *chain;
-        dev_t dev;
-        ino_t ino;
-        int level;
+struct history {
+	struct history *chain;
+	dev_t dev;
+	ino_t ino;
+	int level;
 	off_t total;
 };
+
 static int
 recurse(char *path, struct history *h)
 {
-        size_t l = strlen(path), j = l && path[l-1]=='/' ? l-1 : l;
-        struct stat st;
-        struct history new;
-        int r, entries;
+	size_t l = strlen(path), j = l && path[l-1]=='/' ? l - 1 : l;
+	struct stat st;
+	struct history new;
+	int r, entries;
 
 	int resolve = Lflag || (Hflag && h);
 
-        if (resolve ? stat(path, &st) : lstat(path, &st) < 0) {
-                if (resolve && errno == ENOENT && !lstat(path, &st))
-                        ;
-                else if (errno != EACCES)
+	if (resolve ? stat(path, &st) : lstat(path, &st) < 0) {
+		if (resolve && errno == ENOENT && !lstat(path, &st))
+			;
+		else if (errno != EACCES)
 			return -1;
-        }
+	}
 
-        if (xflag && h && st.st_dev != h->dev)
-                return 0;
-        
-        new.chain = h;
-        new.dev = st.st_dev;
-        new.ino = st.st_ino;
-        new.level = h ? h->level+1 : 0;
+	if (xflag && h && st.st_dev != h->dev)
+		return 0;
+
+	new.chain = h;
+	new.dev = st.st_dev;
+	new.ino = st.st_ino;
+	new.level = h ? h->level + 1 : 0;
 	entries = 0;
-	new.total = st.st_blocks/2;
-        
-        if (!Dflag) {
+	new.total = st.st_blocks / 2;
+
+	if (!Dflag) {
 		prune = 0;
 		r = callback(path, &st, new.level, 0, 0);
 		if (prune)
@@ -981,57 +971,57 @@ recurse(char *path, struct history *h)
 			return r;
 	}
 
-        for (; h; h = h->chain) {
-                if (h->dev == st.st_dev && h->ino == st.st_ino)
-                        return 0;
-		h->total += st.st_blocks/2;
+	for (; h; h = h->chain) {
+		if (h->dev == st.st_dev && h->ino == st.st_ino)
+			return 0;
+		h->total += st.st_blocks / 2;
 	}
 
-        if (S_ISDIR(st.st_mode)) {
-                DIR *d = opendir(path);
-                if (d) {
-                        struct dirent *de;
-                        while ((de = readdir(d))) {
+	if (S_ISDIR(st.st_mode)) {
+		DIR *d = opendir(path);
+		if (d) {
+			struct dirent *de;
+			while ((de = readdir(d))) {
 				entries++;
-                                if (de->d_name[0] == '.'
-                                 && (!de->d_name[1]
-                                  || (de->d_name[1]=='.'
-                                   && !de->d_name[2]))) continue;
-                                if (strlen(de->d_name) >= PATH_MAX-l) {
-                                        errno = ENAMETOOLONG;
-                                        closedir(d);
-                                        return -1;
-                                }
-                                path[j]='/';
-                                strcpy(path+j+1, de->d_name);
-                                if ((r=recurse(path, &new))) {
-                                        closedir(d);
-                                        return r;
-                                }
-                        }
-                        closedir(d);
-                } else if (errno != EACCES) {
-                        return -1;
-                }
-        }
+				if (de->d_name[0] == '.' &&
+				    (!de->d_name[1] ||
+				     (de->d_name[1]=='.' && !de->d_name[2])))
+					continue;
+				if (strlen(de->d_name) >= PATH_MAX-l) {
+					errno = ENAMETOOLONG;
+					closedir(d);
+					return -1;
+				}
+				path[j] = '/';
+				strcpy(path + j + 1, de->d_name);
+				if ((r = recurse(path, &new))) {
+					closedir(d);
+					return r;
+				}
+			}
+			closedir(d);
+		} else if (errno != EACCES) {
+			return -1;
+		}
+	}
 
-        path[l] = 0;
-        if (Dflag && (r=callback(path, &st, new.level, entries, new.total)))
-                return r;
+	path[l] = 0;
+	if (Dflag && (r = callback(path, &st, new.level, entries, new.total)))
+		return r;
 
-        return 0;
+	return 0;
 }
 
 int
 traverse(const char *path)
 {
-	char pathbuf[PATH_MAX+1];
+	char pathbuf[PATH_MAX + 1];
 	size_t l = strlen(path);
-        if (l > PATH_MAX) {
-                errno = ENAMETOOLONG;
-                return -1;
-        }
-        memcpy(pathbuf, path, l+1);
+	if (l > PATH_MAX) {
+		errno = ENAMETOOLONG;
+		return -1;
+	}
+	memcpy(pathbuf, path, l + 1);
 	return recurse(pathbuf, 0);
 }
 
@@ -1065,7 +1055,7 @@ main(int argc, char *argv[])
 			fprintf(stderr, "Usage: %s [-0|-F|-l|-f FMT] [-D] [-H|-L] [-1dsx] [-U|-o ORD] [-t TEST]* PATH...\n", argv0);
 			exit(2);
 		}
-	
+
 	if (optind == argc) {
 		sflag++;
 		traverse(".");
