@@ -85,7 +85,7 @@ static int uwid, gwid;
 
 struct fileinfo {
 	char *fpath;
-	int depth;
+	int depth, entries;
 	struct stat sb;
 };
 
@@ -116,7 +116,7 @@ enum prop {
 	PROP_CTIME,
 	PROP_DEPTH,
 	PROP_DEV,
-//	PROP_ENTRIES,
+	PROP_ENTRIES,
 	PROP_INODE,
 	PROP_LINKS,
 	PROP_MODE,
@@ -414,6 +414,8 @@ parse_cmp()
 		prop = PROP_DEPTH;
 	else if (token("dev"))
 		prop = PROP_DEV;
+	else if (token("entries"))
+		prop = PROP_ENTRIES;
 	else if (token("inode"))
 		prop = PROP_INODE;
 	else if (token("links"))
@@ -550,6 +552,7 @@ eval(struct expr *e, struct fileinfo *fi)
 		case PROP_DEPTH: v = fi->depth; break;
 		case PROP_DEV: v = fi->sb.st_dev; break;
 		case PROP_INODE: v = fi->sb.st_ino; break;
+		case PROP_ENTRIES: v = fi->entries; break;
 		case PROP_LINKS: v = fi->sb.st_nlink; break;
 		case PROP_MODE: v = fi->sb.st_mode & 07777; break;
 		case PROP_MTIME: v = fi->sb.st_mtime; break;
@@ -846,6 +849,10 @@ print(const void *nodep, const VISIT which, const int depth)
 					printf("%*ld", uwid, (long) fi->sb.st_uid);
 					break;
 
+				case 'e':
+					printf("%ld", fi->entries);
+					break;
+
 				default:
 					putchar('%');
 					putchar(*s);
@@ -858,11 +865,12 @@ print(const void *nodep, const VISIT which, const int depth)
 }
 
 int
-callback(const char *fpath, const struct stat *sb, int depth)
+callback(const char *fpath, const struct stat *sb, int depth, int entries)
 {
 	struct fileinfo *fi = malloc (sizeof (struct fileinfo));
 	fi->fpath = strdup(fpath);
 	fi->depth = depth;
+	fi->entries = entries;
 	memcpy((char *) &fi->sb, (char *) sb, sizeof (struct stat));
 
 	if (expr && !eval(expr, fi))
@@ -889,6 +897,7 @@ struct history
         dev_t dev;
         ino_t ino;
         int level;
+	off_t total;
 };
 static int
 recurse(char *path, struct history *h)
@@ -896,7 +905,7 @@ recurse(char *path, struct history *h)
         size_t l = strlen(path), j = l && path[l-1]=='/' ? l-1 : l;
         struct stat st;
         struct history new;
-        int r;
+        int r, entries;
 
 	int resolve = Lflag || (Hflag && h);
 
@@ -914,10 +923,12 @@ recurse(char *path, struct history *h)
         new.dev = st.st_dev;
         new.ino = st.st_ino;
         new.level = h ? h->level+1 : 0;
+	entries = 0;
+	new.total = 0;
         
         if (!dflag) {
 		prune = 0;
-		r = callback(path, &st, new.level);
+		r = callback(path, &st, new.level, 0);
 		if (prune)
 			return 0;
 		if (r)
@@ -933,6 +944,7 @@ recurse(char *path, struct history *h)
                 if (d) {
                         struct dirent *de;
                         while ((de = readdir(d))) {
+				entries++;
                                 if (de->d_name[0] == '.'
                                  && (!de->d_name[1]
                                   || (de->d_name[1]=='.'
@@ -956,7 +968,7 @@ recurse(char *path, struct history *h)
         }
 
         path[l] = 0;
-        if (dflag && (r=callback(path, &st, new.level)))
+        if (dflag && (r=callback(path, &st, new.level, entries)))
                 return r;
 
         return 0;
