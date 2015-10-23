@@ -199,7 +199,6 @@ parse_num(long *r)
 		else if (token("G")) n *= 1024L*1024*1024;
 		else if (token("T")) n *= 1024L*1024*1024*1024;
 		ws();
-printf("%ld %ld", n, INT64_MAX);
 		*r = n;
 		return 1;
 	} else {
