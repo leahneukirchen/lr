@@ -5,9 +5,7 @@
 
 /*
 TODO:
-- expression parsing
 - %NNx formatting strings
-- dynamic columns? i'd rather not (easy to compute for all but names...)
 - error handling? keep going
 - avoid stat in recurse
 - multiple -t
