@@ -258,8 +258,10 @@ parse_inner()
 			return e;
 		parse_error("missing )");
 		return 0;
-	} else
+	} else {
+		parse_error("unknown expression");
 		return 0;
+	}
 }
 
 struct expr *
@@ -429,26 +431,34 @@ parse_cmp()
 }
 
 struct expr *
+chain(struct expr *e1, enum op op, struct expr *e2)
+{
+	struct expr *i, *j, *e;
+	for (j = 0, i = e1; i->op == op; j = i, i = i->b.expr)
+		;
+	if (!j) {
+		e = mkexpr(op);
+		e->a.expr = e1;
+		e->b.expr = e2;
+		return e;
+	} else {
+		e = mkexpr(op);
+		e->a.expr = i;
+		e->b.expr = e2;
+		j->b.expr = e;
+		return e1;
+	}
+}
+
+struct expr *
 parse_and()
 {
 	struct expr *e1 = parse_cmp();
 	struct expr *r = e1;
-	struct expr *l = 0, *a = 0;
 
 	while (token("&&")) {
 		struct expr *e2 = parse_cmp();
-		if (!l) {
-			l = mkexpr(EXPR_AND);
-			l->a.expr = e1;
-			l->b.expr = e2;
-			r = l;
-		} else {
-			a = mkexpr(EXPR_AND);
-			a->a.expr = l->b.expr;
-			a->b.expr = e2;
-			l->b.expr = a;
-			l = a;
-		}
+		r = chain(r, EXPR_AND, e2);
 	}
 	
 	return r;
@@ -460,22 +470,10 @@ parse_or()
 {
 	struct expr *e1 = parse_and();
 	struct expr *r = e1;
-	struct expr *l = 0, *o = 0;
 
 	while (token("||")) {
 		struct expr *e2 = parse_and();
-		if (!l) {
-			l = mkexpr(EXPR_OR);
-			l->a.expr = e1;
-			l->b.expr = e2;
-			r = l;
-		} else {
-			o = mkexpr(EXPR_OR);
-			o->a.expr = l->b.expr;
-			o->b.expr = e2;
-			l->b.expr = o;
-			l = o;
-		}
+		r = chain(r, EXPR_OR, e2);
 	}
 	
 	return r;
