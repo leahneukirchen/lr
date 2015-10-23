@@ -39,6 +39,7 @@ int Uflag = 0;
 int lflag = 0;
 int sflag = 0;
 
+char *argv0;
 char *format;
 char *ordering;
 struct expr *e;
@@ -136,6 +137,13 @@ struct expr {
 static char *pos;
 
 void
+parse_error(const char *msg)
+{
+	fprintf(stderr, "%s: parse error: %s at '%.15s'\n", argv0, msg, pos);
+	exit(2);
+}
+
+void
 ws()
 {
 	while (isspace(*pos))
@@ -188,8 +196,6 @@ parse_op()
 		return EXPR_GT;
 	else if (token("=="))
 		return EXPR_EQ;
-	// TODO glob
-	// TODO re
 
 	return 0;
 }
@@ -214,7 +220,7 @@ parse_inner()
 		struct expr *e = parse_or();
 		if (token(")"))
 			return e;
-		return 0; // TODO ERROR;
+		parse_error("missing )");
 	} else
 		return 0;
 }
@@ -241,8 +247,10 @@ parse_type()
 			else if (token("s"))
 				e->a.filetype = TYPE_SOCKET;
 			else
-				return 0;  // TODO ERROR
+				parse_error("invalid file type");
 			return e;
+		} else {
+			parse_error("invalid file type comparison");
 		}
 	}
 
@@ -292,7 +300,7 @@ parse_strcmp()
 	else if (token("=~"))
 		op = EXPR_REGEX;
 	else
-		return 0; // TODO ERROR
+		parse_error("invalid string operator");
 
 	char *s;
 	if (parse_string(&s)) {
@@ -311,7 +319,7 @@ parse_strcmp()
 		return e;
 	}
 
-	return 0; // TODO ERROR
+	parse_error("invalid string");
 }
 
 struct expr *
@@ -343,7 +351,7 @@ parse_cmp()
 	
 	op = parse_op();
 	if (!op)
-		return 0;  // TODO ERROR
+		parse_error("invalid comparison");
 
 	long n;
 	if (parse_num(&n)) {
@@ -465,11 +473,11 @@ eval(struct expr *e, struct fileinfo *fi)
 		case PROP_DEV: v = fi->sb.st_dev; break;
 		case PROP_INODE: v = fi->sb.st_ino; break;
 		case PROP_LINKS: v = fi->sb.st_nlink; break;
-		case PROP_MODE: v = fi->sb.st_mode; break;
+		case PROP_MODE: v = fi->sb.st_mode & 07777; break;
 		case PROP_MTIME: v = fi->sb.st_mtime; break;
 		case PROP_SIZE: v = fi->sb.st_size; break;
 		default:
-			return 0;  // TODO ERROR
+			parse_error("unknown property");
 		}
 
 		switch (e->op) {
@@ -892,6 +900,7 @@ main(int argc, char *argv[])
 
 	format = "%p\\n";
 	ordering = "n";
+	argv0 = argv[0];
 
 	while ((c = getopt(argc, argv, "df:t:o:xLFHUl0s")) != -1)
 		switch(c) {
@@ -911,7 +920,7 @@ main(int argc, char *argv[])
 			format = "%M %n %u %g %s %TY-%Tm-%Td %TH:%TM %p%F%l\n"; break;
 		case 'F': format = "%p%F\\n"; break;
 		default:
-			fprintf(stderr, "Usage: %s [-oxL] PATH...\n", argv[0]);
+			fprintf(stderr, "Usage: %s [-oxL] PATH...\n", argv0);
 			exit(2);
 		}
 	
