@@ -101,6 +101,8 @@ enum op {
 	EXPR_REGEXI,
 	EXPR_PRUNE,
 	EXPR_TYPE,
+	EXPR_ALLSET,
+	EXPR_ANYSET
 };
 
 enum prop {
@@ -180,6 +182,24 @@ parse_num(long *r)
 		long n = 0;
 		while (isdigit(*pos)) {
 			n *= 10;
+			n += *pos - '0';
+			pos++;
+		}
+		ws();
+		*r = n;
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+int
+parse_octal(long *r)
+{
+	if (*pos >= '0' && *pos <= '7') {
+		long n = 0;
+		while (*pos >= '0' && *pos <= '7') {
+			n *= 8;
 			n += *pos - '0';
 			pos++;
 		}
@@ -333,6 +353,34 @@ parse_strcmp()
 }
 
 struct expr *
+parse_mode()
+{
+	struct expr *e = malloc(sizeof (struct expr));
+	long n;
+
+	e->a.prop = PROP_MODE;
+
+	if (token("==")) {
+		e->op = EXPR_EQ;
+	} else if (token("&")) {
+		e->op = EXPR_ALLSET;
+	} else if (token("|")) {
+		e->op = EXPR_ANYSET;
+	} else {
+		parse_error("invalid mode comparison");
+	}
+
+	if (parse_octal(&n)) {
+		e->b.num = n;
+		printf("%d\n", n);
+	} else {
+		parse_error("invalid mode");
+	}
+
+	return e;
+}
+
+struct expr *
 parse_cmp()
 {
 	enum prop prop;
@@ -351,7 +399,7 @@ parse_cmp()
 	else if (token("links"))
 		prop = PROP_LINKS;
 	else if (token("mode"))
-		prop = PROP_MODE;
+		return parse_mode();
 	else if (token("mtime"))
 		prop = PROP_MTIME;
 	else if (token("size"))
@@ -474,6 +522,8 @@ eval(struct expr *e, struct fileinfo *fi)
 	case EXPR_EQ:
 	case EXPR_GE:
 	case EXPR_GT:
+	case EXPR_ALLSET:
+	case EXPR_ANYSET:
 	{
 		long v = 0;
 		switch (e->a.prop) {
@@ -496,6 +546,8 @@ eval(struct expr *e, struct fileinfo *fi)
 		case EXPR_EQ: return v == e->b.num;
 		case EXPR_GE: return v >= e->b.num;
 		case EXPR_GT: return v > e->b.num;
+		case EXPR_ALLSET: return (v & e->b.num) == e->b.num;
+		case EXPR_ANYSET: return (v & e->b.num) > 0;
 		}
 	}
 	case EXPR_TYPE:
