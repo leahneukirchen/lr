@@ -5,9 +5,9 @@ best features of `ls(1)`, `find(1)` and `du(1)`.
 
 ## Usage:
 
-	lr [-0|-F|-l|-f FMT] [-D] [-H|-L] [-1dsx] [-U|-o ORD] [-t TEST]* PATH...
+	lr [-0|-F|-l|-f FMT] [-D] [-H|-L] [-1Qdsx] [-U|-o ORD] [-t TEST]* PATH...
 
-* `-0`: output filenames seperated by NUL bytes.
+* `-0`: output filenames seperated by NUL bytes (implies `-Q`).
 * `-F`: output filenames and an indicator of their file type (`*/=>@|`).
 * `-l`: long output ala `ls -l`.
 * `-f FMT`: custom formatting, see below.
@@ -16,6 +16,7 @@ best features of `ls(1)`, `find(1)` and `du(1)`.
 * `-H`: only follow symlinks on command line.
 * `-L`: follow all symlinks.
 * `-1`: don't go below one level of directories.
+* `-Q`: don't shell quote file names.
 * `-d`: don't enter directories.
 * `-s`: don't print leading `./`.
 * `-x`: don't enter other filesystems.

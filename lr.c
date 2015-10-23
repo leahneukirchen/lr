@@ -57,6 +57,7 @@ static int xflag;
 static int Uflag;
 static int lflag;
 static int sflag;
+static int Qflag;
 
 static char *argv0;
 static char *format;
@@ -769,6 +770,27 @@ print_mode(int mode)
 	                     : (mode & 00001 ? 'x' : '-'));
 }
 
+static void
+shquote(const char *s)
+{
+	if (Qflag || !strpbrk(s, "\001\002\003\004\005\006\007\010"
+	                         "\011\012\013\014\015\016\017\020"
+	                         "\021\022\023\024\025\026\027\030"
+	                         "\031\032\033\034\035\036\037\040"
+	                         "`^#*[]=|\\?${}()'\"<>&;\127")) {
+		printf("%s", s);
+		return;
+	}
+
+	putchar('\'');
+	for (; *s; s++)
+		if (*s == '\'')
+			printf("'\\''");
+		else
+			putchar(*s);
+	putchar('\'');
+}
+
 void
 print(const void *nodep, const VISIT which, const int depth)
 {
@@ -808,13 +830,13 @@ print(const void *nodep, const VISIT which, const int depth)
 						printf(" ");
 					break;
 				}
-				case 'p': printf("%s",
+				case 'p': shquote(
 					    sflag && strncmp(fi->fpath, "./", 2) == 0 ?
 					    fi->fpath+2 : fi->fpath);
 					break;
 				case 'l':
 					if (S_ISLNK(fi->sb.st_mode))
-						printf("%s", readlin(fi->fpath, ""));
+						shquote(readlin(fi->fpath, ""));
 					break;
 				case 'n': printf("%*ld", intlen(maxlinks), fi->sb.st_nlink); break;
 				case 'F':
@@ -833,7 +855,7 @@ print(const void *nodep, const VISIT which, const int depth)
 						putchar('*');
 					}
 					break;
-				case 'f': printf("%s", basenam(fi->fpath)); break;
+				case 'f': shquote(basenam(fi->fpath)); break;
 				case 'A':
 				case 'C':
 				case 'T': {
@@ -1035,14 +1057,15 @@ main(int argc, char *argv[])
 	ordering = default_ordering;
 	argv0 = argv[0];
 
-	while ((c = getopt(argc, argv, "01DFHLUdf:lo:st:x")) != -1)
+	while ((c = getopt(argc, argv, "01DFHLQUdf:lo:st:x")) != -1)
 		switch(c) {
-		case '0': format = zero_format; break;
+		case '0': format = zero_format; Qflag++; break;
 		case '1': expr = chain(expr, EXPR_AND, parse_expr("depth == 0 || prune")); break;
 		case 'D': Dflag++; break;
 		case 'F': format = type_format; break;
 		case 'H': Hflag++; break;
 		case 'L': Lflag++; break;
+		case 'Q': Qflag++; break;
 		case 'U': Uflag++; break;
 		case 'd': expr = chain(expr, EXPR_AND, parse_expr("type == d && prune || print")); break;
 		case 'f': format = optarg; break;
@@ -1052,7 +1075,7 @@ main(int argc, char *argv[])
 		case 't': expr = chain(expr, EXPR_AND, parse_expr(optarg)); break;
 		case 'x': xflag++; break;
 		default:
-			fprintf(stderr, "Usage: %s [-0|-F|-l|-f FMT] [-D] [-H|-L] [-1dsx] [-U|-o ORD] [-t TEST]* PATH...\n", argv0);
+			fprintf(stderr, "Usage: %s [-0|-F|-l|-f FMT] [-D] [-H|-L] [-1Qdsx] [-U|-o ORD] [-t TEST]* PATH...\n", argv0);
 			exit(2);
 		}
 
