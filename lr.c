@@ -428,52 +428,53 @@ parse_and()
 {
 	struct expr *e1 = parse_cmp();
 	struct expr *r = e1;
-	struct expr *l;
+	struct expr *l = 0, *a = 0;
 
-	if (token("&&")) {
-		struct expr *and = malloc(sizeof (struct expr));
-		struct expr *e2 = parse_and();
-		and->op = EXPR_AND;
-		and->a.expr = r;
-		and->b.expr = e2;
-		r = and;
-		l = and;
-	}
 	while (token("&&")) {
-		struct expr *e2 = parse_and();
-		struct expr *and = malloc(sizeof (struct expr));
-		and->op = EXPR_AND;
-		and->a.expr = l->b.expr;
-		and->b.expr = e2;
-		l->b.expr = and;
+		struct expr *e2 = parse_cmp();
+		if (!l) {
+			l = malloc(sizeof (struct expr));
+			l->op = EXPR_AND;
+			l->a.expr = e1;
+			l->b.expr = e2;
+			r = l;
+		} else {
+			a = malloc(sizeof (struct expr));
+			a->op = EXPR_AND;
+			a->a.expr = l->b.expr;
+			a->b.expr = e2;
+			l->b.expr = a;
+			l = a;
+		}
 	}
 	
 	return r;
 }
+
 
 struct expr *
 parse_or()
 {
 	struct expr *e1 = parse_and();
 	struct expr *r = e1;
-	struct expr *l;
+	struct expr *l = 0, *o = 0;
 
-	if (token("||")) {
-		struct expr *or = malloc(sizeof (struct expr));
-		struct expr *e2 = parse_and();
-		or->op = EXPR_OR;
-		or->a.expr = r;
-		or->b.expr = e2;
-		r = or;
-		l = or;
-	}
 	while (token("||")) {
 		struct expr *e2 = parse_and();
-		struct expr *or = malloc(sizeof (struct expr));
-		or->op = EXPR_OR;
-		or->a.expr = l->b.expr;
-		or->b.expr = e2;
-		l->b.expr = or;
+		if (!l) {
+			l = malloc(sizeof (struct expr));
+			l->op = EXPR_OR;
+			l->a.expr = e1;
+			l->b.expr = e2;
+			r = l;
+		} else {
+			o = malloc(sizeof (struct expr));
+			o->op = EXPR_OR;
+			o->a.expr = l->b.expr;
+			o->b.expr = e2;
+			l->b.expr = o;
+			l = o;
+		}
 	}
 	
 	return r;
