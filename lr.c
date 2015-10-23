@@ -153,6 +153,16 @@ parse_error(const char *msg)
 	exit(2);
 }
 
+struct expr *
+mkexpr(enum op op)
+{
+	struct expr *e = malloc (sizeof (struct expr));
+	if (!e)
+		parse_error("out of memory");
+	e->op = op;
+	return e;
+}
+
 void
 ws()
 {
@@ -235,13 +245,11 @@ struct expr *
 parse_inner()
 {
 	if (token("prune")) {
-		struct expr *e = malloc (sizeof (struct expr));
-		e->op = EXPR_PRUNE;
+		struct expr *e = mkexpr(EXPR_PRUNE);
 		return e;
 	} else if (token("!")) {
 		struct expr *e = parse_cmp();
-		struct expr *not = malloc (sizeof (struct expr));
-		not->op = EXPR_NOT;
+		struct expr *not = mkexpr(EXPR_NOT);
 		not->a.expr = e;
 		return not;
 	} else if (token("(")) {
@@ -259,8 +267,7 @@ parse_type()
 {
 	if (token("type")) {
 		if(token("==")) {  // TODO !=
-			struct expr *e = malloc (sizeof (struct expr));
-			e->op = EXPR_TYPE;
+			struct expr *e = mkexpr(EXPR_TYPE);
 			if (token("b"))
 				e->a.filetype = TYPE_BLOCK;
 			else if (token("c"))
@@ -333,8 +340,7 @@ parse_strcmp()
 
 	char *s;
 	if (parse_string(&s)) {
-		struct expr *e = malloc(sizeof (struct expr));
-		e->op = op;
+		struct expr *e = mkexpr(op);
 		e->a.prop = prop;
 		if (op == EXPR_REGEX) {
 			e->b.regex = malloc (sizeof (regex_t));
@@ -355,7 +361,7 @@ parse_strcmp()
 struct expr *
 parse_mode()
 {
-	struct expr *e = malloc(sizeof (struct expr));
+	struct expr *e = mkexpr(0);
 	long n;
 
 	e->a.prop = PROP_MODE;
@@ -413,8 +419,7 @@ parse_cmp()
 
 	long n;
 	if (parse_num(&n)) {
-		struct expr *e = malloc(sizeof (struct expr));
-		e->op = op;
+		struct expr *e = mkexpr(op);
 		e->a.prop = prop;
 		e->b.num = n;
 		return e;
@@ -433,14 +438,12 @@ parse_and()
 	while (token("&&")) {
 		struct expr *e2 = parse_cmp();
 		if (!l) {
-			l = malloc(sizeof (struct expr));
-			l->op = EXPR_AND;
+			l = mkexpr(EXPR_AND);
 			l->a.expr = e1;
 			l->b.expr = e2;
 			r = l;
 		} else {
-			a = malloc(sizeof (struct expr));
-			a->op = EXPR_AND;
+			a = mkexpr(EXPR_AND);
 			a->a.expr = l->b.expr;
 			a->b.expr = e2;
 			l->b.expr = a;
@@ -462,14 +465,12 @@ parse_or()
 	while (token("||")) {
 		struct expr *e2 = parse_and();
 		if (!l) {
-			l = malloc(sizeof (struct expr));
-			l->op = EXPR_OR;
+			l = mkexpr(EXPR_OR);
 			l->a.expr = e1;
 			l->b.expr = e2;
 			r = l;
 		} else {
-			o = malloc(sizeof (struct expr));
-			o->op = EXPR_OR;
+			o = mkexpr(EXPR_OR);
 			o->a.expr = l->b.expr;
 			o->b.expr = e2;
 			l->b.expr = o;
