@@ -8,7 +8,6 @@ TODO:
 - %NNx formatting strings
 - error handling? keep going
 - avoid stat in recurse
-- multiple -t
 */
 
 #define _GNU_SOURCE
@@ -434,6 +433,8 @@ struct expr *
 chain(struct expr *e1, enum op op, struct expr *e2)
 {
 	struct expr *i, *j, *e;
+	if (!e1)
+		return e2;
 	for (j = 0, i = e1; i->op == op; j = i, i = i->b.expr)
 		;
 	if (!j) {
@@ -971,7 +972,7 @@ main(int argc, char *argv[])
 		case 'd': dflag++; break;
 		case 'f': format = optarg; break;
 		case 'o': ordering = optarg; break;
-		case 't': e = parse_expr(optarg); break;
+		case 't': e = chain(e, EXPR_AND, parse_expr(optarg)); break;
 		case 'x': xflag++; break;
 		case 'H': Hflag++; break;
 		case 'L': Lflag++; break;
