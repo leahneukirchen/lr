@@ -484,7 +484,10 @@ static struct expr *
 parse_expr(char *s)
 {
 	pos = s;
-	return parse_or();
+	struct expr *e = parse_or();
+	if (*pos)
+		parse_error("trailing garbage");
+	return e;
 }
 
 static const char *
