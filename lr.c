@@ -30,38 +30,38 @@ TODO:
 #include <time.h>
 #include <unistd.h>
 
-int dflag = 0;
-int Hflag = 0;
-int Lflag = 0;
-int xflag = 0;
-int Uflag = 0;
-int lflag = 0;
-int sflag = 0;
+static int dflag;
+static int Hflag;
+static int Lflag;
+static int xflag;
+static int Uflag;
+static int lflag;
+static int sflag;
 
-char *argv0;
-char *format;
-char *ordering;
-struct expr *e;
-void *root = NULL; // tree
+static char *argv0;
+static char *format;
+static char *ordering;
+static struct expr *expr;
+static void *root = NULL; // tree
 static int prune;
 
-char default_ordering[] = "n";
-char default_format[] = "%p\\n";
-char type_format[] = "%p%F\\n";
-char long_format[] = "%M %n %u %g %s %TY-%Tm-%Td %TH:%TM %p%F%l\n";
-char zero_format[] = "%p\\0";
+static char default_ordering[] = "n";
+static char default_format[] = "%p\\n";
+static char type_format[] = "%p%F\\n";
+static char long_format[] = "%M %n %u %g %s %TY-%Tm-%Td %TH:%TM %p%F%l\n";
+static char zero_format[] = "%p\\0";
 
-void *users;
-void *groups;
+static void *users;
+static void *groups;
 
 struct idmap {
 	long id;
 	char *name;
 };
 
-off_t maxsize;
-nlink_t maxlinks;
-int uwid, gwid;
+static off_t maxsize;
+static nlink_t maxlinks;
+static int uwid, gwid;
 
 struct fileinfo {
 	char *fpath;
@@ -145,14 +145,14 @@ struct expr {
 
 static char *pos;
 
-void
+static void
 parse_error(const char *msg)
 {
 	fprintf(stderr, "%s: parse error: %s at '%.15s'\n", argv0, msg, pos);
 	exit(2);
 }
 
-struct expr *
+static struct expr *
 mkexpr(enum op op)
 {
 	struct expr *e = malloc (sizeof (struct expr));
@@ -162,14 +162,14 @@ mkexpr(enum op op)
 	return e;
 }
 
-void
+static void
 ws()
 {
 	while (isspace(*pos))
 		pos++;
 }
 
-int
+static int
 token(const char *token)
 {
 	if (strncmp(pos, token, strlen(token)) == 0) {
@@ -181,7 +181,7 @@ token(const char *token)
 	}
 }
 
-int
+static int
 parse_num(long *r)
 {
 	// TODO -negative
@@ -220,7 +220,7 @@ parse_octal(long *r)
 	}
 }
 
-enum op
+static enum op
 parse_op()
 {
 	if (token("<="))
@@ -237,10 +237,10 @@ parse_op()
 	return 0;
 }
 
-struct expr *parse_cmp();
-struct expr *parse_or();
+static struct expr *parse_cmp();
+static struct expr *parse_or();
 
-struct expr *
+static struct expr *
 parse_inner()
 {
 	if (token("prune")) {
@@ -263,7 +263,7 @@ parse_inner()
 	}
 }
 
-struct expr *
+static struct expr *
 parse_type()
 {
 	if (token("type")) {
@@ -294,7 +294,7 @@ parse_type()
 	return parse_inner();
 }
 
-int
+static int
 parse_string(char **s)
 {
 	if (*pos == '"') {
@@ -309,7 +309,7 @@ parse_string(char **s)
 	return 0;
 }
 
-struct expr *
+static struct expr *
 parse_strcmp()
 {
 	enum prop prop;
@@ -359,7 +359,7 @@ parse_strcmp()
 	return 0;
 }
 
-struct expr *
+static struct expr *
 parse_mode()
 {
 	struct expr *e = mkexpr(0);
@@ -387,7 +387,7 @@ parse_mode()
 	return e;
 }
 
-struct expr *
+static struct expr *
 parse_cmp()
 {
 	enum prop prop;
@@ -429,7 +429,7 @@ parse_cmp()
 	return 0;
 }
 
-struct expr *
+static struct expr *
 chain(struct expr *e1, enum op op, struct expr *e2)
 {
 	struct expr *i, *j, *e;
@@ -451,7 +451,7 @@ chain(struct expr *e1, enum op op, struct expr *e2)
 	}
 }
 
-struct expr *
+static struct expr *
 parse_and()
 {
 	struct expr *e1 = parse_cmp();
@@ -466,7 +466,7 @@ parse_and()
 }
 
 
-struct expr *
+static struct expr *
 parse_or()
 {
 	struct expr *e1 = parse_and();
@@ -480,21 +480,21 @@ parse_or()
 	return r;
 }
 
-struct expr *
+static struct expr *
 parse_expr(char *s)
 {
 	pos = s;
 	return parse_or();
 }
 
-const char *
+static const char *
 basenam(const char *s)
 {
 	char *r = strrchr(s, '/');
 	return r ? r + 1 : s;
 }
 
-const char *
+static const char *
 readlin(const char *p, const char *alt)
 {
 	static char b[PATH_MAX];
@@ -642,7 +642,7 @@ idorder(const void *a, const void *b)
 		return 1;
 }
 
-char *
+static char *
 groupname(gid_t gid)
 {
 	struct idmap key, **result;
@@ -665,7 +665,7 @@ groupname(gid_t gid)
 	return (*result)->name;
 }
 
-char *
+static char *
 username(uid_t uid)
 {
 	struct idmap key, **result;
@@ -688,7 +688,7 @@ username(uid_t uid)
 	return (*result)->name;
 }
 
-int
+static int
 intlen(int i)
 {
 	int s;
@@ -697,7 +697,7 @@ intlen(int i)
 	return s;
 }
 
-void
+static void
 print_mode(int mode)
 {
 	putchar("0pcCd?bB-?l?s???"[(mode >> 12) & 0x0f]);
@@ -848,7 +848,7 @@ callback(const char *fpath, const struct stat *sb, int depth)
 	fi->depth = depth;
 	memcpy((char *) &fi->sb, (char *) sb, sizeof (struct stat));
 
-	if (e && !eval(e, fi))
+	if (expr && !eval(expr, fi))
 		return 0;
 
 	if (Uflag)
@@ -945,7 +945,8 @@ recurse(char *path, struct history *h)
         return 0;
 }
 
-int traverse(const char *path)
+int
+traverse(const char *path)
 {
 	char pathbuf[PATH_MAX+1];
 	size_t l = strlen(path);
@@ -972,7 +973,7 @@ main(int argc, char *argv[])
 		case 'd': dflag++; break;
 		case 'f': format = optarg; break;
 		case 'o': ordering = optarg; break;
-		case 't': e = chain(e, EXPR_AND, parse_expr(optarg)); break;
+		case 't': expr = chain(expr, EXPR_AND, parse_expr(optarg)); break;
 		case 'x': xflag++; break;
 		case 'H': Hflag++; break;
 		case 'L': Lflag++; break;
