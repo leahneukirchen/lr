@@ -648,6 +648,8 @@ order(const void *a, const void *b)
 		case 'M': CMP(fb->sb.st_mtime, fa->sb.st_mtime);
 		case 's': CMP(fa->sb.st_size, fb->sb.st_size);
 		case 'S': CMP(fb->sb.st_size, fa->sb.st_size);
+		case 'i': CMP(fa->sb.st_ino, fb->sb.st_ino);
+		case 'I': CMP(fb->sb.st_ino, fa->sb.st_ino);
 		case 'd': CMP(fa->depth, fb->depth);
 		case 'D': CMP(fb->depth, fa->depth);
 		case 'n': STRCMP(fa->fpath, fb->fpath);
@@ -779,6 +781,12 @@ print(const void *nodep, const VISIT which, const int depth)
 				case 'd': printf("%d", fi->depth); break;
 				case 'D': printf("%ld", fi->sb.st_dev); break;
 				case 'i': printf("%ld", fi->sb.st_ino); break;
+				case 'I':
+					{
+					int i;
+					for (i=0; i<fi->depth; i++) printf(" ");
+					}
+					break;
 				case 'p': printf("%s",
 					    sflag && strncmp(fi->fpath, "./", 2) == 0 ?
 					    fi->fpath+2 : fi->fpath);
@@ -1030,7 +1038,7 @@ main(int argc, char *argv[])
 		case 't': expr = chain(expr, EXPR_AND, parse_expr(optarg)); break;
 		case 'x': xflag++; break;
 		default:
-			fprintf(stderr, "Usage: %s [-0|-F|-l|-f FMT] [-D] [-H|-L] [-1dx] [-U|-o ORD] [-t TEST]* PATH...\n", argv0);
+			fprintf(stderr, "Usage: %s [-0|-F|-l|-f FMT] [-D] [-H|-L] [-1dsx] [-U|-o ORD] [-t TEST]* PATH...\n", argv0);
 			exit(2);
 		}
 	
