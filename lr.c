@@ -87,6 +87,7 @@ struct fileinfo {
 	char *fpath;
 	int depth, entries;
 	struct stat sb;
+	off_t total;
 };
 
 enum op {
@@ -124,8 +125,8 @@ enum prop {
 	PROP_NAME,
 	PROP_PATH,
 	PROP_SIZE,
-	PROP_TARGET
-//	PROP_TOTAL
+	PROP_TARGET,
+	PROP_TOTAL,
 };
 
 enum filetype {
@@ -426,6 +427,8 @@ parse_cmp()
 		prop = PROP_MTIME;
 	else if (token("size"))
 		prop = PROP_SIZE;
+	else if (token("total"))
+		prop = PROP_TOTAL;
 	else
 		return parse_strcmp();
 	
@@ -557,6 +560,7 @@ eval(struct expr *e, struct fileinfo *fi)
 		case PROP_MODE: v = fi->sb.st_mode & 07777; break;
 		case PROP_MTIME: v = fi->sb.st_mtime; break;
 		case PROP_SIZE: v = fi->sb.st_size; break;
+		case PROP_TOTAL: v = fi->total; break;
 		default:
 			parse_error("unknown property");
 		}
@@ -850,7 +854,10 @@ print(const void *nodep, const VISIT which, const int depth)
 					break;
 
 				case 'e':
-					printf("%ld", fi->entries);
+					printf("%ld", (long) fi->entries);
+					break;
+				case 't':
+					printf("%ld", fi->total);
 					break;
 
 				default:
@@ -865,12 +872,13 @@ print(const void *nodep, const VISIT which, const int depth)
 }
 
 int
-callback(const char *fpath, const struct stat *sb, int depth, int entries)
+callback(const char *fpath, const struct stat *sb, int depth, int entries, off_t total)
 {
 	struct fileinfo *fi = malloc (sizeof (struct fileinfo));
 	fi->fpath = strdup(fpath);
 	fi->depth = depth;
 	fi->entries = entries;
+	fi->total = total;
 	memcpy((char *) &fi->sb, (char *) sb, sizeof (struct stat));
 
 	if (expr && !eval(expr, fi))
@@ -924,20 +932,22 @@ recurse(char *path, struct history *h)
         new.ino = st.st_ino;
         new.level = h ? h->level+1 : 0;
 	entries = 0;
-	new.total = 0;
+	new.total = st.st_blocks/2;
         
         if (!dflag) {
 		prune = 0;
-		r = callback(path, &st, new.level, 0);
+		r = callback(path, &st, new.level, 0, 0);
 		if (prune)
 			return 0;
 		if (r)
 			return r;
 	}
 
-        for (; h; h = h->chain)
+        for (; h; h = h->chain) {
                 if (h->dev == st.st_dev && h->ino == st.st_ino)
                         return 0;
+		h->total += st.st_blocks/2;
+	}
 
         if (S_ISDIR(st.st_mode)) {
                 DIR *d = opendir(path);
@@ -968,7 +978,7 @@ recurse(char *path, struct history *h)
         }
 
         path[l] = 0;
-        if (dflag && (r=callback(path, &st, new.level, entries)))
+        if (dflag && (r=callback(path, &st, new.level, entries, new.total)))
                 return r;
 
         return 0;
