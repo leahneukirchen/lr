@@ -9,7 +9,6 @@ TODO:
 - error handling? keep going
 - avoid stat in recurse
 - multiple -t
-- don't default to ./ prefix
 */
 
 #define _GNU_SOURCE
@@ -37,6 +36,7 @@ int Lflag = 0;
 int xflag = 0;
 int Uflag = 0;
 int lflag = 0;
+int sflag = 0;
 
 char *format;
 char *ordering;
@@ -656,7 +656,10 @@ print(const void *nodep, const VISIT which, const int depth)
 				case 'd': printf("%d", fi->depth); break;
 				case 'D': printf("%ld", fi->sb.st_dev); break;
 				case 'i': printf("%ld", fi->sb.st_ino); break;
-				case 'p': printf("%s", fi->fpath); break;
+				case 'p': printf("%s",
+					    sflag && strncmp(fi->fpath, "./", 2) == 0 ?
+					    fi->fpath+2 : fi->fpath);
+					break;
 				case 'l':
 					if (S_ISLNK(fi->sb.st_mode))
 						printf("%s", readlin(fi->fpath, ""));
@@ -870,7 +873,7 @@ main(int argc, char *argv[])
 	format = "%p\\n";
 	ordering = "n";
 
-	while ((c = getopt(argc, argv, "df:t:o:xLFHUl0")) != -1)
+	while ((c = getopt(argc, argv, "df:t:o:xLFHUl0s")) != -1)
 		switch(c) {
 		case 'd': dflag++; break;
 		case 'f': format = optarg; break;
@@ -881,6 +884,7 @@ main(int argc, char *argv[])
 		case 'L': Lflag++; break;
 		case 'U': Uflag++; break;
 		case '0': format = "%p\\0"; break;
+		case 's': sflag++; break;
 		case 'l':
 			lflag++;
 			// "%M %2n %u %g %9s %TY-%Tm-%Td %TH:%TM %p%F\n"; break;
@@ -891,10 +895,13 @@ main(int argc, char *argv[])
 			exit(2);
 		}
 	
-	if (optind == argc)
+	if (optind == argc) {
+		sflag++;
 		traverse(".");
-	for (i = optind; i < argc; i++)
-		traverse(argv[i]);
+	} else {
+		for (i = optind; i < argc; i++)
+			traverse(argv[i]);
+	}
 
 	if (!Uflag)
 		twalk(root, print);
