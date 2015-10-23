@@ -1030,7 +1030,7 @@ main(int argc, char *argv[])
 		case 't': expr = chain(expr, EXPR_AND, parse_expr(optarg)); break;
 		case 'x': xflag++; break;
 		default:
-			fprintf(stderr, "Usage: %s [-oxL] PATH...\n", argv0);
+			fprintf(stderr, "Usage: %s [-0|-F|-l|-f FMT] [-D] [-H|-L] [-1dx] [-U|-o ORD] [-t TEST]* PATH...\n", argv0);
 			exit(2);
 		}
 	
