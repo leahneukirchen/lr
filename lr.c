@@ -12,7 +12,6 @@ TODO:
 - avoid stat in recurse
 - multiple -t
 - don't default to ./ prefix
-- %m %y
 */
 
 #define _GNU_SOURCE
@@ -705,6 +704,9 @@ print(const void *nodep, const VISIT which, const int depth)
 					break;
 				case 'M':
 					print_mode(fi->sb.st_mode);
+					break;
+				case 'y':
+					putchar("0pcCd?bBf?l?s???"[(fi->sb.st_mode >> 12) & 0x0f]);
 					break;
 
 				case 'g':
