@@ -23,6 +23,7 @@ TODO:
 #include <fnmatch.h>
 #include <grp.h>
 #include <pwd.h>
+#include <regex.h>
 #include <search.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -87,6 +88,8 @@ enum op {
 	EXPR_STREQI,
 	EXPR_GLOB,
 	EXPR_GLOBI,
+	EXPR_REGEX,
+	EXPR_REGEXI,
 	EXPR_PRUNE,
 	EXPR_TYPE,
 };
@@ -126,6 +129,7 @@ struct expr {
 		struct expr *expr;
 		char *string;
 		long num;
+		regex_t *regex;
 	} a, b;
 };
 
@@ -283,16 +287,27 @@ parse_strcmp()
 		op = EXPR_GLOBI;
 	else if (token("~~"))
 		op = EXPR_GLOB;
+	else if (token("=~~"))
+		op = EXPR_REGEXI;
+	else if (token("=~"))
+		op = EXPR_REGEX;
 	else
 		return 0; // TODO ERROR
-	// TODO =~ =~~ regex
 
 	char *s;
 	if (parse_string(&s)) {
 		struct expr *e = malloc(sizeof (struct expr));
 		e->op = op;
 		e->a.prop = prop;
-		e->b.string = s;
+		if (op == EXPR_REGEX) {
+			e->b.regex = malloc (sizeof (regex_t));
+			regcomp(e->b.regex, s, REG_EXTENDED | REG_NOSUB);
+		} else if (op == EXPR_REGEXI) {
+			e->b.regex = malloc (sizeof (regex_t));
+			regcomp(e->b.regex, s, REG_EXTENDED | REG_NOSUB | REG_ICASE);
+		} else {
+			e->b.string = s;
+		}
 		return e;
 	}
 
@@ -481,6 +496,8 @@ eval(struct expr *e, struct fileinfo *fi)
 	case EXPR_STREQI:
 	case EXPR_GLOB:
 	case EXPR_GLOBI:
+	case EXPR_REGEX:
+	case EXPR_REGEXI:
 	{
 		const char *s = "";
 		switch(e->a.prop) {
@@ -498,6 +515,9 @@ eval(struct expr *e, struct fileinfo *fi)
 		case EXPR_GLOBI:
 			return fnmatch(e->b.string, s,
 			    FNM_PATHNAME | FNM_CASEFOLD) == 0;
+		case EXPR_REGEX:
+		case EXPR_REGEXI:
+			return regexec(e->b.regex, s, 0, 0, 0) == 0;
 		}
 	}
 	}
