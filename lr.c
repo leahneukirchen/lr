@@ -96,6 +96,7 @@ enum op {
 	EXPR_LT,
 	EXPR_LE,
 	EXPR_EQ,
+	EXPR_NEQ,
 	EXPR_GE,
 	EXPR_GT,
 	EXPR_STREQ,
@@ -244,6 +245,8 @@ parse_op()
 		return EXPR_GT;
 	else if (token("=="))
 		return EXPR_EQ;
+	else if (token("!="))
+		return EXPR_NEQ;
 
 	return 0;
 }
@@ -534,6 +537,7 @@ eval(struct expr *e, struct fileinfo *fi)
 	case EXPR_LT:
 	case EXPR_LE:
 	case EXPR_EQ:
+	case EXPR_NEQ:
 	case EXPR_GE:
 	case EXPR_GT:
 	case EXPR_ALLSET:
@@ -558,6 +562,7 @@ eval(struct expr *e, struct fileinfo *fi)
 		case EXPR_LT: return v < e->b.num;
 		case EXPR_LE: return v <= e->b.num;
 		case EXPR_EQ: return v == e->b.num;
+		case EXPR_NEQ: return v != e->b.num;
 		case EXPR_GE: return v >= e->b.num;
 		case EXPR_GT: return v > e->b.num;
 		case EXPR_ALLSET: return (v & e->b.num) == e->b.num;
@@ -735,7 +740,6 @@ print(const void *nodep, const VISIT which, const int depth)
 
 	if (which == postorder || which == leaf) {
 		struct fileinfo *fi = *(struct fileinfo **) nodep;
-//		printf("%d %s\n", depth, fi->fpath);
 
 		char *s;
 		for (s = format; *s; s++) {
