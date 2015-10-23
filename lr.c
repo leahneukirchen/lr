@@ -107,9 +107,10 @@ enum op {
 	EXPR_REGEX,
 	EXPR_REGEXI,
 	EXPR_PRUNE,
+	EXPR_PRINT,
 	EXPR_TYPE,
 	EXPR_ALLSET,
-	EXPR_ANYSET
+	EXPR_ANYSET,
 };
 
 enum prop {
@@ -260,6 +261,9 @@ parse_inner()
 {
 	if (token("prune")) {
 		struct expr *e = mkexpr(EXPR_PRUNE);
+		return e;
+	} else if (token("print")) {
+		struct expr *e = mkexpr(EXPR_PRINT);
 		return e;
 	} else if (token("!")) {
 		struct expr *e = parse_cmp();
@@ -538,6 +542,8 @@ eval(struct expr *e, struct fileinfo *fi)
 		return !eval(e->a.expr, fi);
 	case EXPR_PRUNE:
 		prune = 1;
+		return 1;
+	case EXPR_PRINT:
 		return 1;
 	case EXPR_LT:
 	case EXPR_LE:
