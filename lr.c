@@ -215,6 +215,8 @@ parse_octal(long *r)
 			n *= 8;
 			n += *pos - '0';
 			pos++;
+			if (n > 07777)
+				parse_error("number to big");
 		}
 		ws();
 		*r = n;
@@ -383,7 +385,6 @@ parse_mode()
 
 	if (parse_octal(&n)) {
 		e->b.num = n;
-		printf("%d\n", n);
 	} else {
 		parse_error("invalid mode");
 	}
