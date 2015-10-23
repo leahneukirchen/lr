@@ -24,6 +24,7 @@ TODO:
 #include <pwd.h>
 #include <regex.h>
 #include <search.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -138,7 +139,7 @@ struct expr {
 		enum filetype filetype;
 		struct expr *expr;
 		char *string;
-		long num;
+		int64_t num;
 		regex_t *regex;
 	} a, b;
 };
@@ -181,19 +182,16 @@ token(const char *token)
 	}
 }
 
-static int
+static int64_t
 parse_num(long *r)
 {
-	// TODO -negative
-	// TODO octal?
-	// TODO postfix G M K?
 	if (isdigit(*pos)) {
-		long n = 0;
-		while (isdigit(*pos)) {
-			n *= 10;
-			n += *pos - '0';
-			pos++;
-		}
+		int64_t n;
+
+		for (n = 0; isdigit(*pos) && n <= INT64_MAX/10 - 10; pos++)
+			n = 10*n + (*pos - '0');
+		if (isdigit(*pos))
+			parse_error("number too big");
 		if (token("c"))      ;
 		else if (token("b")) n *= 512L;
 		else if (token("k")) n *= 1024L;
@@ -201,6 +199,7 @@ parse_num(long *r)
 		else if (token("G")) n *= 1024L*1024*1024;
 		else if (token("T")) n *= 1024L*1024*1024*1024;
 		ws();
+printf("%ld %ld", n, INT64_MAX);
 		*r = n;
 		return 1;
 	} else {
@@ -424,7 +423,7 @@ parse_cmp()
 	if (!op)
 		parse_error("invalid comparison");
 
-	long n;
+	int64_t n;
 	if (parse_num(&n)) {
 		struct expr *e = mkexpr(op);
 		e->a.prop = prop;
