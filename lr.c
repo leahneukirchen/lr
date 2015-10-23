@@ -610,6 +610,24 @@ intlen(int i)
 }
 
 void
+print_mode(int mode)
+{
+	putchar("0pcCd?bB-?l?s???"[(mode >> 12) & 0x0f]);
+	putchar(mode & 00400 ? 'r' : '-');
+	putchar(mode & 00200 ? 'w' : '-');
+	putchar(mode & 04000 ? (mode & 00100 ? 's' : 'S')
+	                     : (mode & 00100 ? 'x' : '-'));
+	putchar(mode & 00040 ? 'r' : '-');
+	putchar(mode & 00020 ? 'w' : '-');
+	putchar(mode & 02000 ? (mode & 00010 ? 's' : 'S')
+	                     : (mode & 00010 ? 'x' : '-'));
+	putchar(mode & 00004 ? 'r' : '-');
+	putchar(mode & 00002 ? 'w' : '-');
+	putchar(mode & 01000 ? (mode & 00001 ? 'T' : 't')
+	                     : (mode & 00001 ? 'x' : '-'));
+}
+
+void
 print(const void *nodep, const VISIT which, const int depth)
 {
 	if (which == postorder || which == leaf) {
@@ -666,7 +684,7 @@ print(const void *nodep, const VISIT which, const int depth)
 				case 'f': printf("%s", basenam(fi->fpath)); break;
 				case 'A':
 				case 'C':
-				case 'M':
+				case 'T':
 					{
 					char tfmt[3] = "%\0\0";
 					char buf[256];
@@ -681,6 +699,13 @@ print(const void *nodep, const VISIT which, const int depth)
 					printf("%s", buf);
 					break;
 					}
+
+				case 'm':
+					printf("%04o", fi->sb.st_mode & 07777);
+					break;
+				case 'M':
+					print_mode(fi->sb.st_mode);
+					break;
 
 				case 'g':
 					{
@@ -859,7 +884,7 @@ main(int argc, char *argv[])
 		case 'l':
 			lflag++;
 			// "%M %2n %u %g %9s %TY-%Tm-%Td %TH:%TM %p%F\n"; break;
-			format = "%M %n %u %g %s %MY-%Mm-%Md %MH:%MM %p%F%l\n"; break;
+			format = "%M %n %u %g %s %TY-%Tm-%Td %TH:%TM %p%F%l\n"; break;
 		case 'F': format = "%p%F\\n"; break;
 		default:
 			fprintf(stderr, "Usage: %s [-oxL] PATH...\n", argv[0]);
