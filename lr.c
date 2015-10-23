@@ -119,6 +119,8 @@ enum prop {
 	PROP_DEPTH,
 	PROP_DEV,
 	PROP_ENTRIES,
+	PROP_GID,
+	PROP_GROUP,
 	PROP_INODE,
 	PROP_LINKS,
 	PROP_MODE,
@@ -128,6 +130,8 @@ enum prop {
 	PROP_SIZE,
 	PROP_TARGET,
 	PROP_TOTAL,
+	PROP_UID,
+	PROP_USER,
 };
 
 enum filetype {
@@ -334,12 +338,16 @@ parse_strcmp()
 	enum prop prop;
 	enum op op;
 
-	if (token("name"))
+	if (token("group"))
+		prop = PROP_GROUP;
+	else if (token("name"))
 		prop = PROP_NAME;
 	else if (token("path"))
 		prop = PROP_PATH;
 	else if (token("target"))
 		prop = PROP_TARGET;
+	else if (token("user"))
+		prop = PROP_USER;
 	else
 		return parse_type();
 
@@ -421,6 +429,8 @@ parse_cmp()
 		prop = PROP_DEV;
 	else if (token("entries"))
 		prop = PROP_ENTRIES;
+	else if (token("gid"))
+		prop = PROP_GID;
 	else if (token("inode"))
 		prop = PROP_INODE;
 	else if (token("links"))
@@ -433,6 +443,8 @@ parse_cmp()
 		prop = PROP_SIZE;
 	else if (token("total"))
 		prop = PROP_TOTAL;
+	else if (token("uid"))
+		prop = PROP_UID;
 	else
 		return parse_strcmp();
 	
@@ -531,6 +543,74 @@ readlin(const char *p, const char *alt)
 }
 
 int
+idorder(const void *a, const void *b)
+{
+	struct idmap *ia = (struct idmap *) a;
+	struct idmap *ib = (struct idmap *) b;
+
+	if (ia->id == ib->id)
+		return 0;
+	else if (ia->id < ib->id)
+		return -1;
+	else
+		return 1;
+}
+
+static char *
+strid(long id)
+{
+	static char buf[32];
+	sprintf(buf, "%ld", id);
+	return buf;
+}
+
+static char *
+groupname(gid_t gid)
+{
+	struct idmap key, **result;
+	key.id = gid;
+	key.name = 0;
+
+	if (!(result = tfind(&key, &groups, idorder))) {
+		struct group *g = getgrgid(gid);
+		if (g) {
+			struct idmap *newkey = malloc (sizeof (struct idmap));
+			newkey->id = gid;
+			newkey->name = strdup(g->gr_name);
+			if ((int) strlen(g->gr_name) > gwid)
+				gwid = strlen(g->gr_name);
+			tsearch(newkey, &groups, idorder);
+			return newkey->name;
+		}
+	}
+
+	return result ? (*result)->name : strid(gid);
+}
+
+static char *
+username(uid_t uid)
+{
+	struct idmap key, **result;
+	key.id = uid;
+	key.name = 0;
+
+	if (!(result = tfind(&key, &users, idorder))) {
+		struct passwd *p = getpwuid(uid);
+		if (p) {
+			struct idmap *newkey = malloc (sizeof (struct idmap));
+			newkey->id = uid;
+			newkey->name = strdup(p->pw_name);
+			if ((int) strlen(p->pw_name) > uwid)
+				uwid = strlen(p->pw_name);
+			tsearch(newkey, &users, idorder);
+			return newkey->name;
+		}
+	}
+
+	return result ? (*result)->name : strid(uid);
+}
+
+int
 eval(struct expr *e, struct fileinfo *fi)
 {
 	switch (e->op) {
@@ -560,13 +640,15 @@ eval(struct expr *e, struct fileinfo *fi)
 		case PROP_CTIME: v = fi->sb.st_ctime; break;
 		case PROP_DEPTH: v = fi->depth; break;
 		case PROP_DEV: v = fi->sb.st_dev; break;
-		case PROP_INODE: v = fi->sb.st_ino; break;
 		case PROP_ENTRIES: v = fi->entries; break;
+		case PROP_GID: v = fi->sb.st_gid; break;
+		case PROP_INODE: v = fi->sb.st_ino; break;
 		case PROP_LINKS: v = fi->sb.st_nlink; break;
 		case PROP_MODE: v = fi->sb.st_mode & 07777; break;
 		case PROP_MTIME: v = fi->sb.st_mtime; break;
 		case PROP_SIZE: v = fi->sb.st_size; break;
 		case PROP_TOTAL: v = fi->total; break;
+		case PROP_UID: v = fi->sb.st_uid; break;
 		default:
 			parse_error("unknown property");
 		}
@@ -603,9 +685,11 @@ eval(struct expr *e, struct fileinfo *fi)
 	{
 		const char *s = "";
 		switch(e->a.prop) {
+		case PROP_GROUP: s = groupname(fi->sb.st_gid); break;
 		case PROP_NAME: s = basenam(fi->fpath); break;
 		case PROP_PATH: s = fi->fpath; break;
 		case PROP_TARGET: s = readlin(fi->fpath, ""); break;
+		case PROP_USER: s = username(fi->sb.st_uid); break;
 		}
 		switch (e->op) {
 		case EXPR_STREQ:
@@ -659,66 +743,6 @@ order(const void *a, const void *b)
 	}
 
 	return strcmp(fa->fpath, fb->fpath);
-}
-
-int
-idorder(const void *a, const void *b)
-{
-	struct idmap *ia = (struct idmap *) a;
-	struct idmap *ib = (struct idmap *) b;
-
-	if (ia->id == ib->id)
-		return 0;
-	else if (ia->id < ib->id)
-		return -1;
-	else
-		return 1;
-}
-
-static char *
-groupname(gid_t gid)
-{
-	struct idmap key, **result;
-	key.id = gid;
-	key.name = 0;
-
-	if (!(result = tfind(&key, &groups, idorder))) {
-		struct group *g = getgrgid(gid);
-		if (g) {
-			struct idmap *newkey = malloc (sizeof (struct idmap));
-			newkey->id = gid;
-			newkey->name = strdup(g->gr_name);
-			if ((int) strlen(g->gr_name) > gwid)
-				gwid = strlen(g->gr_name);
-			tsearch(newkey, &groups, idorder);
-			return newkey->name;
-		}
-	}
-
-	return (*result)->name;
-}
-
-static char *
-username(uid_t uid)
-{
-	struct idmap key, **result;
-	key.id = uid;
-	key.name = 0;
-
-	if (!(result = tfind(&key, &users, idorder))) {
-		struct passwd *p = getpwuid(uid);
-		if (p) {
-			struct idmap *newkey = malloc (sizeof (struct idmap));
-			newkey->id = uid;
-			newkey->name = strdup(p->pw_name);
-			if ((int) strlen(p->pw_name) > uwid)
-				uwid = strlen(p->pw_name);
-			tsearch(newkey, &users, idorder);
-			return newkey->name;
-		}
-	}
-
-	return (*result)->name;
 }
 
 static int

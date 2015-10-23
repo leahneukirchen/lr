@@ -80,8 +80,8 @@ case sizes are equal).
 	             | prune             -- do not traverse into subdirectories
 	             | print             -- always true value
 	
-	<numprop>  ::= atime | ctime | depth | dev | entries | inode
-	             | links | mode | mtime | size | total
+	<numprop>  ::= atime | ctime | depth | dev | entries | gid
+	             | inode | links | mode | mtime | size | total | uid
 	
 	<numop>    ::= <= | < | >= | > | == | !=
 	
@@ -92,7 +92,7 @@ case sizes are equal).
 	                      | G        -- *1024*1024*1024
 	                      | T )?     -- *1024*1024*1024*1024
 	
-	<strprop>  ::= name | path | target
+	<strprop>  ::= group | name | path | target | user
 	
 	<strop>    ::= ==                -- string equality
 	             | ===               -- case insensitive string equality
