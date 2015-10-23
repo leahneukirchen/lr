@@ -194,6 +194,12 @@ parse_num(long *r)
 			n += *pos - '0';
 			pos++;
 		}
+		if (token("c"))      ;
+		else if (token("b")) n *= 512L;
+		else if (token("k")) n *= 1024L;
+		else if (token("M")) n *= 1024L*1024;
+		else if (token("G")) n *= 1024L*1024*1024;
+		else if (token("T")) n *= 1024L*1024*1024*1024;
 		ws();
 		*r = n;
 		return 1;
