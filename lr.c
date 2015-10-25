@@ -196,7 +196,7 @@ token(const char *token)
 }
 
 static int64_t
-parse_num(long *r)
+parse_num(int64_t *r)
 {
 	if (isdigit(*pos)) {
 		int64_t n;
@@ -206,11 +206,11 @@ parse_num(long *r)
 		if (isdigit(*pos))
 			parse_error("number too big");
 		if (token("c"))      ;
-		else if (token("b")) n *= 512L;
-		else if (token("k")) n *= 1024L;
-		else if (token("M")) n *= 1024L * 1024;
-		else if (token("G")) n *= 1024L * 1024 * 1024;
-		else if (token("T")) n *= 1024L * 1024 * 1024 * 1024;
+		else if (token("b")) n *= 512LL;
+		else if (token("k")) n *= 1024LL;
+		else if (token("M")) n *= 1024LL * 1024;
+		else if (token("G")) n *= 1024LL * 1024 * 1024;
+		else if (token("T")) n *= 1024LL * 1024 * 1024 * 1024;
 		ws();
 		*r = n;
 		return 1;
@@ -818,12 +818,12 @@ print(const void *nodep, const VISIT which, const int depth)
 			} else if (*s == '%') {
 				switch (*++s) {
 				case '%': putchar('%'); break;
-				case 's': printf("%*ld", intlen(maxsize), fi->sb.st_size); break;
-				case 'b': printf("%ld", fi->sb.st_blocks); break;
-				case 'k': printf("%ld", fi->sb.st_blocks / 2); break;
+				case 's': printf("%*jd", intlen(maxsize), (intmax_t)fi->sb.st_size); break;
+				case 'b': printf("%jd", (intmax_t)fi->sb.st_blocks); break;
+				case 'k': printf("%jd", (intmax_t)fi->sb.st_blocks / 2); break;
 				case 'd': printf("%d", fi->depth); break;
-				case 'D': printf("%ld", fi->sb.st_dev); break;
-				case 'i': printf("%ld", fi->sb.st_ino); break;
+				case 'D': printf("%jd", (intmax_t)fi->sb.st_dev); break;
+				case 'i': printf("%jd", (intmax_t)fi->sb.st_ino); break;
 				case 'I': {
 					int i;
 					for (i=0; i<fi->depth; i++)
@@ -838,7 +838,7 @@ print(const void *nodep, const VISIT which, const int depth)
 					if (S_ISLNK(fi->sb.st_mode))
 						shquote(readlin(fi->fpath, ""));
 					break;
-				case 'n': printf("%*ld", intlen(maxlinks), fi->sb.st_nlink); break;
+				case 'n': printf("%*jd", intlen(maxlinks), (intmax_t)fi->sb.st_nlink); break;
 				case 'F':
 					if (S_ISDIR(fi->sb.st_mode)) {
 						putchar('/');
@@ -907,7 +907,7 @@ print(const void *nodep, const VISIT which, const int depth)
 					printf("%ld", (long)fi->entries);
 					break;
 				case 't':
-					printf("%ld", fi->total);
+					printf("%jd", (intmax_t)fi->total);
 					break;
 
 				default:
