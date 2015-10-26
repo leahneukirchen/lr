@@ -151,7 +151,8 @@ Default: `n`.
 
 The following features won't be implemented:
 
-* `-exec`: use `-0` and `xargs` (or a future replacement).
+* `-exec`: use `-0` and `xargs`
+  (or even better [xa](https://github.com/chneukirchen/xa)).
 * columns: use `column`, `git-column`, Plan 9 `mc`.
 
 ## Installation
