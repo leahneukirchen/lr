@@ -971,7 +971,7 @@ print(const void *nodep, const VISIT which, const int depth)
 						shquote(readlin(fi->fpath, ""));
 					break;
 				case 'n': printf("%*jd", intlen(maxlinks), (intmax_t)fi->sb.st_nlink); break;
-				case 'L':
+				case 'F':
 					if (S_ISDIR(fi->sb.st_mode)) {
 						putchar('/');
 					} else if (S_ISSOCK(fi->sb.st_mode)) {
