@@ -643,7 +643,7 @@ username(uid_t uid)
 	return result ? (*result)->name : strid(uid);
 }
 
-#ifdef __linux__
+#if defined(__linux__)
 #include <mntent.h>
 void
 scan_filesystems()
@@ -670,6 +670,30 @@ scan_filesystems()
 	};
 
 	endmntent(mtab);
+
+	scanned_filesystems = 1;
+}
+#elif defined(__FreeBSD__)
+#include <sys/param.h>
+#include <sys/ucred.h>
+#include <sys/mount.h>
+void
+scan_filesystems()
+{
+	struct statfs *mnt;
+	struct stat st;
+	int i = getmntinfo(&mnt, MNT_NOWAIT);
+
+	while (i-- > 0) {
+		if (stat(mnt->f_mntonname, &st) < 0)
+			continue;
+
+		struct idmap *newkey = malloc(sizeof (struct idmap));
+		newkey->id = st.st_dev;
+		newkey->name = strdup(mnt->f_fstypename);
+		tsearch(newkey, &filesystems, idorder);
+		mnt++;
+	};
 
 	scanned_filesystems = 1;
 }
