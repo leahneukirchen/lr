@@ -678,7 +678,8 @@ void
 scan_filesystems()
 {
 	fprintf(stderr,
-	    "%s: fstype not implemented on this platform, send a patch.", argv0);
+	    "%s: fstype not implemented on this platform, send a patch.\n",
+	    argv0);
 	exit(1);
 }
 #endif
