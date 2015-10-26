@@ -734,6 +734,10 @@ order(const void *a, const void *b)
 		case 'I': CMP(fb->sb.st_ino, fa->sb.st_ino);
 		case 'd': CMP(fa->depth, fb->depth);
 		case 'D': CMP(fb->depth, fa->depth);
+		case 't': CMP("ZZZZAZZZZZZZZZZZ"[(fa->sb.st_mode >> 12) & 0x0f],
+		              "ZZZZAZZZZZZZZZZZ"[(fb->sb.st_mode >> 12) & 0x0f]);
+		case 'T': CMP("ZZZZAZZZZZZZZZZZ"[(fb->sb.st_mode >> 12) & 0x0f],
+		              "ZZZZAZZZZZZZZZZZ"[(fa->sb.st_mode >> 12) & 0x0f]);
 		case 'n': STRCMP(fa->fpath, fb->fpath);
 		case 'N': STRCMP(fb->fpath, fa->fpath);
 		default: STRCMP(fa->fpath, fb->fpath);

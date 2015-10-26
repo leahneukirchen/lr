@@ -94,6 +94,7 @@ Default: `n`.
 * `m`: mtime.
 * `n`: file name.
 * `s`: file size.
+* `t`: file type.  This sorts all directories before other files.
 
 ## Filter expressions
 
