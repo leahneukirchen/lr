@@ -593,7 +593,7 @@ static char *
 strid(long id)
 {
 	static char buf[32];
-	sprintf(buf, "%ld", id);
+	snprintf(buf, sizeof buf, "%ld", id);
 	return buf;
 }
 
