@@ -673,7 +673,7 @@ scan_filesystems()
 
 	scanned_filesystems = 1;
 }
-#elif defined(__FreeBSD__) || (defined(__APPLE__) && defined(__MACH__))
+#elif defined(__FreeBSD__) || defined(__OpenBSD__) || (defined(__APPLE__) && defined(__MACH__))
 #include <sys/param.h>
 #include <sys/ucred.h>
 #include <sys/mount.h>
