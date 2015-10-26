@@ -1078,6 +1078,11 @@ callback(const char *fpath, const struct stat *sb, int depth, int entries, off_t
 		maxlinks = fi->sb.st_nlink;
 	if (fi->sb.st_size > maxsize)
 		maxsize = fi->sb.st_size;
+        if (lflag) {
+		/* prefetch user/group name for correct column widths. */
+		username(fi->sb.st_uid);
+		groupname(fi->sb.st_gid);
+	}
 
 	return 0;
 }
