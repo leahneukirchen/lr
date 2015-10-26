@@ -1092,7 +1092,7 @@ main(int argc, char *argv[])
 		switch(c) {
 		case '0': format = zero_format; Qflag++; break;
 		case '1': expr = chain(expr, EXPR_AND, parse_expr("depth == 0 || prune")); break;
-		case 'A': expr = chain(expr, EXPR_AND, parse_expr("!path ~~ \"*/.*\" && !path == \".\"")); break;
+		case 'A': expr = chain(expr, EXPR_AND, parse_expr("!(path ~~ \"*/.*\" && prune) && !path == \".\"")); break;
 		case 'D': Dflag++; break;
 		case 'F': format = type_format; break;
 		case 'H': Hflag++; break;
