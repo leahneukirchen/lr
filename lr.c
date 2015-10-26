@@ -183,7 +183,7 @@ mkexpr(enum op op)
 static void
 ws()
 {
-	while (isspace(*pos))
+	while (isspace((unsigned char) *pos))
 		pos++;
 }
 
@@ -202,12 +202,12 @@ token(const char *token)
 static int64_t
 parse_num(int64_t *r)
 {
-	if (isdigit(*pos)) {
+	if (isdigit((unsigned char) *pos)) {
 		int64_t n;
 
-		for (n = 0; isdigit(*pos) && n <= INT64_MAX / 10 - 10; pos++)
+		for (n = 0; isdigit((unsigned char) *pos) && n <= INT64_MAX / 10 - 10; pos++)
 			n = 10 * n + (*pos - '0');
-		if (isdigit(*pos))
+		if (isdigit((unsigned char) *pos))
 			parse_error("number too big");
 		if (token("c"))      ;
 		else if (token("b")) n *= 512LL;
