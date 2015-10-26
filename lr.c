@@ -900,7 +900,7 @@ print_human(intmax_t i)
 }
 
 static void
-shquote(const char *s)
+print_shquoted(const char *s)
 {
 	if (Qflag || !strpbrk(s, "\001\002\003\004\005\006\007\010"
 	                         "\011\012\013\014\015\016\017\020"
@@ -962,13 +962,13 @@ print(const void *nodep, const VISIT which, const int depth)
 						printf(" ");
 					break;
 				}
-				case 'p': shquote(
+				case 'p': print_shquoted(
 					    sflag && strncmp(fi->fpath, "./", 2) == 0 ?
 					    fi->fpath+2 : fi->fpath);
 					break;
 				case 'l':
 					if (S_ISLNK(fi->sb.st_mode))
-						shquote(readlin(fi->fpath, ""));
+						print_shquoted(readlin(fi->fpath, ""));
 					break;
 				case 'n': printf("%*jd", intlen(maxlinks), (intmax_t)fi->sb.st_nlink); break;
 				case 'F':
@@ -987,7 +987,7 @@ print(const void *nodep, const VISIT which, const int depth)
 						putchar('*');
 					}
 					break;
-				case 'f': shquote(basenam(fi->fpath)); break;
+				case 'f': print_shquoted(basenam(fi->fpath)); break;
 				case 'A':
 				case 'C':
 				case 'T': {
