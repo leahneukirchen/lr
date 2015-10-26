@@ -533,6 +533,16 @@ basenam(const char *s)
 }
 
 static const char *
+extnam(const char *s)
+{
+	char *r = strrchr(s, '/');
+	char *e = strrchr(s, '.');
+	if (!r || r < e)
+		return e ? e + 1 : "";
+	return "";
+}
+
+static const char *
 readlin(const char *p, const char *alt)
 {
 	static char b[PATH_MAX];
@@ -740,6 +750,8 @@ order(const void *a, const void *b)
 		              "ZZZZAZZZZZZZZZZZ"[(fa->sb.st_mode >> 12) & 0x0f]);
 		case 'n': STRCMP(fa->fpath, fb->fpath);
 		case 'N': STRCMP(fb->fpath, fa->fpath);
+		case 'e': STRCMP(extnam(fa->fpath), extnam(fb->fpath));
+		case 'E': STRCMP(extnam(fb->fpath), extnam(fa->fpath));
 		default: STRCMP(fa->fpath, fb->fpath);
 		}
 	}

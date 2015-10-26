@@ -90,6 +90,7 @@ Default: `n`.
 * `a`: atime.
 * `c`: ctime.
 * `d`: path depth.
+* `e`: file extension.
 * `i`: inode number.
 * `m`: mtime.
 * `n`: file name.
