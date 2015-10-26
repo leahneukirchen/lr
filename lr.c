@@ -701,18 +701,12 @@ eval(struct expr *e, struct fileinfo *fi)
 		case PROP_USER: s = username(fi->sb.st_uid); break;
 		}
 		switch (e->op) {
-		case EXPR_STREQ:
-			return strcmp(e->b.string, s) == 0;
-		case EXPR_STREQI:
-			return strcasecmp(e->b.string, s) == 0;
-		case EXPR_GLOB:
-			return fnmatch(e->b.string, s, FNM_PATHNAME) == 0;
-		case EXPR_GLOBI:
-			return fnmatch(e->b.string, s,
-			    FNM_PATHNAME | FNM_CASEFOLD) == 0;
+		case EXPR_STREQ: return strcmp(e->b.string, s) == 0;
+		case EXPR_STREQI: return strcasecmp(e->b.string, s) == 0;
+		case EXPR_GLOB: return fnmatch(e->b.string, s, 0) == 0;
+		case EXPR_GLOBI: return fnmatch(e->b.string, s, FNM_CASEFOLD) == 0;
 		case EXPR_REGEX:
-		case EXPR_REGEXI:
-			return regexec(e->b.regex, s, 0, 0, 0) == 0;
+		case EXPR_REGEXI: return regexec(e->b.regex, s, 0, 0, 0) == 0;
 		}
 	}
 	}

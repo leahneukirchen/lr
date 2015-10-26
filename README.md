@@ -32,7 +32,7 @@ Over ls:
 
 ## Usage:
 
-	lr [-0|-F|-l|-f FMT] [-D] [-H|-L] [-1Qdhsx] [-U|-o ORD] [-t TEST]* PATH...
+	lr [-0|-F|-l|-f FMT] [-D] [-H|-L] [-1AQdhsx] [-U|-o ORD] [-t TEST]* PATH...
 
 * `-0`: output filenames seperated by NUL bytes (implies `-Q`).
 * `-F`: output filenames and an indicator of their file type (`*/=>@|`).
@@ -43,6 +43,7 @@ Over ls:
 * `-H`: only follow symlinks on command line.
 * `-L`: follow all symlinks.
 * `-1`: don't go below one level of directories.
+* `-A`: don't list files starting with a dot.
 * `-Q`: don't shell quote file names.
 * `-d`: don't enter directories.
 * `-h`: print human readable size for `-l` (also `%s`).
