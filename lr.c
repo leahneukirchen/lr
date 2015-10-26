@@ -1028,7 +1028,7 @@ print(const void *nodep, const VISIT which, const int depth)
 					printf("%s", buf);
 					break;
 				}
-				case 'm': printf("%04o", fi->sb.st_mode & 07777); break;
+				case 'm': printf("%04o", (unsigned int)fi->sb.st_mode & 07777); break;
 				case 'M': print_mode(fi->sb.st_mode); break;
 				case 'y':
 					putchar("0pcCd?bBf?l?s???"[(fi->sb.st_mode >> 12) & 0x0f]);
