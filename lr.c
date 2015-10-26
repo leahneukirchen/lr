@@ -53,11 +53,12 @@
 static int Dflag;
 static int Hflag;
 static int Lflag;
-static int xflag;
+static int Qflag;
 static int Uflag;
+static int hflag;
 static int lflag;
 static int sflag;
-static int Qflag;
+static int xflag;
 
 static char *argv0;
 static char *format;
@@ -787,6 +788,23 @@ print_mode(int mode)
 }
 
 static void
+print_human(intmax_t i)
+{
+	double d = i;
+	const char *u = "\0\0K\0M\0G\0T\0P\0E\0Z\0Y\0";
+	while (d >= 1024) {
+		u += 2;
+		d /= 1024.0;
+	}
+	if (!*u)
+		printf("%5.0f", d);
+	else if (d < 10.0)
+		printf("%4.1f%s", d, u);
+	else
+		printf("%4.0f%s", d, u);
+}
+
+static void
 shquote(const char *s)
 {
 	if (Qflag || !strpbrk(s, "\001\002\003\004\005\006\007\010"
@@ -834,7 +852,10 @@ print(const void *nodep, const VISIT which, const int depth)
 			} else if (*s == '%') {
 				switch (*++s) {
 				case '%': putchar('%'); break;
-				case 's': printf("%*jd", intlen(maxsize), (intmax_t)fi->sb.st_size); break;
+				case 's': if (!hflag) {
+						printf("%*jd", intlen(maxsize), (intmax_t)fi->sb.st_size); break;
+					} else /* FALLTHRU */
+				case 'S': print_human((intmax_t)fi->sb.st_size); break;
 				case 'b': printf("%jd", (intmax_t)fi->sb.st_blocks); break;
 				case 'k': printf("%jd", (intmax_t)fi->sb.st_blocks / 2); break;
 				case 'd': printf("%d", fi->depth); break;
@@ -1073,7 +1094,7 @@ main(int argc, char *argv[])
 	ordering = default_ordering;
 	argv0 = argv[0];
 
-	while ((c = getopt(argc, argv, "01DFHLQUdf:lo:st:x")) != -1)
+	while ((c = getopt(argc, argv, "01DFHLQUdf:lho:st:x")) != -1)
 		switch(c) {
 		case '0': format = zero_format; Qflag++; break;
 		case '1': expr = chain(expr, EXPR_AND, parse_expr("depth == 0 || prune")); break;
@@ -1085,13 +1106,14 @@ main(int argc, char *argv[])
 		case 'U': Uflag++; break;
 		case 'd': expr = chain(expr, EXPR_AND, parse_expr("type == d && prune || print")); break;
 		case 'f': format = optarg; break;
+		case 'h': hflag++; break;
 		case 'l': lflag++; format = long_format; break;
 		case 'o': ordering = optarg; break;
 		case 's': sflag++; break;
 		case 't': expr = chain(expr, EXPR_AND, parse_expr(optarg)); break;
 		case 'x': xflag++; break;
 		default:
-			fprintf(stderr, "Usage: %s [-0|-F|-l|-f FMT] [-D] [-H|-L] [-1Qdsx] [-U|-o ORD] [-t TEST]* PATH...\n", argv0);
+			fprintf(stderr, "Usage: %s [-0|-F|-l|-f FMT] [-D] [-H|-L] [-1Qdhsx] [-U|-o ORD] [-t TEST]* PATH...\n", argv0);
 			exit(2);
 		}
 

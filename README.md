@@ -32,7 +32,7 @@ Over ls:
 
 ## Usage:
 
-	lr [-0|-F|-l|-f FMT] [-D] [-H|-L] [-1Qdsx] [-U|-o ORD] [-t TEST]* PATH...
+	lr [-0|-F|-l|-f FMT] [-D] [-H|-L] [-1Qdhsx] [-U|-o ORD] [-t TEST]* PATH...
 
 * `-0`: output filenames seperated by NUL bytes (implies `-Q`).
 * `-F`: output filenames and an indicator of their file type (`*/=>@|`).
@@ -45,6 +45,7 @@ Over ls:
 * `-1`: don't go below one level of directories.
 * `-Q`: don't shell quote file names.
 * `-d`: don't enter directories.
+* `-h`: print human readable size for `-l` (also `%s`).
 * `-s`: don't print leading `./`.
 * `-x`: don't enter other filesystems.
 * `-U`: don't sort results.
@@ -56,6 +57,7 @@ Over ls:
 * `\a`, `\b`, `\f`, `\n`, `\r`, `\v`, `\0` as in C.
 * `%%`: plain `%`.
 * `%s`: file size in bytes.
+* `%S`: file size, with human readable unit.
 * `%b`: file size in 512-byte blocks.
 * `%k`: file size in 1024-byte blocks.
 * `%d`: path depth.
