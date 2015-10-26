@@ -75,6 +75,8 @@ static char zero_format[] = "%p\\0";
 
 static void *users;
 static void *groups;
+static void *filesystems;
+static int scanned_filesystems;
 
 struct idmap {
 	long id;
@@ -121,6 +123,7 @@ enum prop {
 	PROP_DEPTH,
 	PROP_DEV,
 	PROP_ENTRIES,
+	PROP_FSTYPE,
 	PROP_GID,
 	PROP_GROUP,
 	PROP_INODE,
@@ -356,7 +359,9 @@ parse_strcmp()
 	enum prop prop;
 	enum op op;
 
-	if (token("group"))
+	if (token("fstype"))
+		prop = PROP_FSTYPE;
+	else if (token("group"))
 		prop = PROP_GROUP;
 	else if (token("name"))
 		prop = PROP_NAME;
@@ -638,6 +643,60 @@ username(uid_t uid)
 	return result ? (*result)->name : strid(uid);
 }
 
+#ifdef __linux__
+#include <mntent.h>
+void
+scan_filesystems()
+{
+	FILE *mtab;
+	struct mntent *mnt;
+	struct stat st;
+
+	/* Approach: iterate over mtab and memorize st_dev for each mountpoint.
+	 * this will fail if we are not allowed to read the mountpoint, but then
+	 * we should not have to look up this st_dev value... */
+	mtab = setmntent("/etc/mtab", "r");
+	if (!mtab)
+		return;
+
+	while ((mnt = getmntent(mtab))) {
+		if (stat(mnt->mnt_dir, &st) < 0)
+			continue;
+
+		struct idmap *newkey = malloc(sizeof (struct idmap));
+		newkey->id = st.st_dev;
+		newkey->name = strdup(mnt->mnt_type);
+		tsearch(newkey, &filesystems, idorder);
+	};
+
+	endmntent(mtab);
+
+	scanned_filesystems = 1;
+}
+#else
+void
+scan_filesystems()
+{
+	fprintf(stderr,
+	    "%s: fstype not implemented on this platform, send a patch.", argv0);
+	exit(1);
+}
+#endif
+
+static char *
+fstype(dev_t devid)
+{
+	struct idmap key, **result;
+	key.id = devid;
+	key.name = 0;
+
+	if (!scanned_filesystems)
+		scan_filesystems();
+	result = tfind(&key, &filesystems, idorder);
+
+	return result ? (*result)->name : strid(devid);
+}
+
 int
 eval(struct expr *e, struct fileinfo *fi)
 {
@@ -710,6 +769,7 @@ eval(struct expr *e, struct fileinfo *fi)
 	case EXPR_REGEXI: {
 		const char *s = "";
 		switch(e->a.prop) {
+		case PROP_FSTYPE: s = fstype(fi->sb.st_dev); break;
 		case PROP_GROUP: s = groupname(fi->sb.st_gid); break;
 		case PROP_NAME: s = basenam(fi->fpath); break;
 		case PROP_PATH: s = fi->fpath; break;
@@ -886,7 +946,7 @@ print(const void *nodep, const VISIT which, const int depth)
 						shquote(readlin(fi->fpath, ""));
 					break;
 				case 'n': printf("%*jd", intlen(maxlinks), (intmax_t)fi->sb.st_nlink); break;
-				case 'F':
+				case 'L':
 					if (S_ISDIR(fi->sb.st_mode)) {
 						putchar('/');
 					} else if (S_ISSOCK(fi->sb.st_mode)) {
@@ -956,7 +1016,9 @@ print(const void *nodep, const VISIT which, const int depth)
 				case 't':
 					printf("%jd", (intmax_t)fi->total);
 					break;
-
+				case 'Y':
+					printf("%s", fstype(fi->sb.st_dev));
+					break;
 				default:
 					putchar('%');
 					putchar(*s);

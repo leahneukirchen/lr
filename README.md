@@ -80,6 +80,7 @@ Over ls:
 * `%U`: numeric uid.
 * `%e`: number of entries in directories (only with `-D`).
 * `%t`: total size used by accepted files in directories (only with `-D`).
+* `%Y`: type of the filesystem the file resides on.
 
 ## Sort order
 
@@ -127,7 +128,7 @@ Default: `n`.
 	                      | G        -- *1024*1024*1024
 	                      | T )?     -- *1024*1024*1024*1024
 	
-	<strprop>  ::= group | name | path | target | user
+	<strprop>  ::= fstype | group | name | path | target | user
 	
 	<strop>    ::= ==                -- string equality
 	             | ===               -- case insensitive string equality
