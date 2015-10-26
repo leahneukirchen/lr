@@ -23,7 +23,7 @@ Over ls:
 * `ls`: `lr -1 | column`
 * `find .`: `lr` (or `lr -U` for speed.)
 * `ls -l`: `lr -1l`
-* `ls -ltrc`: `lr -l1oc`
+* `ls -ltrc`: `lr -l1Aoc`
 * `find . -name '*.c'`: `lr -t 'name ~~ "*.c"'`
 * `find . -regex 'c$': `lr -t 'path =~ "c$"'`
 * `find -L /proc/*/fd -maxdepth 1 -type f -links 0 -printf '%b %p\n'`:
