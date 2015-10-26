@@ -697,6 +697,29 @@ scan_filesystems()
 
 	scanned_filesystems = 1;
 }
+#elif defined(__NetBSD__)
+#include <sys/types.h>
+#include <sys/statvfs.h>
+void
+scan_filesystems()
+{
+	struct statvfs *mnt;
+	struct stat st;
+	int i = getmntinfo(&mnt, MNT_NOWAIT);
+
+	while (i-- > 0) {
+		if (stat(mnt->f_mntonname, &st) < 0)
+			continue;
+
+		struct idmap *newkey = malloc(sizeof (struct idmap));
+		newkey->id = st.st_dev;
+		newkey->name = strdup(mnt->f_fstypename);
+		tsearch(newkey, &filesystems, idorder);
+		mnt++;
+	};
+
+	scanned_filesystems = 1;
+}
 #else
 void
 scan_filesystems()
