@@ -40,6 +40,7 @@
 #include <errno.h>
 #include <fnmatch.h>
 #include <grp.h>
+#include <limits.h>
 #include <pwd.h>
 #include <regex.h>
 #include <search.h>
@@ -49,6 +50,11 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+
+/* For Solaris. */
+#if !defined(FNM_CASEFOLD) && defined(FNM_IGNORECASE)
+#define FNM_CASEFOLD FNM_IGNORECASE
+#endif
 
 static int Dflag;
 static int Hflag;
@@ -670,6 +676,33 @@ scan_filesystems()
 	};
 
 	endmntent(mtab);
+
+	scanned_filesystems = 1;
+}
+#elif defined(__SVR4)
+#include <sys/mnttab.h>
+void
+scan_filesystems()
+{
+	FILE *mtab;
+	struct mnttab mnt;
+	struct stat st;
+
+	mtab = fopen("/etc/mnttab", "r");
+	if (!mtab)
+		return;
+
+	while (getmntent(mtab, &mnt) == 0) {
+		if (stat(mnt.mnt_mountp, &st) < 0)
+			continue;
+
+		struct idmap *newkey = malloc(sizeof (struct idmap));
+		newkey->id = st.st_dev;
+		newkey->name = strdup(mnt.mnt_fstype);
+		tsearch(newkey, &filesystems, idorder);
+	};
+
+	fclose(mtab);
 
 	scanned_filesystems = 1;
 }
