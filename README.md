@@ -136,7 +136,7 @@ Default: `n`.
 	             | =~                -- POSIX Extended Regular Expressions
 	             | =~~               -- case insensitive POSIX Extended Regular Expressions
 	
-	<str>      ::= " [^"]+ "
+	<str>      ::= " ([^"] | "")+ "  -- use "" for a single " inside "
 
 	<typetest> ::= type == ( b | c | d | p | f | l )
 

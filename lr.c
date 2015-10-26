@@ -322,12 +322,28 @@ parse_type()
 static int
 parse_string(char **s)
 {
+	char *buf = 0;
+	size_t bufsiz = 0;
+	size_t len = 0;
+
 	if (*pos == '"') {
 		pos++;
-		char *e = strchr(pos, '"');
-		*s = strndup(pos, e - pos);
-		pos += e - pos + 1;
+		while (*pos != '"' || (*pos == '"' && *(pos+1) == '"')) {
+			if (len >= bufsiz) {
+				bufsiz = 2*bufsiz + 16;
+				buf = realloc(buf, bufsiz);
+				if (!buf)
+					parse_error("string too long");
+			}
+			if (*pos == '"')
+				pos++;
+			buf[len++] = *pos++;
+		}
+		if (buf)
+			buf[len] = 0;
+		pos++;
 		ws();
+		*s = buf ? buf : (char *) "";
 		return 1;
 	}
 
