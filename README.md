@@ -22,7 +22,7 @@ Over ls:
 
 * `ls`: `lr -1 | column`
 * `find .`: `lr` (or `lr -U` for speed.)
-* `ls -l`: `lr -1r`
+* `ls -l`: `lr -1l`
 * `ls -ltrc`: `lr -l1oc`
 * `find . -name '*.c'`: `lr -t 'name ~~ "*.c"'`
 * `find . -regex 'c$': `lr -t 'path =~ "c$"'`
