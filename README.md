@@ -1,7 +1,12 @@
 ## lr: list files, recursively
 
 `lr` is a new tool for generating file listings, which includes the
-best features of `ls(1)`, `find(1)` and `du(1)`.
+best features of `ls(1)`, `find(1)`, `stat(1)` and `du(1)`.
+
+`lr` has been tested on Linux 4.1, FreeBSD 10.2, OpenBSD 5.7,
+NetBSD 5.2.3, Mac OS X 10.10 and OmniOS 5.11.
+It will likely work on other Unix-like systems with C99, but you'll
+need to port scan_filesystems for fstype to work.
 
 ## Benefits
 
