@@ -759,13 +759,10 @@ scan_filesystems()
 	scanned_filesystems = 1;
 }
 #else
+#warning fstype lookup not implemented on this platform, keeping st_dev as number
 void
 scan_filesystems()
 {
-	fprintf(stderr,
-	    "%s: fstype not implemented on this platform, send a patch.\n",
-	    argv0);
-	exit(1);
 }
 #endif
 
