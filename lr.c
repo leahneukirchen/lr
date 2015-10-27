@@ -654,7 +654,7 @@ username(uid_t uid)
 	return result ? (*result)->name : strid(uid);
 }
 
-#if defined(__linux__)
+#if defined(__linux__) || defined(__CYGWIN__)
 #include <mntent.h>
 void
 scan_filesystems()
