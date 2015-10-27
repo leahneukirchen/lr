@@ -138,6 +138,7 @@ enum prop {
 	PROP_MTIME,
 	PROP_NAME,
 	PROP_PATH,
+	PROP_RDEV,
 	PROP_SIZE,
 	PROP_TARGET,
 	PROP_TOTAL,
@@ -468,6 +469,8 @@ parse_cmp()
 		return parse_mode();
 	else if (token("mtime"))
 		prop = PROP_MTIME;
+	else if (token("rdev"))
+		prop = PROP_RDEV;
 	else if (token("size"))
 		prop = PROP_SIZE;
 	else if (token("total"))
@@ -813,6 +816,7 @@ eval(struct expr *e, struct fileinfo *fi)
 		case PROP_LINKS: v = fi->sb.st_nlink; break;
 		case PROP_MODE: v = fi->sb.st_mode & 07777; break;
 		case PROP_MTIME: v = fi->sb.st_mtime; break;
+		case PROP_RDEV: v = fi->sb.st_rdev; break;
 		case PROP_SIZE: v = fi->sb.st_size; break;
 		case PROP_TOTAL: v = fi->total; break;
 		case PROP_UID: v = fi->sb.st_uid; break;
@@ -1011,6 +1015,7 @@ print(const void *nodep, const VISIT which, const int depth)
 				case 'k': printf("%jd", (intmax_t)fi->sb.st_blocks / 2); break;
 				case 'd': printf("%d", fi->depth); break;
 				case 'D': printf("%jd", (intmax_t)fi->sb.st_dev); break;
+				case 'R': printf("%jd", (intmax_t)fi->sb.st_rdev); break;
 				case 'i': printf("%jd", (intmax_t)fi->sb.st_ino); break;
 				case 'I': {
 					int i;

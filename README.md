@@ -63,6 +63,7 @@ Over ls:
 * `%k`: file size in 1024-byte blocks.
 * `%d`: path depth.
 * `%D`: device number (`stat.st_dev`).
+* `%R`: device ID for special files (`stat.st_rdev`).
 * `%i`: inode number.
 * `%I`: one space character for every depth level.
 * `%p`: full path (without `./` if `-s`).
@@ -116,8 +117,8 @@ Default: `n`.
 	             | prune             -- do not traverse into subdirectories
 	             | print             -- always true value
 	
-	<numprop>  ::= atime | ctime | depth | dev | entries | gid
-	             | inode | links | mode | mtime | size | total | uid
+	<numprop>  ::= atime | ctime | depth | dev | entries | gid | inode
+	             | links | mode | mtime | rdev | size | total | uid
 	
 	<numop>    ::= <= | < | >= | > | == | !=
 	
