@@ -41,6 +41,7 @@
 #include <fnmatch.h>
 #include <grp.h>
 #include <limits.h>
+#include <paths.h>
 #include <pwd.h>
 #include <regex.h>
 #include <search.h>
@@ -665,7 +666,7 @@ scan_filesystems()
 	/* Approach: iterate over mtab and memorize st_dev for each mountpoint.
 	 * this will fail if we are not allowed to read the mountpoint, but then
 	 * we should not have to look up this st_dev value... */
-	mtab = setmntent("/etc/mtab", "r");
+	mtab = setmntent(_PATH_MOUNTED, "r");
 	if (!mtab)
 		return;
 
@@ -692,7 +693,7 @@ scan_filesystems()
 	struct mnttab mnt;
 	struct stat st;
 
-	mtab = fopen("/etc/mnttab", "r");
+	mtab = fopen(MNTTAB, "r");
 	if (!mtab)
 		return;
 
