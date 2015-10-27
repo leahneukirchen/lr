@@ -156,6 +156,91 @@ The following features won't be implemented:
   (or even better [xa](https://github.com/chneukirchen/xa)).
 * columns: use `column`, `git-column`, Plan 9 `mc`.
 
+## "Screenshots"
+
+Default output, sorted by name:
+
+```
+% lr
+./
+.git/
+.git/HEAD
+.git/config
+[...]
+Makefile
+README.md
+lr.c
+```
+
+Long output format:
+
+```
+% lr -l
+drwxrwxr-x 3 chris users   120 2015-10-27 13:56 ./
+drwxrwxr-x 7 chris users   240 2015-10-27 13:56 .git/
+-rw-rw-r-- 1 chris users    23 2015-10-27 13:56 .git/HEAD
+-rw-rw-r-- 1 chris users   257 2015-10-27 13:56 .git/config
+[...]
+-rw-rw-r-- 1 chris users   297 2015-10-27 13:56 Makefile
+-rw-rw-r-- 1 chris users  5828 2015-10-27 13:56 README.md
+-rw-rw-r-- 1 chris users 27589 2015-10-27 13:56 lr.c
+```
+
+Simple test:
+
+```
+% lr -t 'type == d'
+./
+.git/
+.git/hooks/
+.git/info/
+.git/logs/
+.git/logs/refs/
+.git/logs/refs/heads/
+.git/logs/refs/remotes/
+.git/logs/refs/remotes/origin/
+.git/objects/
+.git/objects/info/
+.git/objects/pack/
+.git/refs/
+.git/refs/heads/
+.git/refs/remotes/
+.git/refs/remotes/origin/
+.git/refs/tags/
+```
+
+List regular files by size, largest first:
+
+```
+% lr -f '%S %f\n' -1 -t 'type == f' -oS
+  27K lr.c
+ 5.7K README.md
+  297 Makefile
+```
+
+List directory total sizes, indented:
+
+```
+% lr -D -t 'type == d' -f '%I%I%t %p\n'
+172 .
+  132 .git
+    40 .git/hooks
+    4 .git/info
+    12 .git/logs
+      8 .git/logs/refs
+        4 .git/logs/refs/heads
+        4 .git/logs/refs/remotes
+          4 .git/logs/refs/remotes/origin
+    48 .git/objects
+      0 .git/objects/info
+      48 .git/objects/pack
+    8 .git/refs
+      4 .git/refs/heads
+      4 .git/refs/remotes
+        4 .git/refs/remotes/origin
+      0 .git/refs/tags
+```
+
 ## Installation
 
 Use `make all` to build, `make install` to install relative to `PREFIX`
