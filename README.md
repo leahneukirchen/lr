@@ -32,11 +32,12 @@ Over ls:
 
 ## Usage:
 
-	lr [-0|-F|-l|-f FMT] [-D] [-H|-L] [-1AQdhsx] [-U|-o ORD] [-t TEST]* PATH...
+	lr [-0|-F|-l|-S|-f FMT] [-D] [-H|-L] [-1AQdhsx] [-U|-o ORD] [-t TEST]* PATH...
 
 * `-0`: output filenames seperated by NUL bytes (implies `-Q`).
 * `-F`: output filenames and an indicator of their file type (`*/=>@|`).
 * `-l`: long output ala `ls -l`.
+* `-S`: BSD stat(2)-inspired output.
 * `-f FMT`: custom formatting, see below.
 * `-D`: depth first traversal. `prune` does not work, but `entries`
   and `total` is computed.

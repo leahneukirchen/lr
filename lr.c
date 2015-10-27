@@ -78,6 +78,7 @@ static char default_format[] = "%p\\n";
 static char type_format[] = "%p%F\\n";
 static char long_format[] = "%M %n %u %g %s %TY-%Tm-%Td %TH:%TM %p%F%l\n";
 static char zero_format[] = "%p\\0";
+static char stat_format[] = "%D %i %M %n %u %g %R %s \"%Ab %Ad %AT %AY\" \"%Tb %Td %TT %TY\" \"%Cb %Cd %CT %CY\" %b %p\n";
 
 static void *users;
 static void *groups;
@@ -1257,7 +1258,7 @@ main(int argc, char *argv[])
 	ordering = default_ordering;
 	argv0 = argv[0];
 
-	while ((c = getopt(argc, argv, "01ADFHLQUdf:lho:st:x")) != -1)
+	while ((c = getopt(argc, argv, "01ADFHLQSUdf:lho:st:x")) != -1)
 		switch(c) {
 		case '0': format = zero_format; Qflag++; break;
 		case '1': expr = chain(expr, EXPR_AND, parse_expr("depth == 0 || prune")); break;
@@ -1267,6 +1268,7 @@ main(int argc, char *argv[])
 		case 'H': Hflag++; break;
 		case 'L': Lflag++; break;
 		case 'Q': Qflag++; break;
+		case 'S': format = stat_format; break;
 		case 'U': Uflag++; break;
 		case 'd': expr = chain(expr, EXPR_AND, parse_expr("type == d && prune || print")); break;
 		case 'f': format = optarg; break;
@@ -1277,7 +1279,7 @@ main(int argc, char *argv[])
 		case 't': expr = chain(expr, EXPR_AND, parse_expr(optarg)); break;
 		case 'x': xflag++; break;
 		default:
-			fprintf(stderr, "Usage: %s [-0|-F|-l|-f FMT] [-D] [-H|-L] [-1AQdhsx] [-U|-o ORD] [-t TEST]* PATH...\n", argv0);
+			fprintf(stderr, "Usage: %s [-0|-F|-l|-S|-f FMT] [-D] [-H|-L] [-1AQdhsx] [-U|-o ORD] [-t TEST]* PATH...\n", argv0);
 			exit(2);
 		}
 
