@@ -162,8 +162,8 @@ Default output, sorted by name:
 
 ```
 % lr
-./
-.git/
+.
+.git
 .git/HEAD
 .git/config
 [...]
@@ -189,7 +189,7 @@ drwxrwxr-x 7 chris users   240 2015-10-27 13:56 .git/
 Simple test:
 
 ```
-% lr -t 'type == d'
+% lr -F -t 'type == d'
 ./
 .git/
 .git/hooks/
