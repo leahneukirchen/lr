@@ -1164,7 +1164,7 @@ recurse(char *path, struct history *h)
 	struct history new;
 	int r, entries;
 
-	int resolve = Lflag || (Hflag && h);
+	int resolve = Lflag || (Hflag && !h);
 
 	if (resolve ? stat(path, &st) : lstat(path, &st) < 0) {
 		if (resolve && errno == ENOENT && !lstat(path, &st))
