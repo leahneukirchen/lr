@@ -73,6 +73,7 @@ static char *ordering;
 static struct expr *expr;
 static void *root = NULL; // tree
 static int prune;
+static size_t prefixl;
 
 static char default_ordering[] = "n";
 static char default_format[] = "%p\\n";
@@ -97,6 +98,7 @@ static int uwid, gwid;
 
 struct fileinfo {
 	char *fpath;
+	size_t prefixl;
 	int depth, entries;
 	struct stat sb;
 	off_t total;
@@ -980,6 +982,17 @@ print_shquoted(const char *s)
 }
 
 void
+print_noprefix(struct fileinfo *fi)
+{
+	if (strlen(fi->fpath) > fi->prefixl + 1)  /* strip prefix */
+		print_shquoted(fi->fpath + fi->prefixl + 1);
+	else if (S_ISDIR(fi->sb.st_mode))  /* turn empty string into "." */
+		printf(".");
+	else  /* turn empty string into basename */
+		print_shquoted(basenam(fi->fpath));
+}
+
+void
 print(const void *nodep, const VISIT which, const int depth)
 {
 	(void)depth;
@@ -1006,9 +1019,12 @@ print(const void *nodep, const VISIT which, const int depth)
 			} else if (*s == '%') {
 				switch (*++s) {
 				case '%': putchar('%'); break;
-				case 's': if (!hflag) {
-						printf("%*jd", intlen(maxsize), (intmax_t)fi->sb.st_size); break;
-					} else /* FALLTHRU */
+				case 's':
+					if (!hflag) {
+						printf("%*jd", intlen(maxsize), (intmax_t)fi->sb.st_size);
+						break;
+					}
+					/* FALLTHRU */
 				case 'S': print_human((intmax_t)fi->sb.st_size); break;
 				case 'b': printf("%jd", (intmax_t)fi->sb.st_blocks); break;
 				case 'k': printf("%jd", (intmax_t)fi->sb.st_blocks / 2); break;
@@ -1022,9 +1038,14 @@ print(const void *nodep, const VISIT which, const int depth)
 						printf(" ");
 					break;
 				}
-				case 'p': print_shquoted(
-					    sflag && strncmp(fi->fpath, "./", 2) == 0 ?
-					    fi->fpath+2 : fi->fpath);
+				case 'p':
+					if (!sflag) {
+						print_shquoted(fi->fpath);
+						break;
+					}
+					/* FALLTHRU */
+				case 'P':
+					print_noprefix(fi);
 					break;
 				case 'l':
 					if (S_ISLNK(fi->sb.st_mode))
@@ -1120,6 +1141,7 @@ callback(const char *fpath, const struct stat *sb, int depth, int entries, off_t
 {
 	struct fileinfo *fi = malloc(sizeof (struct fileinfo));
 	fi->fpath = strdup(fpath);
+	fi->prefixl = prefixl;
 	fi->depth = depth;
 	fi->entries = entries;
 	fi->total = total;
@@ -1237,12 +1259,14 @@ int
 traverse(const char *path)
 {
 	char pathbuf[PATH_MAX + 1];
-	size_t l = strlen(path);
-	if (l > PATH_MAX) {
+	prefixl = strlen(path);
+	while (path[prefixl-1] == '/')
+		prefixl--;
+	if (prefixl > PATH_MAX) {
 		errno = ENAMETOOLONG;
 		return -1;
 	}
-	memcpy(pathbuf, path, l + 1);
+	memcpy(pathbuf, path, prefixl + 1);
 	return recurse(pathbuf, 0);
 }
 

@@ -53,7 +53,7 @@ Over ls:
 * `-Q`: don't shell quote file names.
 * `-d`: don't enter directories.
 * `-h`: print human readable size for `-l` (also `%s`).
-* `-s`: don't print leading `./`.
+* `-s`: strip directory prefix passed on command line.
 * `-x`: don't enter other filesystems.
 * `-U`: don't sort results.
 * `-o ORD`: sort according to the string `ORD`, see below.
@@ -72,7 +72,8 @@ Over ls:
 * `%R`: device ID for special files (`stat.st_rdev`).
 * `%i`: inode number.
 * `%I`: one space character for every depth level.
-* `%p`: full path (without `./` if `-s`).
+* `%p`: full path (`%P` if `-s`).
+* `%P`: full path without command line argument prefix.
 * `%l`: symlink target.
 * `%n`: number of hardlinks.
 * `%F`: file indicator type symbol (`*/=>@|`).
