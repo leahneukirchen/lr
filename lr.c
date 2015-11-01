@@ -95,8 +95,17 @@ struct idmap {
 static int need_group;
 static int need_user;
 static int need_fstype;
+
+static dev_t maxdev;
+static ino_t maxino;
+static nlink_t maxnlink;
+static uid_t maxuid;
+static gid_t maxgid;
+static dev_t maxrdev;
 static off_t maxsize;
-static nlink_t maxlinks;
+static blkcnt_t maxblocks;
+
+static int maxdepth;
 static int uwid, gwid, fwid;
 
 struct fileinfo {
@@ -1050,12 +1059,12 @@ print_format(struct fileinfo *fi)
 			}
 			/* FALLTHRU */
 		case 'S': print_human((intmax_t)fi->sb.st_size); break;
-		case 'b': printf("%jd", (intmax_t)fi->sb.st_blocks); break;
-		case 'k': printf("%jd", (intmax_t)fi->sb.st_blocks / 2); break;
-		case 'd': printf("%d", fi->depth); break;
-		case 'D': printf("%jd", (intmax_t)fi->sb.st_dev); break;
-		case 'R': printf("%jd", (intmax_t)fi->sb.st_rdev); break;
-		case 'i': printf("%jd", (intmax_t)fi->sb.st_ino); break;
+		case 'b': printf("%*jd", intlen(maxblocks), (intmax_t)fi->sb.st_blocks); break;
+		case 'k': printf("%*jd", intlen(maxblocks/2), (intmax_t)fi->sb.st_blocks / 2); break;
+		case 'd': printf("%*d", intlen(maxdepth), fi->depth); break;
+		case 'D': printf("%*jd", intlen(maxdev), (intmax_t)fi->sb.st_dev); break;
+		case 'R': printf("%*jd", intlen(maxrdev), (intmax_t)fi->sb.st_rdev); break;
+		case 'i': printf("%*jd", intlen(maxino), (intmax_t)fi->sb.st_ino); break;
 		case 'I': {
 			int i;
 			for (i=0; i<fi->depth; i++)
@@ -1073,7 +1082,7 @@ print_format(struct fileinfo *fi)
 			if (S_ISLNK(fi->sb.st_mode))
 				print_shquoted(readlin(fi->fpath, ""));
 			break;
-		case 'n': printf("%*jd", intlen(maxlinks), (intmax_t)fi->sb.st_nlink); break;
+		case 'n': printf("%*jd", intlen(maxnlink), (intmax_t)fi->sb.st_nlink); break;
 		case 'F':
 			if (S_ISDIR(fi->sb.st_mode)) {
 				putchar('/');
@@ -1158,12 +1167,28 @@ callback(const char *fpath, const struct stat *sb, int depth, int entries, off_t
 		// add to the tree, note that this will elimnate duplicate files
 		tsearch(fi, &root, order);
 
-	if (fi->sb.st_nlink > maxlinks)
-		maxlinks = fi->sb.st_nlink;
+	if (depth > maxdepth)
+		maxdepth = depth;
+
+	if (fi->sb.st_nlink > maxnlink)
+		maxnlink = fi->sb.st_nlink;
 	if (fi->sb.st_size > maxsize)
 		maxsize = fi->sb.st_size;
+	if (fi->sb.st_rdev > maxrdev)
+		maxrdev = fi->sb.st_rdev;
+	if (fi->sb.st_dev > maxdev)
+		maxdev = fi->sb.st_dev;
+	if (fi->sb.st_blocks > maxblocks)
+		maxblocks = fi->sb.st_blocks;
+	if (fi->sb.st_uid > maxuid)
+		maxuid = fi->sb.st_uid;
+	if (fi->sb.st_gid > maxuid)
+		maxgid = fi->sb.st_gid;
+	if (fi->sb.st_ino > maxino)
+		maxino = fi->sb.st_ino;
+
 	/* prefetch user/group/fs name for correct column widths. */
-        if (need_user)
+	if (need_user)
 		username(fi->sb.st_uid);
 	if (need_group)
 		groupname(fi->sb.st_gid);
