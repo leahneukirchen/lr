@@ -92,6 +92,9 @@ struct idmap {
 	char *name;
 };
 
+static int need_group;
+static int need_user;
+static int need_fstype;
 static off_t maxsize;
 static nlink_t maxlinks;
 static int uwid, gwid, fwid;
@@ -996,6 +999,25 @@ print_noprefix(struct fileinfo *fi)
 }
 
 void
+analyze_format()
+{
+	char *s;
+	for (s = format; *s; s++) {
+		if (*s == '\\') {
+			s++;
+			continue;
+		}
+	       	if (*s != '%')
+			continue;
+		switch (*++s) {
+		case 'g': need_group++; break;
+		case 'u': need_user++; break;
+		case 'Y': need_fstype++; break;
+		}
+	}
+}
+
+void
 print_format(struct fileinfo *fi)
 {
 	char *s;
@@ -1155,11 +1177,13 @@ callback(const char *fpath, const struct stat *sb, int depth, int entries, off_t
 		maxlinks = fi->sb.st_nlink;
 	if (fi->sb.st_size > maxsize)
 		maxsize = fi->sb.st_size;
-        if (lflag) {
-		/* prefetch user/group name for correct column widths. */
+	/* prefetch user/group/fs name for correct column widths. */
+        if (need_user)
 		username(fi->sb.st_uid);
+	if (need_group)
 		groupname(fi->sb.st_gid);
-	}
+	if (need_fstype)
+		fstype(fi->sb.st_dev);
 
 	return 0;
 }
@@ -1299,6 +1323,8 @@ main(int argc, char *argv[])
 			fprintf(stderr, "Usage: %s [-0|-F|-l|-S|-f FMT] [-D] [-H|-L] [-1AQdhsx] [-U|-o ORD] [-t TEST]* PATH...\n", argv0);
 			exit(2);
 		}
+
+	analyze_format();
 
 	if (optind == argc) {
 		sflag++;
