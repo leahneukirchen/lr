@@ -94,7 +94,7 @@ struct idmap {
 
 static off_t maxsize;
 static nlink_t maxlinks;
-static int uwid, gwid;
+static int uwid, gwid, fwid;
 
 struct fileinfo {
 	char *fpath;
@@ -779,6 +779,9 @@ fstype(dev_t devid)
 		scan_filesystems();
 	result = tfind(&key, &filesystems, idorder);
 
+	if (result && (int)strlen((*result)->name) > fwid)
+		fwid = strlen((*result)->name);
+
 	return result ? (*result)->name : strid(devid);
 }
 
@@ -1111,7 +1114,7 @@ print_format(struct fileinfo *fi)
 
 		case 'e': printf("%ld", (long)fi->entries); break;
 		case 't': printf("%jd", (intmax_t)fi->total); break;
-		case 'Y': printf("%s", fstype(fi->sb.st_dev)); break;
+		case 'Y': printf("%*s", -fwid, fstype(fi->sb.st_dev)); break;
 		default:
 			putchar('%');
 			putchar(*s);
