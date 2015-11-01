@@ -1114,25 +1114,10 @@ print_format(struct fileinfo *fi)
 			putchar("0pcCd?bBf?l?s???"[(fi->sb.st_mode >> 12) & 0x0f]);
 			break;
 
-		case 'g': {
-			char *s = groupname(fi->sb.st_gid);
-			if (s) {
-				printf("%*s", -gwid, s);
-				break;
-			}
-			/* FALLTHRU */
-		}
-		case 'G': printf("%*ld", gwid, (long)fi->sb.st_gid); break;
-
-		case 'u': {
-			char *s = username(fi->sb.st_uid);
-			if (s) {
-				printf("%*s", -uwid, s);
-				break;
-			}
-			/* FALLTHRU */
-		}
-		case 'U': printf("%*ld", uwid, (long)fi->sb.st_uid); break;
+		case 'g': printf("%*s", -gwid, groupname(fi->sb.st_gid)); break;
+		case 'G': printf("%*ld", intlen(maxgid), (long)fi->sb.st_gid); break;
+		case 'u': printf("%*s", -uwid, username(fi->sb.st_uid)); break;
+		case 'U': printf("%*ld", intlen(maxuid), (long)fi->sb.st_uid); break;
 
 		case 'e': printf("%ld", (long)fi->entries); break;
 		case 't': printf("%jd", (intmax_t)fi->total); break;
