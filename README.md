@@ -33,7 +33,7 @@ Over ls:
 * `find . -regex '.*c': `lr -t 'path =~ "c$"'`
 * `find -L /proc/*/fd -maxdepth 1 -type f -links 0 -printf '%b %p\n'`:
 `lr -UL1 -t 'type == f && links == 0' -f '%b %p\n' /proc/*/fd`
-* `find "${@:-.}" -name HEAD -execdir sh -c 'git rev-parse --resolve-git-dir . >/dev/null 2>/dev/null && pwd' ';'`: `lr -0t 'name == "HEAD"' "$@" | xapply -fz 'cd %Q[1/-$] && git rev-parse --resolve-git-dir . >/dev/null && pwd' - 2>/dev/null`
+* `find "${@:-.}" -name HEAD -execdir sh -c 'git rev-parse --resolve-git-dir . >/dev/null 2>/dev/null && pwd' ';'`: `lr -0U -t 'name == "HEAD"' "$@" | xe -0 -s 'cd ${1%/*} && git rev-parse --resolve-git-dir . >/dev/null && pwd; true' 2>/dev/null`
 
 ## Usage:
 
