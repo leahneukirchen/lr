@@ -993,147 +993,139 @@ print_noprefix(struct fileinfo *fi)
 }
 
 void
+print_format(struct fileinfo *fi)
+{
+	char *s;
+	for (s = format; *s; s++) {
+		if (*s == '\\') {
+			switch (*++s) {
+			case 'a': putchar('\a'); break;
+			case 'b': putchar('\b'); break;
+			case 'f': putchar('\f'); break;
+			case 'n': putchar('\n'); break;
+			case 'r': putchar('\r'); break;
+			case 't': putchar('\t'); break;
+			case 'v': putchar('\v'); break;
+			case '0': putchar('\0'); break;
+			// TODO: \NNN
+		       	default: putchar(*s);
+	       		}
+			continue;
+		}
+	       	if (*s != '%') {
+			putchar(*s);
+			continue;
+		}
+		switch (*++s) {
+		case '%': putchar('%'); break;
+		case 's':
+			if (!hflag) {
+				printf("%*jd", intlen(maxsize), (intmax_t)fi->sb.st_size);
+				break;
+			}
+			/* FALLTHRU */
+		case 'S': print_human((intmax_t)fi->sb.st_size); break;
+		case 'b': printf("%jd", (intmax_t)fi->sb.st_blocks); break;
+		case 'k': printf("%jd", (intmax_t)fi->sb.st_blocks / 2); break;
+		case 'd': printf("%d", fi->depth); break;
+		case 'D': printf("%jd", (intmax_t)fi->sb.st_dev); break;
+		case 'R': printf("%jd", (intmax_t)fi->sb.st_rdev); break;
+		case 'i': printf("%jd", (intmax_t)fi->sb.st_ino); break;
+		case 'I': {
+			int i;
+			for (i=0; i<fi->depth; i++)
+				printf(" ");
+			break;
+		}
+		case 'p':
+			if (!sflag) {
+				print_shquoted(fi->fpath);
+				break;
+			}
+			/* FALLTHRU */
+		case 'P': print_noprefix(fi); break;
+		case 'l':
+			if (S_ISLNK(fi->sb.st_mode))
+				print_shquoted(readlin(fi->fpath, ""));
+			break;
+		case 'n': printf("%*jd", intlen(maxlinks), (intmax_t)fi->sb.st_nlink); break;
+		case 'F':
+			if (S_ISDIR(fi->sb.st_mode)) {
+				putchar('/');
+			} else if (S_ISSOCK(fi->sb.st_mode)) {
+				putchar('=');
+			} else if (S_ISFIFO(fi->sb.st_mode)) {
+				putchar('|');
+			} else if (S_ISLNK(fi->sb.st_mode)) {
+				if (lflag)
+					printf(" -> ");
+				else
+					putchar('@');
+			} else if (fi->sb.st_mode & S_IXUSR) {
+				putchar('*');
+			}
+			break;
+		case 'f': print_shquoted(basenam(fi->fpath)); break;
+		case 'A':
+		case 'C':
+		case 'T': {
+			char tfmt[3] = "%\0\0";
+			char buf[256];
+			s++;
+			if (!*s)
+				break;
+			tfmt[1] = *s;
+			strftime(buf, sizeof buf, tfmt,
+			    localtime(
+			    *s == 'A' ? &fi->sb.st_atime :
+			    *s == 'C' ? &fi->sb.st_ctime :
+			    &fi->sb.st_mtime));
+			printf("%s", buf);
+			break;
+		}
+		case 'm': printf("%04o", (unsigned int)fi->sb.st_mode & 07777); break;
+		case 'M': print_mode(fi->sb.st_mode); break;
+		case 'y':
+			putchar("0pcCd?bBf?l?s???"[(fi->sb.st_mode >> 12) & 0x0f]);
+			break;
+
+		case 'g': {
+			char *s = groupname(fi->sb.st_gid);
+			if (s) {
+				printf("%*s", -gwid, s);
+				break;
+			}
+			/* FALLTHRU */
+		}
+		case 'G': printf("%*ld", gwid, (long)fi->sb.st_gid); break;
+
+		case 'u': {
+			char *s = username(fi->sb.st_uid);
+			if (s) {
+				printf("%*s", -uwid, s);
+				break;
+			}
+			/* FALLTHRU */
+		}
+		case 'U': printf("%*ld", uwid, (long)fi->sb.st_uid); break;
+
+		case 'e': printf("%ld", (long)fi->entries); break;
+		case 't': printf("%jd", (intmax_t)fi->total); break;
+		case 'Y': printf("%s", fstype(fi->sb.st_dev)); break;
+		default:
+			putchar('%');
+			putchar(*s);
+		}
+	}
+}
+
+void
 print(const void *nodep, const VISIT which, const int depth)
 {
 	(void)depth;
 
-	if (which == postorder || which == leaf) {
-		struct fileinfo *fi = *(struct fileinfo **)nodep;
-
-		char *s;
-		for (s = format; *s; s++) {
-			if (*s == '\\') {
-				switch (*++s) {
-				case 'a': putchar('\a'); break;
-				case 'b': putchar('\b'); break;
-				case 'f': putchar('\f'); break;
-				case 'n': putchar('\n'); break;
-				case 'r': putchar('\r'); break;
-				case 't': putchar('\t'); break;
-				case 'v': putchar('\v'); break;
-				case '0': putchar('\0'); break;
-					// TODO: \NNN
-				default:
-					putchar(*s);
-				}
-			} else if (*s == '%') {
-				switch (*++s) {
-				case '%': putchar('%'); break;
-				case 's':
-					if (!hflag) {
-						printf("%*jd", intlen(maxsize), (intmax_t)fi->sb.st_size);
-						break;
-					}
-					/* FALLTHRU */
-				case 'S': print_human((intmax_t)fi->sb.st_size); break;
-				case 'b': printf("%jd", (intmax_t)fi->sb.st_blocks); break;
-				case 'k': printf("%jd", (intmax_t)fi->sb.st_blocks / 2); break;
-				case 'd': printf("%d", fi->depth); break;
-				case 'D': printf("%jd", (intmax_t)fi->sb.st_dev); break;
-				case 'R': printf("%jd", (intmax_t)fi->sb.st_rdev); break;
-				case 'i': printf("%jd", (intmax_t)fi->sb.st_ino); break;
-				case 'I': {
-					int i;
-					for (i=0; i<fi->depth; i++)
-						printf(" ");
-					break;
-				}
-				case 'p':
-					if (!sflag) {
-						print_shquoted(fi->fpath);
-						break;
-					}
-					/* FALLTHRU */
-				case 'P':
-					print_noprefix(fi);
-					break;
-				case 'l':
-					if (S_ISLNK(fi->sb.st_mode))
-						print_shquoted(readlin(fi->fpath, ""));
-					break;
-				case 'n': printf("%*jd", intlen(maxlinks), (intmax_t)fi->sb.st_nlink); break;
-				case 'F':
-					if (S_ISDIR(fi->sb.st_mode)) {
-						putchar('/');
-					} else if (S_ISSOCK(fi->sb.st_mode)) {
-						putchar('=');
-					} else if (S_ISFIFO(fi->sb.st_mode)) {
-						putchar('|');
-					} else if (S_ISLNK(fi->sb.st_mode)) {
-						if (lflag)
-							printf(" -> ");
-						else
-							putchar('@');
-					} else if (fi->sb.st_mode & S_IXUSR) {
-						putchar('*');
-					}
-					break;
-				case 'f': print_shquoted(basenam(fi->fpath)); break;
-				case 'A':
-				case 'C':
-				case 'T': {
-					char tfmt[3] = "%\0\0";
-					char buf[256];
-					s++;
-					if (!*s)
-						break;
-					tfmt[1] = *s;
-					strftime(buf, sizeof buf, tfmt,
-					    localtime(
-					    *s == 'A' ? &fi->sb.st_atime :
-					    *s == 'C' ? &fi->sb.st_ctime :
-					    &fi->sb.st_mtime));
-					printf("%s", buf);
-					break;
-				}
-				case 'm': printf("%04o", (unsigned int)fi->sb.st_mode & 07777); break;
-				case 'M': print_mode(fi->sb.st_mode); break;
-				case 'y':
-					putchar("0pcCd?bBf?l?s???"[(fi->sb.st_mode >> 12) & 0x0f]);
-					break;
-
-				case 'g': {
-					char *s = groupname(fi->sb.st_gid);
-					if (s) {
-						printf("%*s", -gwid, s);
-						break;
-					}
-					/* FALLTHRU */
-				}
-				case 'G':
-					printf("%*ld", gwid, (long)fi->sb.st_gid);
-					break;
-
-				case 'u': {
-					char *s = username(fi->sb.st_uid);
-					if (s) {
-						printf("%*s", -uwid, s);
-						break;
-					}
-					/* FALLTHRU */
-				}
-				case 'U':
-					printf("%*ld", uwid, (long)fi->sb.st_uid);
-					break;
-
-				case 'e':
-					printf("%ld", (long)fi->entries);
-					break;
-				case 't':
-					printf("%jd", (intmax_t)fi->total);
-					break;
-				case 'Y':
-					printf("%s", fstype(fi->sb.st_dev));
-					break;
-				default:
-					putchar('%');
-					putchar(*s);
-				}
-			} else {
-				putchar(*s);
-			}
-		}
-	}
+	if (which == postorder || which == leaf)
+		print_format(*(struct fileinfo **)nodep);
 }
 
 int
