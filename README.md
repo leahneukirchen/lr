@@ -106,6 +106,7 @@ Default: `n`.
 * `i`: inode number.
 * `m`: mtime.
 * `n`: file name.
+* `p`: directory name.
 * `s`: file size.
 * `t`: file type.  This sorts all directories before other files.
 

@@ -891,8 +891,33 @@ eval(struct expr *e, struct fileinfo *fi)
 	return 0;
 }
 
+int
+dircmp(char *a, char *b)
+{
+	char *ea = strrchr(a, '/');
+	char *eb = strrchr(b, '/');
+	if (!ea)
+		ea = a + strlen(a);
+	if (!eb)
+		eb = b + strlen(b);
+
+	while (a != ea && b != eb && *a == *b) {
+		a++;
+		b++;
+	}
+
+	if (a == ea && b == eb)
+		return 0;
+	if (a == ea)
+		return -1;
+	if (b == eb)
+		return 1;
+	return *a - *b;
+}
+
 #define CMP(a, b) if ((a) == (b)) break; else if ((a) < (b)) return -1; else return 1
 #define STRCMP(a, b) if (strcmp(a, b) == 0) break; else return (strcmp(a, b));
+#define DIRCMP(a, b) { int r = dircmp(a, b); if (r == 0) break; else return r; };
 
 int
 order(const void *a, const void *b)
@@ -924,6 +949,8 @@ order(const void *a, const void *b)
 		case 'N': STRCMP(fb->fpath, fa->fpath);
 		case 'e': STRCMP(extnam(fa->fpath), extnam(fb->fpath));
 		case 'E': STRCMP(extnam(fb->fpath), extnam(fa->fpath));
+		case 'p': DIRCMP(fa->fpath, fb->fpath);
+		case 'P': DIRCMP(fb->fpath, fa->fpath);
 		default: STRCMP(fa->fpath, fb->fpath);
 		}
 	}
