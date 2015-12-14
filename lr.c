@@ -414,17 +414,27 @@ parse_strcmp()
 
 	char *s;
 	if (parse_string(&s)) {
+		int r = 0;
 		struct expr *e = mkexpr(op);
 		e->a.prop = prop;
 		if (op == EXPR_REGEX) {
 			e->b.regex = malloc(sizeof (regex_t));
-			regcomp(e->b.regex, s, REG_EXTENDED | REG_NOSUB);
+			r = regcomp(e->b.regex, s, REG_EXTENDED | REG_NOSUB);
 		} else if (op == EXPR_REGEXI) {
 			e->b.regex = malloc(sizeof (regex_t));
-			regcomp(e->b.regex, s, REG_EXTENDED | REG_NOSUB | REG_ICASE);
+			r = regcomp(e->b.regex, s, REG_EXTENDED | REG_NOSUB | REG_ICASE);
 		} else {
 			e->b.string = s;
 		}
+
+		if (r != 0) {
+			char msg[256];
+			regerror(r, e->b.regex, msg, sizeof msg);
+			fprintf(stderr, "%s: invalid regex '%s': %s\n",
+			    argv0, s, msg);
+			exit(2);
+		}
+
 		return e;
 	}
 
