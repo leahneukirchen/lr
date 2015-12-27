@@ -121,17 +121,32 @@ Default: `n`.
 	             | <expr> && <expr>  -- conjunction
 	             | ! <expr>          -- negation
 	             | ( <expr )
+	             | <timeprop> <numop> <dur>
 	             | <numprop> <numop> <num>
 	             | <strprop> <strop> <str>
 	             | <typetest>
 	             | <modetest>
 	             | prune             -- do not traverse into subdirectories
 	             | print             -- always true value
+
+        <timeprop> ::= atime | ctime | mtime
 	
-	<numprop>  ::= atime | ctime | depth | dev | entries | gid | inode
-	             | links | mode | mtime | rdev | size | total | uid
+	<numprop>  ::= depth | dev | entries | gid | inode
+	             | links | mode | rdev | size | total | uid
 	
 	<numop>    ::= <= | < | >= | > | == | !=
+
+        <dur>      ::= "./path"          -- mtime of relative path
+                     | "/path"           -- mtime of absolute path
+                     | "YYYY-MM-DD HH:MM:SS"
+                     | "YYYY-MM-DD"      -- at midnight
+                     | "HH:MM:SS"        -- today
+                     | "HH:MM"           -- today
+                     | "-[0-9]+d"        -- n days ago at midnight
+                     | "-[0-9]+h"        -- n hours before now
+                     | "-[0-9]+m"        -- n minutes before now
+                     | "-[0-9]+s"        -- n seconds before now
+                     | [0-9]+            -- absolute epoch time
 	
 	<num>      ::= [0-9]+ ( c        -- *1
 	                      | b        -- *512

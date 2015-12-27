@@ -378,6 +378,84 @@ parse_string(char **s)
 	return 0;
 }
 
+static int
+parse_dur(int64_t *n)
+{
+	char *s, *r;
+	if (!parse_string(&s))
+		return 0;
+
+	if (*s == '/' || *s == '.') {
+		struct stat st;
+		if (stat(s, &st) < 0)
+			parse_error("can't stat file");
+		*n = st.st_mtime;
+		return 1;
+	}
+
+	struct tm tm = { 0 };
+	r = strptime(s, "%Y-%m-%d %H:%M:%S", &tm);
+	if (r && !*r) {
+		*n = mktime(&tm);
+		return 1;
+	}
+	r = strptime(s, "%Y-%m-%d", &tm);
+	if (r && !*r) {
+		tm.tm_hour = tm.tm_min = tm.tm_sec = 0;
+		*n = mktime(&tm);
+		return 1;
+	}
+	r = strptime(s, "%H:%M:%S", &tm);
+	if (r && !*r) {
+		struct tm *tmnow = localtime(&now);
+		tm.tm_year = tmnow->tm_year;
+		tm.tm_mon = tmnow->tm_mon;
+		tm.tm_mday = tmnow->tm_mday;
+		*n = mktime(&tm);
+		return 1;
+	}
+	r = strptime(s, "%H:%M", &tm);
+	if (r && !*r) {
+		struct tm *tmnow = localtime(&now);
+		tm.tm_year = tmnow->tm_year;
+		tm.tm_mon = tmnow->tm_mon;
+		tm.tm_mday = tmnow->tm_mday;
+		tm.tm_sec = 0;
+		*n = mktime(&tm);
+		return 1;
+	}
+
+	if (*s == '-') {
+		s++;
+
+		errno = 0;
+		int64_t d;
+		d = strtol(s, &r, 10);
+		if (errno == 0 && r[0] == 'd' && !r[1]) {
+			struct tm *tmnow = localtime(&now);
+			tmnow->tm_mday -= d;
+			tmnow->tm_hour = tmnow->tm_min = tmnow->tm_sec = 0;
+			*n = mktime(tmnow);
+			return 1;
+		}
+		if (errno == 0 && r[0] == 'h' && !r[1]) {
+			*n = now - (d*60*60);
+			return 1;
+		}
+		if (errno == 0 && r[0] == 'm' && !r[1]) {
+			*n = now - (d*60);
+			return 1;
+		}
+		if (errno == 0 && r[0] == 's' && !r[1]) {
+			*n = now - d;
+			return 1;
+		}
+	}
+
+	parse_error("invalid time format");
+	return 0;
+}
+
 static struct expr *
 parse_strcmp()
 {
@@ -477,11 +555,7 @@ parse_cmp()
 	enum prop prop;
 	enum op op;
 
-	if (token("atime"))
-		prop = PROP_ATIME;
-	else if (token("ctime"))
-		prop = PROP_CTIME;
-	else if (token("depth"))
+	if (token("depth"))
 		prop = PROP_DEPTH;
 	else if (token("dev"))
 		prop = PROP_DEV;
@@ -495,8 +569,6 @@ parse_cmp()
 		prop = PROP_LINKS;
 	else if (token("mode"))
 		return parse_mode();
-	else if (token("mtime"))
-		prop = PROP_MTIME;
 	else if (token("rdev"))
 		prop = PROP_RDEV;
 	else if (token("size"))
@@ -514,6 +586,36 @@ parse_cmp()
 
 	int64_t n;
 	if (parse_num(&n)) {
+		struct expr *e = mkexpr(op);
+		e->a.prop = prop;
+		e->b.num = n;
+		return e;
+	}
+
+	return 0;
+}
+
+static struct expr *
+parse_timecmp()
+{
+	enum prop prop;
+	enum op op;
+
+	if (token("atime"))
+		prop = PROP_ATIME;
+	else if (token("ctime"))
+		prop = PROP_CTIME;
+	else if (token("mtime"))
+		prop = PROP_MTIME;
+	else
+		return parse_cmp();
+
+	op = parse_op();
+	if (!op)
+		parse_error("invalid comparison");
+
+	int64_t n;
+	if (parse_num(&n) || parse_dur(&n)) {
 		struct expr *e = mkexpr(op);
 		e->a.prop = prop;
 		e->b.num = n;
@@ -548,11 +650,11 @@ chain(struct expr *e1, enum op op, struct expr *e2)
 static struct expr *
 parse_and()
 {
-	struct expr *e1 = parse_cmp();
+	struct expr *e1 = parse_timecmp();
 	struct expr *r = e1;
 
 	while (token("&&")) {
-		struct expr *e2 = parse_cmp();
+		struct expr *e2 = parse_timecmp();
 		r = chain(r, EXPR_AND, e2);
 	}
 
