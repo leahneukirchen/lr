@@ -45,6 +45,7 @@
 #include <pwd.h>
 #include <regex.h>
 #include <search.h>
+#include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -189,9 +190,13 @@ struct expr {
 static char *pos;
 
 static void
-parse_error(const char *msg)
+parse_error(const char *msg, ...)
 {
-	fprintf(stderr, "%s: parse error: %s at '%.15s'\n", argv0, msg, pos);
+	va_list ap;
+	va_start(ap, msg);
+	fprintf(stderr, "%s: parse error: ", argv0);
+	vfprintf(stderr, msg, ap);
+	fprintf(stderr, "\n");
 	exit(2);
 }
 
@@ -227,13 +232,14 @@ token(const char *token)
 static int64_t
 parse_num(int64_t *r)
 {
+	char *s = pos;
 	if (isdigit((unsigned char) *pos)) {
 		int64_t n;
 
 		for (n = 0; isdigit((unsigned char) *pos) && n <= INT64_MAX / 10 - 10; pos++)
 			n = 10 * n + (*pos - '0');
 		if (isdigit((unsigned char) *pos))
-			parse_error("number too big");
+			parse_error("number too big: %s", s);
 		if (token("c"))      ;
 		else if (token("b")) n *= 512LL;
 		else if (token("k")) n *= 1024LL;
@@ -251,6 +257,7 @@ parse_num(int64_t *r)
 int
 parse_octal(long *r)
 {
+	char *s = pos;
 	if (*pos >= '0' && *pos <= '7') {
 		long n = 0;
 		while (*pos >= '0' && *pos <= '7') {
@@ -258,7 +265,7 @@ parse_octal(long *r)
 			n += *pos - '0';
 			pos++;
 			if (n > 07777)
-				parse_error("number to big");
+				parse_error("number to big: %s", s);
 		}
 		ws();
 		*r = n;
@@ -308,10 +315,10 @@ parse_inner()
 		struct expr *e = parse_or();
 		if (token(")"))
 			return e;
-		parse_error("missing )");
+		parse_error("missing ) at '%.15s'", pos);
 		return 0;
 	} else {
-		parse_error("unknown expression");
+		parse_error("unknown expression at '%.15s'", pos);
 		return 0;
 	}
 }
@@ -336,11 +343,14 @@ parse_type()
 				e->a.filetype = TYPE_SYMLINK;
 			else if (token("s"))
 				e->a.filetype = TYPE_SOCKET;
+			else if (*pos)
+				parse_error("invalid file type '%c'", *pos);
 			else
-				parse_error("invalid file type");
+				parse_error("no file type given");
 			return e;
 		} else {
-			parse_error("invalid file type comparison");
+			parse_error("invalid file type comparison at '%.15s'",
+			    pos);
 		}
 	}
 
@@ -388,7 +398,8 @@ parse_dur(int64_t *n)
 	if (*s == '/' || *s == '.') {
 		struct stat st;
 		if (stat(s, &st) < 0)
-			parse_error("can't stat file");
+			parse_error("can't stat file '%s': %s",
+			    s, strerror(errno));
 		*n = st.st_mtime;
 		return 1;
 	}
@@ -450,9 +461,10 @@ parse_dur(int64_t *n)
 			*n = now - d;
 			return 1;
 		}
+		parse_error("invalid relative time format '%s'", s-1);
 	}
 
-	parse_error("invalid time format");
+	parse_error("invalid time format '%s'", s);
 	return 0;
 }
 
@@ -490,7 +502,7 @@ parse_strcmp()
 	else if (token("=~"))
 		op = EXPR_REGEX;
 	else
-		parse_error("invalid string operator");
+		parse_error("invalid string operator at '%.15s'", pos);
 
 	char *s;
 	if (parse_string(&s)) {
@@ -510,15 +522,14 @@ parse_strcmp()
 		if (r != 0) {
 			char msg[256];
 			regerror(r, e->b.regex, msg, sizeof msg);
-			fprintf(stderr, "%s: invalid regex '%s': %s\n",
-			    argv0, s, msg);
+			parse_error("invalid regex '%s': %s", s, msg);
 			exit(2);
 		}
 
 		return e;
 	}
 
-	parse_error("invalid string");
+	parse_error("invalid string at '%.15s'", pos);
 	return 0;
 }
 
@@ -537,13 +548,13 @@ parse_mode()
 	} else if (token("|")) {
 		e->op = EXPR_ANYSET;
 	} else {
-		parse_error("invalid mode comparison");
+		parse_error("invalid mode comparison at '%.15s'", pos);
 	}
 
 	if (parse_octal(&n)) {
 		e->b.num = n;
 	} else {
-		parse_error("invalid mode");
+		parse_error("invalid mode at '%.15s'", pos);
 	}
 
 	return e;
@@ -582,7 +593,7 @@ parse_cmp()
 
 	op = parse_op();
 	if (!op)
-		parse_error("invalid comparison");
+		parse_error("invalid comparison at '%.15s'", pos);
 
 	int64_t n;
 	if (parse_num(&n)) {
@@ -612,7 +623,7 @@ parse_timecmp()
 
 	op = parse_op();
 	if (!op)
-		parse_error("invalid comparison");
+		parse_error("invalid comparison at '%.15s'", pos);
 
 	int64_t n;
 	if (parse_num(&n) || parse_dur(&n)) {
@@ -682,7 +693,7 @@ parse_expr(const char *s)
 	pos = (char *)s;
 	struct expr *e = parse_or();
 	if (*pos)
-		parse_error("trailing garbage");
+		parse_error("trailing garbage at '%.15s'", pos);
 	return e;
 }
 
