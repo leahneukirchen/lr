@@ -108,6 +108,8 @@ static blkcnt_t maxblocks;
 static int maxdepth;
 static int uwid, gwid, fwid;
 
+static time_t now;
+
 struct fileinfo {
 	char *fpath;
 	size_t prefixl;
@@ -1145,13 +1147,22 @@ print_format(struct fileinfo *fi)
 			s++;
 			if (!*s)
 				break;
-			tfmt[1] = *s;
-			strftime(buf, sizeof buf, tfmt,
-			    localtime(
-			    *s == 'A' ? &fi->sb.st_atime :
-			    *s == 'C' ? &fi->sb.st_ctime :
-			    &fi->sb.st_mtime));
-			printf("%s", buf);
+
+                        time_t t = (*s == 'A' ? fi->sb.st_atime :
+			    *s == 'C' ? fi->sb.st_ctime :
+			    fi->sb.st_mtime);
+
+			if (*s == '-') {
+                                printf("%3ldd%3ldh%3ldm%3lds",
+                                    ((now - t) / (60*60*24)),
+                                    ((now - t) / (60*60)) % 24,
+                                    ((now - t) / 60) % 60,
+                                    (now - t) % 60);
+			} else {
+				tfmt[1] = *s;
+				strftime(buf, sizeof buf, tfmt, localtime(&t));
+				printf("%s", buf);
+			}
 			break;
 		}
 		case 'm': printf("%04o", (unsigned int)fi->sb.st_mode & 07777); break;
@@ -1345,6 +1356,7 @@ main(int argc, char *argv[])
 	format = default_format;
 	ordering = default_ordering;
 	argv0 = argv[0];
+	now = time(0);
 
 	while ((c = getopt(argc, argv, "01ADFHLQSUdf:lho:st:x")) != -1)
 		switch(c) {

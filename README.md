@@ -80,6 +80,7 @@ Over ls:
 * `%n`: number of hardlinks.
 * `%F`: file indicator type symbol (`*/=>@|`).
 * `%f`: file basename (everything after last `/`).
+* `%A-`, `%C-`, `%T-`: relative age for atime/ctime/mtime.
 * `%Ax`, `%Cx`, `%Tx`: result of `strftime` for `%x` on atime/ctime/mtime.
 * `%m`: octal file permissions.
 * `%M`: ls-style symbolic file permissions.
