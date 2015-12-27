@@ -112,6 +112,7 @@ Default: `n`.
 * `p`: directory name.
 * `s`: file size.
 * `t`: file type.  This sorts all directories before other files.
+* `v`: file name as version numbers (sorts "2" before "10").
 
 ## Filter expressions
 
