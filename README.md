@@ -35,6 +35,7 @@ Over ls:
 `lr -UL1 -t 'type == f && links == 0' -f '%b %p\n' /proc/*/fd`
 * `find "${@:-.}" -name HEAD -execdir sh -c 'git rev-parse --resolve-git-dir . >/dev/null 2>/dev/null && pwd' ';'`: `lr -0U -t 'name == "HEAD"' "$@" | xe -0 -s 'cd ${1%/*} && git rev-parse --resolve-git-dir . >/dev/null && pwd; true' 2>/dev/null`
 * Filter list of files for existence: `xe lr -dQU <list`
+* replacement for who(1): `lr -om -t 'name =~ "[0-9][0-9]*$" && uid != 0' -f '%u\t%p\t%CY-%Cm-%Cd %CH:%CM\n' /dev/pts /dev/tty*`
 
 ## Usage:
 
