@@ -44,7 +44,7 @@ Over ls:
 * `-0`: output filenames seperated by NUL bytes (implies `-Q`).
 * `-F`: output filenames and an indicator of their file type (`*/=>@|`).
 * `-l`: long output ala `ls -l`.
-* `-S`: BSD stat(2)-inspired output.
+* `-S`: BSD stat(1)-inspired output.
 * `-f FMT`: custom formatting, see below.
 * `-D`: depth first traversal. `prune` does not work, but `entries`
   and `total` is computed.
@@ -181,7 +181,7 @@ Default: `n`.
 The following features won't be implemented:
 
 * `-exec`: use `-0` and `xargs`
-  (or even better [xa](https://github.com/chneukirchen/xa)).
+  (or even better [xa](https://github.com/chneukirchen/xe)).
 * columns: use `column`, `git-column`, Plan 9 `mc`.
 
 ## "Screenshots"
