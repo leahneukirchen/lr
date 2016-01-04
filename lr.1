@@ -1,0 +1,276 @@
+.Dd January 4, 2016
+.Dt LR 1
+.Os
+.Sh NAME
+.Nm lr
+.Nd list files, recursively
+.Sh SYNOPSIS
+.Nm
+.Op Fl 0 | Fl F | Fl l | Fl S | Fl f Ar fmt
+.Op Fl D
+.Op Fl H | Fl L
+.Op Fl 1AQdhsx
+.Op Fl U | Fl o Ar ord
+.Op Fl t Ar test
+.Ar path\ ...
+.Sh DESCRIPTION
+.Nm
+is a versatile tool to generate file listings with configurable
+formatting, ordering and filtering.
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl 0
+Output filenames seperated by NUL bytes (implies
+.Fl Q ) .
+.It Fl F
+Output filenames and an indicator of their file type (one of
+.Sq Li */=>@| ) .
+.It Fl l
+Long output ala
+.Ic ls -l .
+.It Fl S
+Output inspired by
+BSD
+.Xr stat 1 .
+.It Fl f Ar fmt
+Custom formatting, see
+.Sx FORMATTING .
+.It Fl D
+Use depth first traversal.
+.Ic prune
+will not work, but
+.Ic entries
+and
+.Ic total
+is computed.
+.It Fl H
+Only follow symlinks on command line (default: don't follow symlinks).
+.It Fl L
+Follow all symlinks.
+.It Fl 1
+Don't go below one level of directories.
+.It Fl A
+Don't list files starting with a dot.
+.It Fl Q
+Don't shell quote file names.
+.It Fl d
+Don't enter directories.
+.It Fl h
+Print human readable size for
+.Fl l
+(also
+.Ic %s ) .
+.It Fl s
+Strip directory prefix passed on command line.
+.It Fl x
+Don't enter other filesystems.
+.It Fl U
+Don't sort results.
+.It Fl o Ar ord
+Sort according to
+.Ar ord ,
+see
+.Sx SORT ORDER .
+.It Fl t Ar test
+Only show files matching the expression
+.Ar test ,
+see
+.Sx TESTS .
+Multiple occurences of
+.Fl t
+are regarded as a conjunction.
+.El
+.Sh FORMATTING
+.Nm
+format strings support the following escape sequences:
+.Pp
+.Bl -tag -compact -width Ds
+.It Ic \ea , \eb , \ef , \en , \er , \ev , \e0
+Special characters as in C.
+.It Ic \&%%
+A plain
+.Sq % .
+.It Ic \&%s
+File size in bytes
+.It Ic \&%S
+File size, with human readable unit
+.It Ic \&%b
+File size in 512-byte blocks
+.It Ic \&%k
+File size in 1024-byte blocks
+.It Ic \&%d
+Path depth
+.It Ic \&%D
+Device number
+.Va ( stat.st_dev )
+.It Ic \&%R
+Device ID for special files
+.Va ( stat.st_rdev )
+.It Ic \&%i
+Inode number
+.It Ic \&%I
+One space character for every depth level
+.It Ic \&%p
+Full path
+.Ic ( \&%P
+if
+.Fl s
+is used)
+.It Ic \&%P
+Full path without command line argument prefix
+.It Ic \&%l
+Symlink target
+.It Ic \&%n
+Number of hardlinks
+.It Ic \&%F
+File indicator type symbol (one of
+.Sq Li */=>@| )
+.It Ic \&%f
+File basename (everything after last
+.Li / )
+.It Ic \&%A- , %C- , %T-
+relative age for atime/ctime/mtime.
+.It Ic \&%A Ns Ar x , Ic \&%C Ns Ar x , Ic \&%T Ns Ar x
+result of
+.Xr strftime 3
+for
+.Ic \&% Ns Ar x
+on atime/ctime/mtime
+.It Ic \&%m
+Octal file permissions
+.It Ic \&%M
+ls-style symbolic file permissions
+.It Ic \&%y
+ls-style symbolic file type
+.Sq Li ( bcdfls )
+.It Ic \&%g
+Group name
+.It Ic \&%G
+Numeric gid
+.It Ic \&%u
+User name
+.It Ic \&%U
+Numeric uid
+.It Ic \&%e
+Number of entries in directories (only with
+.Fl D )
+.It Ic \&%t
+Total size used by accepted files in directories (only with
+.Fl D )
+.It Ic \&%Y
+Type of the filesystem the file resides on
+.El
+.Sh SORT ORDER
+Sort order is string consisting of the following letters.
+Uppercase letters reverse sorting.
+Default sort order is
+.Sq Ic n .
+.Pp
+.Bl -tag -compact -width Ds
+.It Ic a
+atime
+.It Ic c
+ctime
+.It Ic d
+path depth
+.It Ic e
+file extension
+.It Ic i
+inode number
+.It Ic m
+mtime
+.It Ic n
+file name
+.It Ic p
+directory name
+.It Ic s
+file size
+.It Ic t
+file type.
+This sorts all directories before other files.
+.It Ic v
+File name as version numbers (sorts
+.Sq 2
+before
+.Sq 10 ) .
+.El
+.Pp
+E.g.\&
+.Sq Ic Sn
+sorts first by size, smallest last, and then by name
+(in case sizes are equal).
+.Sh TESTS
+.Nm
+tests are given by the following EBNF:
+.Bd -literal
+<expr>     ::= <expr> || <expr>  -- disjunction
+             | <expr> && <expr>  -- conjunction
+             | ! <expr>          -- negation
+             | ( <expr )
+             | <timeprop> <numop> <dur>
+             | <numprop> <numop> <num>
+             | <strprop> <strop> <str>
+             | <typetest>
+             | <modetest>
+             | prune             -- do not traverse into subdirectories
+             | print             -- always true value
+
+<timeprop> ::= atime | ctime | mtime
+
+<numprop>  ::= depth | dev | entries | gid | inode
+             | links | mode | rdev | size | total | uid
+
+<numop>    ::= <= | < | >= | > | == | !=
+
+<dur>      ::= "./path"          -- mtime of relative path
+             | "/path"           -- mtime of absolute path
+             | "YYYY-MM-DD HH:MM:SS"
+             | "YYYY-MM-DD"      -- at midnight
+             | "HH:MM:SS"        -- today
+             | "HH:MM"           -- today
+             | "-[0-9]+d"        -- n days ago at midnight
+             | "-[0-9]+h"        -- n hours before now
+             | "-[0-9]+m"        -- n minutes before now
+             | "-[0-9]+s"        -- n seconds before now
+             | [0-9]+            -- absolute epoch time
+
+<num>      ::= [0-9]+ ( c        -- *1
+                      | b        -- *512
+                      | k        -- *1024
+                      | M        -- *1024*1024
+                      | G        -- *1024*1024*1024
+                      | T )?     -- *1024*1024*1024*1024
+
+<strprop>  ::= fstype | group | name | path | target | user
+
+<strop>    ::= ==                -- string equality
+             | ===               -- case insensitive string equality
+             | ~~                -- glob (fnmatch)
+             | ~~~               -- case insensitive glob (fnmatch)
+             | =~                -- POSIX Extended Regular Expressions
+             | =~~               -- case insensitive POSIX Extended Regular Expressions
+
+<str>      ::= " ([^"] | "")+ "  -- use "" for a single " inside "
+
+<typetest> ::= type == ( b | c | d | p | f | l )
+
+<modetest> ::= mode ( ==         -- exact permissions
+                    | &          -- check if all bits of <octal> set
+                    | |          -- check if any bit of <octal> set
+                    ) <octal>
+
+<octal> ::= [0-7]+
+.Ed
+.Sh EXIT STATUS
+.Ex -std
+.Sh SEE ALSO
+.Xr du 1 ,
+.Xr find 1 ,
+.Xr ls 1 ,
+.Xr stat 1
+.Sh AUTHORS
+.An Christian Neukirchen Aq Mt chneukirchen@gmail.com
+.Sh LICENSE
+.Nm
+is licensed under the terms of the MIT license.
