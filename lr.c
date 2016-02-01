@@ -1640,6 +1640,9 @@ main(int argc, char *argv[])
 			exit(2);
 		}
 
+	if (Gflag == 1 && !isatty(1))
+		Gflag = 0;
+
 	analyze_format();
 
 	if (optind == argc) {
