@@ -58,6 +58,7 @@
 #define FNM_CASEFOLD FNM_IGNORECASE
 #endif
 
+static int Gflag;
 static int Dflag;
 static int Hflag;
 static int Lflag;
@@ -1146,6 +1147,48 @@ print_mode(int mode)
 }
 
 static void
+fgbold()
+{
+	printf("\033[1m");
+}
+
+static void
+fg256(int c)
+{
+	printf("\033[38;5;%dm", c);
+}
+
+static void
+fgdefault()
+{
+	if (Gflag)
+		printf("\033[0m");
+}
+
+static void
+color_size_on(off_t s)
+{
+	int c;
+
+        if (!Gflag)
+		return;
+
+	if	(s <		  1024LL) c = 46;
+	else if (s <		4*1024LL) c = 82;
+	else if (s <	       16*1024LL) c = 118;
+	else if (s <	       32*1024LL) c = 154;
+	else if (s <	      128*1024LL) c = 190;
+	else if (s <	      512*1024LL) c = 226;
+	else if (s <	     1024*1024LL) c = 220;
+	else if (s <	 700*1024*1024LL) c = 214;
+	else if (s <  2*1048*1024*1024LL) c = 208;
+	else if (s < 50*1024*1024*1024LL) c = 202;
+	else				  c = 196;
+
+	fg256(c);
+}
+
+static void
 print_human(intmax_t i)
 {
 	double d = i;
@@ -1154,12 +1197,18 @@ print_human(intmax_t i)
 		u += 2;
 		d /= 1024.0;
 	}
+
+	color_size_on(i);
+
 	if (!*u)
 		printf("%5.0f", d);
 	else if (d < 10.0)
 		printf("%4.1f%s", d, u);
 	else
 		printf("%4.0f%s", d, u);
+
+	fgdefault();
+
 }
 
 static void
@@ -1213,6 +1262,50 @@ analyze_format()
 	}
 }
 
+static void
+color_age_on(time_t t)
+{
+	time_t age = now - t;
+	int c;
+
+        if (!Gflag)
+		return;
+
+	if	(age <		     0LL) c = 196;
+	else if (age <		    60LL) c = 255;
+	else if (age <		 60*60LL) c = 252;
+	else if (age <	      24*60*60LL) c = 250;
+	else if (age <	    7*24*60*60LL) c = 244;
+	else if (age <	  4*7*24*60*60LL) c = 244;
+	else if (age <	 26*7*24*60*60LL) c = 242;
+	else if (age <	 52*7*24*60*60LL) c = 240;
+	else if (age < 2*52*7*24*60*60LL) c = 238;
+	else				  c = 236;
+
+	fg256(c);
+}
+
+static void
+color_name_on(const char *f, mode_t m)
+{
+	const char *b;
+
+	if (!Gflag)
+		return;
+
+	b = basenam(f);
+
+	if (m & S_IXUSR)
+		fgbold();
+
+	if (*b == '.' || (S_ISREG(m) && b[strlen(b)-1] == '~'))
+		fg256(238);
+	else if (S_ISDIR(m))
+		fg256(242);
+	else if (S_ISREG(m) && (m & S_IXUSR))
+		fg256(154);
+}
+
 void
 print_format(struct fileinfo *fi)
 {
@@ -1241,7 +1334,10 @@ print_format(struct fileinfo *fi)
 		case '%': putchar('%'); break;
 		case 's':
 			if (!hflag) {
-				printf("%*jd", intlen(maxsize), (intmax_t)fi->sb.st_size);
+				color_size_on(fi->sb.st_size);
+				printf("%*jd", intlen(maxsize),
+				    (intmax_t)fi->sb.st_size);
+				fgdefault();
 				break;
 			}
 			/* FALLTHRU */
@@ -1260,11 +1356,17 @@ print_format(struct fileinfo *fi)
 		}
 		case 'p':
 			if (!sflag) {
+				color_name_on(fi->fpath, fi->sb.st_mode);
 				print_shquoted(fi->fpath);
+				fgdefault();
 				break;
 			}
 			/* FALLTHRU */
-		case 'P': print_noprefix(fi); break;
+		case 'P':
+			color_name_on(fi->fpath, fi->sb.st_mode);
+			print_noprefix(fi);
+			fgdefault();
+			break;
 		case 'l':
 			if (S_ISLNK(fi->sb.st_mode))
 				print_shquoted(readlin(fi->fpath, ""));
@@ -1286,7 +1388,11 @@ print_format(struct fileinfo *fi)
 				putchar('*');
 			}
 			break;
-		case 'f': print_shquoted(basenam(fi->fpath)); break;
+		case 'f':
+			color_name_on(fi->fpath, fi->sb.st_mode);
+			print_shquoted(basenam(fi->fpath));
+			fgdefault();
+			break;
 		case 'A':
 		case 'C':
 		case 'T': {
@@ -1300,6 +1406,7 @@ print_format(struct fileinfo *fi)
 			    *s == 'C' ? fi->sb.st_ctime :
 			    fi->sb.st_mtime);
 
+			color_age_on(t);
 			if (*s == '-') {
                                 printf("%3ldd%3ldh%3ldm%3lds",
                                     ((now - t) / (60*60*24)),
@@ -1311,6 +1418,7 @@ print_format(struct fileinfo *fi)
 				strftime(buf, sizeof buf, tfmt, localtime(&t));
 				printf("%s", buf);
 			}
+			fgdefault();
 			break;
 		}
 		case 'm': printf("%04o", (unsigned int)fi->sb.st_mode & 07777); break;
@@ -1506,13 +1614,14 @@ main(int argc, char *argv[])
 	argv0 = argv[0];
 	now = time(0);
 
-	while ((c = getopt(argc, argv, "01ADFHLQSUdf:lho:st:x")) != -1)
+	while ((c = getopt(argc, argv, "01ADFGHLQSUdf:lho:st:x")) != -1)
 		switch(c) {
 		case '0': format = zero_format; Qflag++; break;
 		case '1': expr = chain(expr, EXPR_AND, parse_expr("depth == 0 || prune")); break;
 		case 'A': expr = chain(expr, EXPR_AND, parse_expr("!(path ~~ \"*/.*\" && prune) && !path == \".\"")); break;
 		case 'D': Dflag++; break;
 		case 'F': format = type_format; break;
+		case 'G': Gflag++; break;
 		case 'H': Hflag++; break;
 		case 'L': Lflag++; break;
 		case 'Q': Qflag++; break;
