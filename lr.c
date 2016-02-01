@@ -1120,7 +1120,7 @@ order(const void *a, const void *b)
 }
 
 static int
-intlen(int i)
+intlen(intmax_t i)
 {
 	int s;
 	for (s = 1; i > 9; i /= 10)
