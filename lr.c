@@ -79,7 +79,7 @@ static size_t prefixl;
 static char default_ordering[] = "n";
 static char default_format[] = "%p\\n";
 static char type_format[] = "%p%F\\n";
-static char long_format[] = "%M %n %u %g %s %TY-%Tm-%Td %TH:%TM %p%F%l\n";
+static char long_format[] = "%M %n %u %g %s %TF %TR %p%F%l\n";
 static char zero_format[] = "%p\\0";
 static char stat_format[] = "%D %i %M %n %u %g %R %s \"%Ab %Ad %AT %AY\" \"%Tb %Td %TT %TY\" \"%Cb %Cd %CT %CY\" %b %p\n";
 
