@@ -9,7 +9,7 @@
 .Op Fl 0 | Fl F | Fl l | Fl S | Fl f Ar fmt
 .Op Fl D
 .Op Fl H | Fl L
-.Op Fl 1AQdhsx
+.Op Fl 1AGQdhsx
 .Op Fl U | Fl o Ar ord
 .Op Fl t Ar test
 .Ar path\ ...
@@ -56,6 +56,9 @@ Don't list files starting with a dot.
 Don't shell quote file names.
 .It Fl d
 Don't enter directories.
+.It Fl G
+Colorize output to TTY.
+Use twice to force colorized output.
 .It Fl h
 Print human readable size for
 .Fl l
