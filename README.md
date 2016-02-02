@@ -8,6 +8,10 @@ NetBSD 5.2.3, Mac OS X 10.10, OmniOS 5.11 and Cygwin 1.7.32.
 It will likely work on other Unix-like systems with C99, but you'll
 need to port scan_filesystems for fstype to work.
 
+## Screenshot
+
+![Screenshot of lr -AFGl -ovh](lr.png)
+
 ## Benefits
 
 Over find:
