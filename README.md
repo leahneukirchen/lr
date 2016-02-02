@@ -183,7 +183,8 @@ The following features won't be implemented:
 
 * `-exec`: use `-0` and `xargs`
   (or even better [xa](https://github.com/chneukirchen/xe)).
-* columns: use `column`, `git-column`, Plan 9 `mc`.
+* columns: use `column`, `git-column` (supports colors), Plan 9 `mc`.
+  (e.g. `lr -1AGFs | git column --mode=dense --padding=2`)
 
 ## "Screenshots"
 
