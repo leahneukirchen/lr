@@ -1181,7 +1181,7 @@ color_size_on(off_t s)
 {
 	int c;
 
-        if (!Gflag)
+	if (!Gflag)
 		return;
 
 	if	(s <		  1024LL) c = 46;
@@ -1279,7 +1279,7 @@ color_age_on(time_t t)
 	time_t age = now - t;
 	int c;
 
-        if (!Gflag)
+	if (!Gflag)
 		return;
 
 	if	(age <		     0LL) c = 196;
@@ -1413,17 +1413,17 @@ print_format(struct fileinfo *fi)
 			if (!*s)
 				break;
 
-                        time_t t = (*s == 'A' ? fi->sb.st_atime :
+			time_t t = (*s == 'A' ? fi->sb.st_atime :
 			    *s == 'C' ? fi->sb.st_ctime :
 			    fi->sb.st_mtime);
 
 			color_age_on(t);
 			if (*s == '-') {
-                                printf("%3ldd%3ldh%3ldm%3lds",
-                                    ((now - t) / (60*60*24)),
-                                    ((now - t) / (60*60)) % 24,
-                                    ((now - t) / 60) % 60,
-                                    (now - t) % 60);
+				printf("%3ldd%3ldh%3ldm%3lds",
+				    ((now - t) / (60*60*24)),
+				    ((now - t) / (60*60)) % 24,
+				    ((now - t) / 60) % 60,
+				    (now - t) % 60);
 			} else {
 				tfmt[1] = *s;
 				strftime(buf, sizeof buf, tfmt, localtime(&t));
