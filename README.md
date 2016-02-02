@@ -136,7 +136,7 @@ Default: `n`.
 	<numprop>  ::= depth | dev | entries | gid | inode
 	             | links | mode | rdev | size | total | uid
 	
-	<numop>    ::= <= | < | >= | > | == | !=
+	<numop>    ::= <= | < | >= | > | == | = | !=
 
         <dur>      ::= "./path"          -- mtime of relative path
                      | "/path"           -- mtime of absolute path
@@ -159,7 +159,7 @@ Default: `n`.
 	
 	<strprop>  ::= fstype | group | name | path | target | user
 	
-	<strop>    ::= ==                -- string equality
+	<strop>    ::= == | =            -- string equality
 	             | ===               -- case insensitive string equality
 	             | ~~                -- glob (fnmatch)
 	             | ~~~               -- case insensitive glob (fnmatch)
@@ -168,9 +168,9 @@ Default: `n`.
 	
 	<str>      ::= " ([^"] | "")+ "  -- use "" for a single " inside "
 
-	<typetest> ::= type == ( b | c | d | p | f | l )
+	<typetest> ::= type ( == | = ) ( b | c | d | p | f | l )
 
-	<modetest> ::= mode ( ==         -- exact permissions
+	<modetest> ::= mode ( == | =     -- exact permissions
 	                    | &          -- check if all bits of <octal> set
 	                    | |          -- check if any bit of <octal> set
 	                    ) <octal>

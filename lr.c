@@ -287,7 +287,7 @@ parse_op()
 		return EXPR_GE;
 	else if (token(">"))
 		return EXPR_GT;
-	else if (token("=="))
+	else if (token("==") || token("="))
 		return EXPR_EQ;
 	else if (token("!="))
 		return EXPR_NEQ;
@@ -328,7 +328,7 @@ static struct expr *
 parse_type()
 {
 	if (token("type")) {
-		if (token("==")) {  // TODO !=
+		if (token("==") || token("=")) {  // TODO !=
 			struct expr *e = mkexpr(EXPR_TYPE);
 			if (token("b"))
 				e->a.filetype = TYPE_BLOCK;
@@ -494,6 +494,8 @@ parse_strcmp()
 		op = EXPR_STREQI;
 	else if (token("=="))
 		op = EXPR_STREQ;
+	else if (token("="))
+		op = EXPR_STREQ;
 	else if (token("~~~"))
 		op = EXPR_GLOBI;
 	else if (token("~~"))
@@ -542,7 +544,7 @@ parse_mode()
 
 	e->a.prop = PROP_MODE;
 
-	if (token("==")) {
+	if (token("==") || token("=")) {
 		e->op = EXPR_EQ;
 	} else if (token("&")) {
 		e->op = EXPR_ALLSET;
