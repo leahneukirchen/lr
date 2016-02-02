@@ -168,7 +168,7 @@ Default: `n`.
 	
 	<str>      ::= " ([^"] | "")+ "  -- use "" for a single " inside "
 
-	<typetest> ::= type ( == | = ) ( b | c | d | p | f | l )
+	<typetest> ::= type ( == | = | != ) ( b | c | d | p | f | l )
 
 	<modetest> ::= mode ( == | =     -- exact permissions
 	                    | &          -- check if all bits of <octal> set

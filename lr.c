@@ -327,8 +327,11 @@ parse_inner()
 static struct expr *
 parse_type()
 {
+	int negate = 0;
+
 	if (token("type")) {
-		if (token("==") || token("=")) {  // TODO !=
+		if (token("==") || token("=")
+		    || (token("!=") && ++negate)) {
 			struct expr *e = mkexpr(EXPR_TYPE);
 			if (token("b"))
 				e->a.filetype = TYPE_BLOCK;
@@ -348,7 +351,13 @@ parse_type()
 				parse_error("invalid file type '%c'", *pos);
 			else
 				parse_error("no file type given");
-			return e;
+			if (negate) {
+				struct expr *not = mkexpr(EXPR_NOT);
+				not->a.expr = e;
+				return not;
+			} else {
+				return e;
+			}
 		} else {
 			parse_error("invalid file type comparison at '%.15s'",
 			    pos);
