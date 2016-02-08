@@ -1,0 +1,8 @@
+#!/bin/sh
+# lrls - lr with GNU ls style output
+
+color=
+[ -t 1 ] && color=-GG
+
+lr $color -A1s  -t '!type == d || depth > 0' "$@" |git column --mode=dense --pad=2
+

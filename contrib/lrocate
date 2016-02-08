@@ -1,0 +1,5 @@
+#!/bin/sh
+# lrocate [PATTERN] [LR OPTIONS...] - call lr(1) on locate(1) results
+
+pattern=$1; shift
+locate -0 "$pattern" | xe -0 -N0 lr -lG "$@"
