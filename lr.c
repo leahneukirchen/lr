@@ -396,6 +396,23 @@ parse_string(char **s)
 		ws();
 		*s = buf ? buf : (char *) "";
 		return 1;
+	} else if (*pos == '$') {
+		char t;
+		char *e = ++pos;
+
+		while (isalnum((unsigned char) *pos) || *pos == '_')
+			pos++;
+		if (e == pos)
+			parse_error("invalid environment variable name");
+
+		t = *pos;
+		*pos = 0;
+		*s = getenv(e);
+		if (!*s)
+			*s = (char *) "";
+		*pos = t;
+		ws();
+		return 1;
 	}
 
 	return 0;

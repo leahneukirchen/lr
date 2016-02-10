@@ -171,6 +171,7 @@ Default: `n`.
 	             | =~~               -- case insensitive POSIX Extended Regular Expressions
 	
 	<str>      ::= " ([^"] | "")+ "  -- use "" for a single " inside "
+	             | $[A-Za-z0-9_]     -- environment variable
 
 	<typetest> ::= type ( == | = | != ) ( b | c | d | p | f | l )
 
