@@ -376,7 +376,8 @@ parse_string(char **s)
 
 	if (*pos == '"') {
 		pos++;
-		while (*pos != '"' || (*pos == '"' && *(pos+1) == '"')) {
+		while (*pos &&
+		    (*pos != '"' || (*pos == '"' && *(pos+1) == '"'))) {
 			if (len >= bufsiz) {
 				bufsiz = 2*bufsiz + 16;
 				buf = realloc(buf, bufsiz);
@@ -387,6 +388,8 @@ parse_string(char **s)
 				pos++;
 			buf[len++] = *pos++;
 		}
+		if (!*pos)
+			parse_error("unterminated string");
 		if (buf)
 			buf[len] = 0;
 		pos++;
