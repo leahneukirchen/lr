@@ -119,7 +119,8 @@ static time_t now;
 struct fileinfo {
 	char *fpath;
 	size_t prefixl;
-	int depth, entries;
+	int depth;
+	nlink_t entries;
 	struct stat sb;
 	off_t total;
 };
