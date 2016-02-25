@@ -84,7 +84,7 @@ static size_t prefixl;
 static char default_ordering[] = "n";
 static char default_format[] = "%p\\n";
 static char type_format[] = "%p%F\\n";
-static char long_format[] = "%M %n %u %g %s %TF %TR %p%F%l\n";
+static char long_format[] = "%M%x %n %u %g %s %TF %TR %p%F%l\n";
 static char zero_format[] = "%p\\0";
 static char stat_format[] = "%D %i %M %n %u %g %R %s \"%Ab %Ad %AT %AY\" \"%Tb %Td %TT %TY\" \"%Cb %Cd %CT %CY\" %b %p\n";
 
@@ -101,6 +101,7 @@ struct idmap {
 static int need_group;
 static int need_user;
 static int need_fstype;
+static int need_xattr;
 
 static dev_t maxdev;
 static ino_t maxino;
@@ -110,6 +111,7 @@ static gid_t maxgid;
 static dev_t maxrdev;
 static off_t maxsize;
 static blkcnt_t maxblocks;
+static int maxxattr;
 
 static int maxdepth;
 static int uwid, gwid, fwid;
@@ -123,6 +125,7 @@ struct fileinfo {
 	nlink_t entries;
 	struct stat sb;
 	off_t total;
+	char xattr;
 };
 
 enum op {
@@ -1294,6 +1297,7 @@ analyze_format()
 		case 'g': need_group++; break;
 		case 'u': need_user++; break;
 		case 'Y': need_fstype++; break;
+		case 'x': need_xattr++; break;
 		}
 	}
 }
@@ -1504,7 +1508,7 @@ print_format(struct fileinfo *fi)
 		case 'e': printf("%ld", (long)fi->entries); break;
 		case 't': printf("%jd", (intmax_t)fi->total); break;
 		case 'Y': printf("%*s", -fwid, fstype(fi->sb.st_dev)); break;
-		case 'x': putchar(xattr_char(fi->fpath)); break;
+		case 'x': if (maxxattr > 0) putchar(fi->xattr); break;
 		default:
 			putchar('%');
 			putchar(*s);
@@ -1530,6 +1534,7 @@ callback(const char *fpath, const struct stat *sb, int depth, int entries, off_t
 	fi->depth = depth;
 	fi->entries = entries;
 	fi->total = total;
+	fi->xattr = ' ';
 	memcpy((char *)&fi->sb, (char *)sb, sizeof (struct stat));
 
 	if (expr && !eval(expr, fi))
@@ -1568,6 +1573,11 @@ callback(const char *fpath, const struct stat *sb, int depth, int entries, off_t
 		groupname(fi->sb.st_gid);
 	if (need_fstype)
 		fstype(fi->sb.st_dev);
+	if (need_xattr) {
+		fi->xattr = xattr_char(fi->fpath);
+		if (fi->xattr != ' ')
+			maxxattr = 1;
+	}
 
 	return 0;
 }
