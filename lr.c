@@ -1550,6 +1550,13 @@ callback(const char *fpath, const struct stat *sb, int depth, int entries, off_t
 	if (expr && !eval(expr, fi))
 		return 0;
 
+	if (need_xattr) {
+		strncpy(fi->xattr, xattr_string(fi->fpath), sizeof fi->xattr);
+		if (strlen(fi->xattr) > maxxattr)
+			maxxattr = strlen(fi->xattr);
+	} else
+		memset(fi->xattr, 0, sizeof fi->xattr);
+
 	if (Uflag)
 		print(&fi, postorder, depth);
 	else
@@ -1583,12 +1590,6 @@ callback(const char *fpath, const struct stat *sb, int depth, int entries, off_t
 		groupname(fi->sb.st_gid);
 	if (need_fstype)
 		fstype(fi->sb.st_dev);
-	if (need_xattr) {
-		strncpy(fi->xattr, xattr_string(fi->fpath), sizeof fi->xattr);
-		if (strlen(fi->xattr) > maxxattr)
-			maxxattr = strlen(fi->xattr);
-	} else
-		memset(fi->xattr, 0, sizeof fi->xattr);
 
 	return 0;
 }
