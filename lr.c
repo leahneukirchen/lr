@@ -172,6 +172,7 @@ enum prop {
 	PROP_TOTAL,
 	PROP_UID,
 	PROP_USER,
+	PROP_XATTR,
 };
 
 enum filetype {
@@ -524,6 +525,8 @@ parse_strcmp()
 		prop = PROP_TARGET;
 	else if (token("user"))
 		prop = PROP_USER;
+	else if (token("xattr"))
+		prop = PROP_XATTR;
 	else
 		return parse_type();
 
@@ -962,6 +965,50 @@ fstype(dev_t devid)
 	return result ? (*result)->name : strid(devid);
 }
 
+static char*
+xattr_string(const char *f)
+{
+#ifdef __linux__
+	char xattr[1024];
+	int i, r;
+	int have_xattr = 0, have_cap = 0, have_acl = 0;
+
+	if (Lflag)
+		r = listxattr(f, xattr, sizeof xattr);
+	else
+		r = llistxattr(f, xattr, sizeof xattr);
+	if (r < 0 && errno == ERANGE) {
+		/* just look at prefix */
+		r = sizeof xattr;
+		xattr[r-1] = 0;
+	}
+	// ignoring ENOTSUP or r == 0
+
+	for (i = 0; i < r; i += strlen(xattr+i) + 1)
+		if (strcmp(xattr+i, "security.capability") == 0)
+			have_cap = 1;
+		else if (strcmp(xattr+i, "system.posix_acl_access") == 0 ||
+		    strcmp(xattr+i, "system.posix_acl_default") == 0)
+			have_acl = 1;
+		else
+			have_xattr = 1;
+
+	static char buf[4];
+	char *c = buf;
+	if (have_cap)
+		*c++ = '#';
+	if (have_acl)
+		*c++ = '+';
+	if (have_xattr)
+		*c++ = '@';
+	*c = 0;
+
+	return buf;
+#else
+	return "";		// No support for xattrs on this platform.
+#endif
+}
+
 int
 eval(struct expr *e, struct fileinfo *fi)
 {
@@ -1041,6 +1088,7 @@ eval(struct expr *e, struct fileinfo *fi)
 		case PROP_PATH: s = fi->fpath; break;
 		case PROP_TARGET: s = readlin(fi->fpath, ""); break;
 		case PROP_USER: s = username(fi->sb.st_uid); break;
+		case PROP_XATTR: s = xattr_string(fi->fpath); break;
 		}
 		switch (e->op) {
 		case EXPR_STREQ: return strcmp(e->b.string, s) == 0;
@@ -1344,50 +1392,6 @@ color_name_on(const char *f, mode_t m)
 		fg256(242);
 	else if (S_ISREG(m) && (m & S_IXUSR))
 		fg256(154);
-}
-
-static char*
-xattr_string(const char *f)
-{
-#ifdef __linux__
-	char xattr[1024];
-	int i, r;
-	int have_xattr = 0, have_cap = 0, have_acl = 0;
-
-	if (Lflag)
-		r = listxattr(f, xattr, sizeof xattr);
-	else
-		r = llistxattr(f, xattr, sizeof xattr);
-	if (r < 0 && errno == ERANGE) {
-		/* just look at prefix */
-		r = sizeof xattr;
-		xattr[r-1] = 0;
-	}
-	// ignoring ENOTSUP or r == 0
-
-	for (i = 0; i < r; i += strlen(xattr+i) + 1)
-		if (strcmp(xattr+i, "security.capability") == 0)
-			have_cap = 1;
-		else if (strcmp(xattr+i, "system.posix_acl_access") == 0 ||
-		    strcmp(xattr+i, "system.posix_acl_default") == 0)
-			have_acl = 1;
-		else
-			have_xattr = 1;
-
-	static char buf[4];
-	char *c = buf;
-	if (have_cap)
-		*c++ = '#';
-	if (have_acl)
-		*c++ = '+';
-	if (have_xattr)
-		*c++ = '@';
-	*c = 0;
-
-	return buf;
-#else
-	return "";		// No support for xattrs on this platform.
-#endif
 }
 
 void

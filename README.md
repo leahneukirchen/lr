@@ -162,7 +162,7 @@ Default: `n`.
 	                      | G        -- *1024*1024*1024
 	                      | T )?     -- *1024*1024*1024*1024
 	
-	<strprop>  ::= fstype | group | name | path | target | user
+	<strprop>  ::= fstype | group | name | path | target | user | xattr
 	
 	<strop>    ::= == | =            -- string equality
 	             | ===               -- case insensitive string equality
