@@ -163,6 +163,16 @@ Total size used by accepted files in directories (only with
 .Fl D )
 .It Ic \&%Y
 Type of the filesystem the file resides on
+.It Ic \&%x
+Linux-only:
+Print
+.Sq Li \&#
+for files with security capabilities,
+.Sq Li \&+
+for files with an ACL,
+.Sq Li \&@
+for files with other extended attributes,
+or a single space else.
 .El
 .Sh SORT ORDER
 Sort order is string consisting of the following letters.

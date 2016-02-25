@@ -35,6 +35,10 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#ifdef __linux__
+#include <attr/xattr.h>
+#endif
+
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
@@ -1337,6 +1341,39 @@ color_name_on(const char *f, mode_t m)
 		fg256(154);
 }
 
+static char
+xattr_char(const char *f)
+{
+#ifdef __linux__
+	char xattr[1024];
+	int c, i, r;
+
+	if (Lflag)
+		r = listxattr(f, xattr, sizeof xattr);
+	else
+		r = llistxattr(f, xattr, sizeof xattr);
+	if (r < 0 && errno == ERANGE) {
+		/* just look at prefix */
+		r = sizeof xattr;
+		xattr[r-1] = 0;
+	}
+	// ignoring ENOTSUP or r == 0
+
+	for (i = 0, c = 0; i < r; i += strlen(xattr+i) + 1)
+		if (strcmp(xattr+i, "security.capability") == 0) {
+			if (c < 3) c = 3;
+		} else if (strcmp(xattr+i, "system.posix_acl_access") == 0) {
+			if (c < 2) c = 2;
+		} else {
+			if (c < 1) c = 1;
+		}
+
+	return " @+#"[c];
+#else
+	return ' ';		// No support for xattrs on this platform.
+#endif
+}
+
 void
 print_format(struct fileinfo *fi)
 {
@@ -1466,6 +1503,7 @@ print_format(struct fileinfo *fi)
 		case 'e': printf("%ld", (long)fi->entries); break;
 		case 't': printf("%jd", (intmax_t)fi->total); break;
 		case 'Y': printf("%*s", -fwid, fstype(fi->sb.st_dev)); break;
+		case 'x': putchar(xattr_char(fi->fpath)); break;
 		default:
 			putchar('%');
 			putchar(*s);
