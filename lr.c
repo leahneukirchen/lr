@@ -111,7 +111,7 @@ static gid_t maxgid;
 static dev_t maxrdev;
 static off_t maxsize;
 static blkcnt_t maxblocks;
-static int maxxattr;
+static unsigned int maxxattr;
 
 static int maxdepth;
 static int uwid, gwid, fwid;
@@ -125,7 +125,7 @@ struct fileinfo {
 	nlink_t entries;
 	struct stat sb;
 	off_t total;
-	char xattr;
+	char xattr[4];
 };
 
 enum op {
@@ -1346,12 +1346,13 @@ color_name_on(const char *f, mode_t m)
 		fg256(154);
 }
 
-static char
-xattr_char(const char *f)
+static char*
+xattr_string(const char *f)
 {
 #ifdef __linux__
 	char xattr[1024];
-	int c, i, r;
+	int i, r;
+	int have_xattr = 0, have_cap = 0, have_acl = 0;
 
 	if (Lflag)
 		r = listxattr(f, xattr, sizeof xattr);
@@ -1364,18 +1365,28 @@ xattr_char(const char *f)
 	}
 	// ignoring ENOTSUP or r == 0
 
-	for (i = 0, c = 0; i < r; i += strlen(xattr+i) + 1)
-		if (strcmp(xattr+i, "security.capability") == 0) {
-			if (c < 3) c = 3;
-		} else if (strcmp(xattr+i, "system.posix_acl_access") == 0) {
-			if (c < 2) c = 2;
-		} else {
-			if (c < 1) c = 1;
-		}
+	for (i = 0; i < r; i += strlen(xattr+i) + 1)
+		if (strcmp(xattr+i, "security.capability") == 0)
+			have_cap = 1;
+		else if (strcmp(xattr+i, "system.posix_acl_access") == 0 ||
+		    strcmp(xattr+i, "system.posix_acl_default") == 0)
+			have_acl = 1;
+		else
+			have_xattr = 1;
 
-	return " @+#"[c];
+	static char buf[4];
+	char *c = buf;
+	if (have_cap)
+		*c++ = '#';
+	if (have_acl)
+		*c++ = '+';
+	if (have_xattr)
+		*c++ = '@';
+	*c = 0;
+
+	return buf;
 #else
-	return ' ';		// No support for xattrs on this platform.
+	return "";		// No support for xattrs on this platform.
 #endif
 }
 
@@ -1508,7 +1519,7 @@ print_format(struct fileinfo *fi)
 		case 'e': printf("%ld", (long)fi->entries); break;
 		case 't': printf("%jd", (intmax_t)fi->total); break;
 		case 'Y': printf("%*s", -fwid, fstype(fi->sb.st_dev)); break;
-		case 'x': if (maxxattr > 0) putchar(fi->xattr); break;
+		case 'x': printf("%*s", -maxxattr, fi->xattr); break;
 		default:
 			putchar('%');
 			putchar(*s);
@@ -1534,7 +1545,6 @@ callback(const char *fpath, const struct stat *sb, int depth, int entries, off_t
 	fi->depth = depth;
 	fi->entries = entries;
 	fi->total = total;
-	fi->xattr = ' ';
 	memcpy((char *)&fi->sb, (char *)sb, sizeof (struct stat));
 
 	if (expr && !eval(expr, fi))
@@ -1574,10 +1584,11 @@ callback(const char *fpath, const struct stat *sb, int depth, int entries, off_t
 	if (need_fstype)
 		fstype(fi->sb.st_dev);
 	if (need_xattr) {
-		fi->xattr = xattr_char(fi->fpath);
-		if (fi->xattr != ' ')
-			maxxattr = 1;
-	}
+		strncpy(fi->xattr, xattr_string(fi->fpath), sizeof fi->xattr);
+		if (strlen(fi->xattr) > maxxattr)
+			maxxattr = strlen(fi->xattr);
+	} else
+		memset(fi->xattr, 0, sizeof fi->xattr);
 
 	return 0;
 }

@@ -97,7 +97,7 @@ Over ls:
 * `%e`: number of entries in directories (only with `-D`).
 * `%t`: total size used by accepted files in directories (only with `-D`).
 * `%Y`: type of the filesystem the file resides on.
-* `%x`: Linux-only: `#` for files with security capabilities, `+` for files with an ACL, `@` for files with other extended attributes, a single space else.
+* `%x`: Linux-only: a combination of: `#` for files with security capabilities, `+` for files with an ACL, `@` for files with other extended attributes.
 
 ## Sort order
 
