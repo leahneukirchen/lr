@@ -51,7 +51,7 @@ Over ls:
 * `-S`: BSD stat(1)-inspired output.
 * `-f FMT`: custom formatting, see below.
 * `-D`: depth first traversal. `prune` does not work, but `entries`
-  and `total` is computed.
+  and `total` are computed on the fly.
 * `-H`: only follow symlinks on command line.
 * `-L`: follow all symlinks.
 * `-1`: don't go below one level of directories.
@@ -94,7 +94,7 @@ Over ls:
 * `%G`: numeric gid.
 * `%u`: user name.
 * `%U`: numeric uid.
-* `%e`: number of entries in directories (only with `-D`).
+* `%e`: number of entries in directories.
 * `%t`: total size used by accepted files in directories (only with `-D`).
 * `%Y`: type of the filesystem the file resides on.
 * `%x`: Linux-only: a combination of: `#` for files with security capabilities, `+` for files with an ACL, `@` for files with other extended attributes.

@@ -1009,6 +1009,33 @@ xattr_string(const char *f)
 #endif
 }
 
+static nlink_t
+count_entries(struct fileinfo *fi)
+{
+	nlink_t c = 0;
+	struct dirent *de;
+	DIR *d;
+
+	if (Dflag)
+		return fi->entries;
+
+	if (!S_ISDIR(fi->sb.st_mode))
+		return 0;
+
+	d = opendir(fi->fpath);
+	if (!d)
+		return 0;
+	while ((de = readdir(d))) {
+		if (de->d_name[0] == '.' &&
+		    (!de->d_name[1] || (de->d_name[1]=='.' && !de->d_name[2])))
+			continue;
+		c++;
+	}
+	closedir(d);
+
+	return c;
+}
+
 int
 eval(struct expr *e, struct fileinfo *fi)
 {
@@ -1038,7 +1065,7 @@ eval(struct expr *e, struct fileinfo *fi)
 		case PROP_CTIME: v = fi->sb.st_ctime; break;
 		case PROP_DEPTH: v = fi->depth; break;
 		case PROP_DEV: v = fi->sb.st_dev; break;
-		case PROP_ENTRIES: v = fi->entries; break;
+		case PROP_ENTRIES: v = count_entries(fi); break;
 		case PROP_GID: v = fi->sb.st_gid; break;
 		case PROP_INODE: v = fi->sb.st_ino; break;
 		case PROP_LINKS: v = fi->sb.st_nlink; break;
@@ -1520,7 +1547,7 @@ print_format(struct fileinfo *fi)
 		case 'u': printf("%*s", -uwid, username(fi->sb.st_uid)); break;
 		case 'U': printf("%*ld", intlen(maxuid), (long)fi->sb.st_uid); break;
 
-		case 'e': printf("%ld", (long)fi->entries); break;
+		case 'e': printf("%ld", (long)count_entries(fi)); break;
 		case 't': printf("%jd", (intmax_t)fi->total); break;
 		case 'Y': printf("%*s", -fwid, fstype(fi->sb.st_dev)); break;
 		case 'x': printf("%*s", -maxxattr, fi->xattr); break;
