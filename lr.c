@@ -122,7 +122,7 @@ struct fileinfo {
 	char *fpath;
 	size_t prefixl;
 	int depth;
-	nlink_t entries;
+	ino_t entries;
 	struct stat sb;
 	off_t total;
 	char xattr[4];
@@ -1009,10 +1009,10 @@ xattr_string(const char *f)
 #endif
 }
 
-static nlink_t
+static ino_t
 count_entries(struct fileinfo *fi)
 {
-	nlink_t c = 0;
+	ino_t c = 0;
 	struct dirent *de;
 	DIR *d;
 
