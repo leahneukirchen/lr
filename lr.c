@@ -1654,11 +1654,11 @@ recurse(char *path, struct history *h)
 		if (d) {
 			struct dirent *de;
 			while ((de = readdir(d))) {
-				entries++;
 				if (de->d_name[0] == '.' &&
 				    (!de->d_name[1] ||
 				     (de->d_name[1]=='.' && !de->d_name[2])))
 					continue;
+				entries++;
 				if (strlen(de->d_name) >= PATH_MAX-l) {
 					errno = ENAMETOOLONG;
 					closedir(d);
