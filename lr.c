@@ -1513,13 +1513,14 @@ print_format(struct fileinfo *fi)
 		case 'T': {
 			char tfmt[3] = "%\0\0";
 			char buf[256];
-			s++;
-			if (!*s)
-				break;
 
 			time_t t = (*s == 'A' ? fi->sb.st_atime :
 			    *s == 'C' ? fi->sb.st_ctime :
 			    fi->sb.st_mtime);
+
+			s++;
+			if (!*s)
+				break;
 
 			color_age_on(t);
 			if (*s == '-') {
