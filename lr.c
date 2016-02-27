@@ -118,6 +118,7 @@ static int maxdepth;
 static int uwid, gwid, fwid;
 
 static time_t now;
+static mode_t default_mask;
 
 struct fileinfo {
 	char *fpath;
@@ -150,6 +151,7 @@ enum op {
 	EXPR_TYPE,
 	EXPR_ALLSET,
 	EXPR_ANYSET,
+	EXPR_CHMOD,
 };
 
 enum prop {
@@ -209,6 +211,67 @@ parse_error(const char *msg, ...)
 	vfprintf(stderr, msg, ap);
 	fprintf(stderr, "\n");
 	exit(2);
+}
+
+int
+test_chmod(char *c, mode_t oldmode)
+{
+	mode_t newmode = oldmode;
+	mode_t whom, what;
+	char op;
+
+	do {
+		whom = 0;
+		what = 0;
+
+		while (1) {
+			switch(*c) {
+			case 'u': whom |= 04700; break;
+			case 'g': whom |= 02070; break;
+			case 'o': whom |= 01007; break;
+			case 'a': whom |= 07777; break;
+			default: goto op;
+			}
+			c++;
+		}
+op:
+		if (whom == 0)
+			whom = default_mask;
+		op = *c++;
+		if (!(op == '-' || op == '+' || op == '='))
+			parse_error("invalid mode operator");
+
+		switch(*c) {
+		case 'u': what = 00111 * ((newmode >> 6) & 0007); break;
+		case 'g': what = 00111 * ((newmode >> 3) & 0007); break;
+		case 'o': what = 00111 * ((newmode     ) & 0007); break;
+		default:
+			while (1) {
+				switch(*c) {
+				case 'r': what |= 00444; break;
+				case 'w': what |= 00222; break;
+				case 'x': what |= 00111; break;
+				case 'X': if (newmode & 00111) what |= 00111; break;
+				case 's': what |= 06000; break;
+				case 't': what |= 01000; break;
+				case ',': case 0: goto doit;
+				default: parse_error("invalid permission");
+				}
+				c++;
+			}
+		}
+doit:
+		switch (op) {
+		case '-': newmode &= ~(whom & what); break;
+		case '+': newmode |= (whom & what); break;
+		case '=': newmode &= ~whom; newmode |= (whom & what); break;
+		}
+	} while (*c == ',' && c++);
+
+	if (*c)
+		parse_error("trailing garbage in mode string '%s'", c);
+
+	return newmode == oldmode;
 }
 
 static struct expr *
@@ -582,6 +645,7 @@ parse_mode()
 {
 	struct expr *e = mkexpr(0);
 	long n;
+	char *s;
 
 	e->a.prop = PROP_MODE;
 
@@ -597,6 +661,11 @@ parse_mode()
 
 	if (parse_octal(&n)) {
 		e->b.num = n;
+	} if (e->op == EXPR_EQ && parse_string(&s)) {
+		e->op = EXPR_CHMOD;
+		e->b.string = s;
+		default_mask = umask(umask(0));  /* cache for future usage */
+		test_chmod(s, 0);  /* run once to check for syntax */
 	} else {
 		parse_error("invalid mode at '%.15s'", pos);
 	}
@@ -1091,6 +1160,8 @@ eval(struct expr *e, struct fileinfo *fi)
 		case EXPR_ANYSET: return (v & e->b.num) > 0;
 		}
 	}
+	case EXPR_CHMOD:
+		return test_chmod(e->b.string, fi->sb.st_mode & 07777);
 	case EXPR_TYPE:	{
 		switch (e->a.filetype) {
 		case TYPE_BLOCK: return S_ISBLK(fi->sb.st_mode);

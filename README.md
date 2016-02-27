@@ -183,8 +183,13 @@ Default: `n`.
 	                    | &          -- check if all bits of <octal> set
 	                    | |          -- check if any bit of <octal> set
 	                    ) <octal>
+	             | mode = "<chmod>"  -- check if symbolic mode is satisfied
 	
 	<octal> ::= [0-7]+
+
+	<chmod> ::= <clause> (, <clause>)+
+
+	<clause> ::= [guoa]* [+-=] [rwxXstugo]*  -- see chmod(1)
 
 ## EWONTFIX
 
