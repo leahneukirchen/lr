@@ -661,7 +661,7 @@ parse_mode()
 
 	if (parse_octal(&n)) {
 		e->b.num = n;
-	} if (e->op == EXPR_EQ && parse_string(&s)) {
+	} else if (e->op == EXPR_EQ && parse_string(&s)) {
 		e->op = EXPR_CHMOD;
 		e->b.string = s;
 		umask(default_mask = 07777 & ~umask(0));  /* for future usage */
