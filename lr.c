@@ -664,7 +664,7 @@ parse_mode()
 	} if (e->op == EXPR_EQ && parse_string(&s)) {
 		e->op = EXPR_CHMOD;
 		e->b.string = s;
-		default_mask = umask(umask(0));  /* cache for future usage */
+		umask(default_mask = 07777 & ~umask(0));  /* for future usage */
 		test_chmod(s, 0);  /* run once to check for syntax */
 	} else {
 		parse_error("invalid mode at '%.15s'", pos);
