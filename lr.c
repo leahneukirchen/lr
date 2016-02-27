@@ -251,7 +251,7 @@ op:
 				case 'r': what |= 00444; break;
 				case 'w': what |= 00222; break;
 				case 'x': what |= 00111; break;
-				case 'X': if (newmode & 00111) what |= 00111; break;
+				case 'X': if (oldmode & 00111) what |= 00111; break;
 				case 's': what |= 06000; break;
 				case 't': what |= 01000; break;
 				case ',': case 0: goto doit;
