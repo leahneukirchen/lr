@@ -72,7 +72,7 @@ static int hflag;
 static int lflag;
 static int sflag;
 static int xflag;
-static char Tflag = 'M';
+static char Tflag = 'T';
 
 static char *argv0;
 static char *format;
@@ -1737,7 +1737,7 @@ static char
 timeflag(char *arg)
 {
 	if ((arg[0] == 'A' || arg[0] == 'C' || arg[0] == 'M') && !arg[1])
-		return arg[0];
+		return arg[0] == 'M' ? 'T' : arg[0];
 	fprintf(stderr, "%s: -T only accepts A, C or M as argument.\n", argv0);
 	exit(2);
 }
