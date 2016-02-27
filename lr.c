@@ -1801,6 +1801,7 @@ traverse(const char *path)
 		return -1;
 	}
 	memcpy(pathbuf, path, prefixl + 1);
+	pathbuf[prefixl] = 0;
 	return recurse(pathbuf, 0);
 }
 
