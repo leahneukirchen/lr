@@ -242,9 +242,9 @@ op:
 			parse_error("invalid mode operator");
 
 		switch(*c) {
-		case 'u': what = 00111 * ((newmode >> 6) & 0007); break;
-		case 'g': what = 00111 * ((newmode >> 3) & 0007); break;
-		case 'o': what = 00111 * ((newmode     ) & 0007); break;
+		case 'u': what = 00111 * ((newmode >> 6) & 0007); c++; break;
+		case 'g': what = 00111 * ((newmode >> 3) & 0007); c++; break;
+		case 'o': what = 00111 * ((newmode     ) & 0007); c++; break;
 		default:
 			while (1) {
 				switch(*c) {
