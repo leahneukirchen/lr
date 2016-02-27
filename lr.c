@@ -1493,6 +1493,8 @@ color_name_on(const char *f, mode_t m)
 		fg256(242);
 	else if (S_ISREG(m) && (m & S_IXUSR))
 		fg256(154);
+	else if (m == 0)  /* broken link */
+		fg256(160);
 }
 
 // unused format codes: BEHJKLNOQVWXZ achjoqrvwz
@@ -1558,8 +1560,30 @@ print_format(struct fileinfo *fi)
 			fgdefault();
 			break;
 		case 'l':
-			if (S_ISLNK(fi->sb.st_mode))
-				print_shquoted(readlin(fi->fpath, ""));
+			if (S_ISLNK(fi->sb.st_mode)) {
+				char target[PATH_MAX];
+				size_t j = strlen(fi->fpath);
+				struct stat st;
+				st.st_mode = 0;
+
+				strcpy(target, fi->fpath);
+				while (j && target[j-1] != '/')
+					j--;
+				ssize_t l = readlink(fi->fpath,
+				    target+j, sizeof target - j);
+				if (l > 0 && (size_t)l < sizeof target - j) {
+					target[j+l] = 0;
+					if (Gflag)
+						lstat(target[j] == '/' ?
+						    target + j : target,
+						    &st);
+				} else {
+					*target = 0;
+				}
+				color_name_on(target, st.st_mode);
+				print_shquoted(target + j);
+				fgdefault();
+			}
 			break;
 		case 'n': printf("%*jd", intlen(maxnlink), (intmax_t)fi->sb.st_nlink); break;
 		case 'F':
