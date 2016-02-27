@@ -6,7 +6,8 @@
 .Nd list files, recursively
 .Sh SYNOPSIS
 .Nm
-.Op Fl 0 | Fl F | Fl l | Fl S | Fl f Ar fmt
+.Op Fl 0 | Fl F | Fl l Oo Fl TA | Fl TC | Fl TM Oc | Fl S | Fl f Ar fmt
+.br
 .Op Fl D
 .Op Fl H | Fl L
 .Op Fl 1AGQdhsx
@@ -29,6 +30,19 @@ Output filenames and an indicator of their file type (one of
 .It Fl l
 Long output ala
 .Ic ls -l .
+.It Fl TA
+With
+.Fl l ,
+print atime.
+.It Fl TC
+With
+.Fl l ,
+print ctime.
+.It Fl TM
+With
+.Fl l ,
+print mtime.
+This is the default.
 .It Fl S
 Output inspired by
 BSD

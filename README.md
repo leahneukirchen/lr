@@ -43,11 +43,14 @@ Over ls:
 
 ## Usage:
 
-	lr [-0|-F|-l|-S|-f FMT] [-D] [-H|-L] [-1AGQdhsx] [-U|-o ORD] [-t TEST]* PATH...
+	lr [-0|-F|-l [-TA|-TC|-TM]|-S|-f FMT] [-D] [-H|-L] [-1AGQdhsx] [-U|-o ORD] [-t TEST]* PATH...
 
 * `-0`: output filenames seperated by NUL bytes (implies `-Q`).
 * `-F`: output filenames and an indicator of their file type (`*/=>@|`).
 * `-l`: long output ala `ls -l`.
+* `-TA`: with `-l`, output atime.
+* `-TC`: with `-l`, output ctime.
+* `-TM`: with `-l`, output mtime (default).
 * `-S`: BSD stat(1)-inspired output.
 * `-f FMT`: custom formatting, see below.
 * `-D`: depth first traversal. `prune` does not work, but `entries`

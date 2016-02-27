@@ -72,6 +72,7 @@ static int hflag;
 static int lflag;
 static int sflag;
 static int xflag;
+static char Tflag = 'M';
 
 static char *argv0;
 static char *format;
@@ -84,7 +85,7 @@ static size_t prefixl;
 static char default_ordering[] = "n";
 static char default_format[] = "%p\\n";
 static char type_format[] = "%p%F\\n";
-static char long_format[] = "%M%x %n %u %g %s %TF %TR %p%F%l\n";
+static char long_format[] = "%M%x %n %u %g %s %\324F %\324R %p%F%l\n";
 static char zero_format[] = "%p\\0";
 static char stat_format[] = "%D %i %M %n %u %g %R %s \"%Ab %Ad %AT %AY\" \"%Tb %Td %TT %TY\" \"%Cb %Cd %CT %CY\" %b %p\n";
 
@@ -1421,6 +1422,7 @@ color_name_on(const char *f, mode_t m)
 		fg256(154);
 }
 
+// unused format codes: BEHJKLNOQVWXZ achjoqrvwz
 void
 print_format(struct fileinfo *fi)
 {
@@ -1510,9 +1512,13 @@ print_format(struct fileinfo *fi)
 			break;
 		case 'A':
 		case 'C':
-		case 'T': {
+		case 'T':
+		case '\324': /* Meta-T */ {
 			char tfmt[3] = "%\0\0";
 			char buf[256];
+
+			if (*s == '\324')
+				*s = Tflag;
 
 			time_t t = (*s == 'A' ? fi->sb.st_atime :
 			    *s == 'C' ? fi->sb.st_ctime :
@@ -1727,6 +1733,15 @@ traverse(const char *path)
 	return recurse(pathbuf, 0);
 }
 
+static char
+timeflag(char *arg)
+{
+	if ((arg[0] == 'A' || arg[0] == 'C' || arg[0] == 'M') && !arg[1])
+		return arg[0];
+	fprintf(stderr, "%s: -T only accepts A, C or M as argument.\n", argv0);
+	exit(2);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -1738,7 +1753,7 @@ main(int argc, char *argv[])
 	argv0 = argv[0];
 	now = time(0);
 
-	while ((c = getopt(argc, argv, "01ADFGHLQSUdf:lho:st:x")) != -1)
+	while ((c = getopt(argc, argv, "01ADFGHLQST:Udf:lho:st:x")) != -1)
 		switch(c) {
 		case '0': format = zero_format; Qflag++; break;
 		case '1': expr = chain(expr, EXPR_AND, parse_expr("depth == 0 || prune")); break;
@@ -1750,6 +1765,7 @@ main(int argc, char *argv[])
 		case 'L': Lflag++; break;
 		case 'Q': Qflag++; break;
 		case 'S': format = stat_format; break;
+		case 'T': Tflag = timeflag(optarg); break;
 		case 'U': Uflag++; break;
 		case 'd': expr = chain(expr, EXPR_AND, parse_expr("type == d && prune || print")); break;
 		case 'f': format = optarg; break;
@@ -1760,7 +1776,7 @@ main(int argc, char *argv[])
 		case 't': expr = chain(expr, EXPR_AND, parse_expr(optarg)); break;
 		case 'x': xflag++; break;
 		default:
-			fprintf(stderr, "Usage: %s [-0|-F|-l|-S|-f FMT] [-D] [-H|-L] [-1AGQdhsx] [-U|-o ORD] [-t TEST]* PATH...\n", argv0);
+			fprintf(stderr, "Usage: %s [-0|-F|-l [-TA|-TC|-TM]|-S|-f FMT] [-D] [-H|-L] [-1AGQdhsx] [-U|-o ORD] [-t TEST]* PATH...\n", argv0);
 			exit(2);
 		}
 
