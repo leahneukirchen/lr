@@ -264,7 +264,7 @@ doit:
 		switch (op) {
 		case '-': newmode &= ~(whom & what); break;
 		case '+': newmode |= (whom & what); break;
-		case '=': newmode &= ~whom; newmode |= (whom & what); break;
+		case '=': newmode = (newmode & ~whom) | (whom & what); break;
 		}
 	} while (*c == ',' && c++);
 
