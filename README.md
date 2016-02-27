@@ -42,6 +42,7 @@ Over ls:
 * replacement for who(1): `lr -om -t 'name =~ "[0-9][0-9]*$" && uid != 0' -f '%u\t%p\t%CY-%Cm-%Cd %CH:%CM\n' /dev/pts /dev/tty*`
 * Find files with setuid or setgid: `lr -t 'mode | 06000' /usr/bin` or `lr -t 'mode = "u+s" || mode = "g+s"' /usr/bin`
 * Find files with non-umask permissions: `lr -t '!(mode = "=rw,+X")' -l`
+* Find broken symlinks: `lr -L -t 'type = l'`
 
 ## Usage:
 
