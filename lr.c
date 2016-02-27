@@ -755,6 +755,8 @@ chain(struct expr *e1, enum op op, struct expr *e2)
 	struct expr *i, *j, *e;
 	if (!e1)
 		return e2;
+	if (!e2)
+		return e1;
 	for (j = 0, i = e1; i->op == op; j = i, i = i->b.expr)
 		;
 	if (!j) {
@@ -1828,8 +1830,8 @@ main(int argc, char *argv[])
 	while ((c = getopt(argc, argv, "01ADFGHLQST:Udf:lho:st:x")) != -1)
 		switch(c) {
 		case '0': format = zero_format; Qflag++; break;
-		case '1': expr = chain(expr, EXPR_AND, parse_expr("depth == 0 || prune")); break;
-		case 'A': expr = chain(expr, EXPR_AND, parse_expr("!(path ~~ \"*/.*\" && prune) && !path == \".\"")); break;
+		case '1': expr = chain(parse_expr("depth == 0 || prune"), EXPR_AND, expr); break;
+		case 'A': expr = chain(parse_expr("!(path ~~ \"*/.*\" && prune) && !path == \".\""), EXPR_AND, expr); break;
 		case 'D': Dflag++; break;
 		case 'F': format = type_format; break;
 		case 'G': Gflag++; break;
@@ -1839,7 +1841,7 @@ main(int argc, char *argv[])
 		case 'S': format = stat_format; break;
 		case 'T': Tflag = timeflag(optarg); break;
 		case 'U': Uflag++; break;
-		case 'd': expr = chain(expr, EXPR_AND, parse_expr("type == d && prune || print")); break;
+		case 'd': expr = chain(parse_expr("type == d && prune || print"), EXPR_AND, expr); break;
 		case 'f': format = optarg; break;
 		case 'h': hflag++; break;
 		case 'l': lflag++; format = long_format; break;
