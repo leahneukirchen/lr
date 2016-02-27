@@ -1257,7 +1257,7 @@ print_mode(int mode)
 	                     : (mode & 00010 ? 'x' : '-'));
 	putchar(mode & 00004 ? 'r' : '-');
 	putchar(mode & 00002 ? 'w' : '-');
-	putchar(mode & 01000 ? (mode & 00001 ? 'T' : 't')
+	putchar(mode & 01000 ? (mode & 00001 ? 't' : 'T')
 	                     : (mode & 00001 ? 'x' : '-'));
 }
 
