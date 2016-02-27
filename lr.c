@@ -1494,7 +1494,7 @@ color_name_on(const char *f, mode_t m)
 	else if (S_ISREG(m) && (m & S_IXUSR))
 		fg256(154);
 	else if (m == 0)  /* broken link */
-		fg256(160);
+		fg256(196);
 }
 
 // unused format codes: BEHJKLNOQVWXZ achjoqrvwz
