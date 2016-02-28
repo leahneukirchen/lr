@@ -5,4 +5,5 @@
 * Colorize symlink targets
 * Show broken links
 * On Linux: Display of capabilities, ACL and xattrs in `-l`
+* zsh completion
 * Some small things in contrib/

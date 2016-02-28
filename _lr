@@ -1,0 +1,102 @@
+#compdef lr
+
+_lr_format() {
+	if [[ ${(Q)PREFIX} = *% ]]; then
+		local -a specs
+		specs=(
+			'%:percent sign'
+			's:file size in bytes'
+			'S:file size, with human readable unit'
+			'b:file size in 512-byte blocks'
+			'k:file size in 1024-byte blocks'
+			'd:path depth'
+			'D:device number'
+			'R:device ID for special files'
+			'i:inode number'
+			'I:one space character for every depth level'
+			'p:full path'
+			'P:full path without command line argument prefix'
+			'l:symlink target'
+			'n:number of hardlinks'
+			'F:file indicator type'
+			'f:file basename'
+			'A:atime prefix'
+			'C:ctime prefix'
+			'T:mtime prefix'
+			'm:octal file permissions'
+			'M:ls-style symbolic file permissions'
+			'y:ls-style symbolic file type'
+			'g:group name'
+			'G:numeric gid'
+			'u:user name'
+			'U:numeric uid'
+			'e:number of entries in directories'
+			't:total size used by accepted files'
+			'Y:file system type'
+			'x:extended attributes'
+		)
+		compset -P "*"
+		_describe -t lr-format-specifiers 'format specifier' specs -S ''
+	else
+		_wanted lr-format-specifiers expl 'format specifier' compadd -S '' %
+	fi
+	return 0
+}
+
+_lr_order() {
+	local -a specs
+	specs=(
+		'a:atime'
+		'c:ctime'
+		'd:path depth'
+		'e:file extension'
+		'i:inode number'
+		'm:mtime'
+		'n:file name'
+		'p:directory name'
+		's:file size'
+		't:file type'
+		'v:file name as version number'
+		'A:atime (reversed)'
+		'C:ctime (reversed)'
+		'D:path depth (reversed)'
+		'E:file extension (reversed)'
+		'I:inode number (reversed)'
+		'M:mtime (reversed)'
+		'N:file name (reversed)'
+		'P:directory name (reversed)'
+		'S:file size (reversed)'
+		'T:file type (reversed)'
+		'V:file name as version number (reversed)'
+	)
+	compset -P "*"
+	_describe -t lr-order-specifiers 'order specifier' specs -S ''
+	return 0
+}
+
+if (( words[(I)-l] )); then
+	local timeopt='-T+[show time]:time:((A\:access\ time C\:inode\ change\ time M\:file\ modification\ time))'
+fi
+
+_arguments -S : \
+	'(-F -l -S -f)-0[output filenames NUL-separated]' \
+	'(-0 -l -S -f)-F[output filenames with type indicator]' \
+	'(-0 -F -S -f)-l[long output]' \
+	'(-0 -F -l -f)-S[stat(1)-like output]' \
+	'(-0 -F -l -S)-f[output with custom format]:format:_lr_format' \
+	$timeopt \
+	'-D[use depth-first traversal]' \
+	'(-L)-H[only follow symlinks on command line]' \
+	'(-H)-L[follow all symlinks]' \
+	'-1[don'\''t go below one level of directories]' \
+	'-A[don'\''t list files starting with a dot]' \
+	'-Q[don'\''t shell quote file names]' \
+	'-d[don'\''t enter directories]' \
+	'-G[colorize output]' \
+	'-h[print human readable size]' \
+	'-s[strip directory prefix passed on command line]' \
+	'-x[don'\''t enter other filesystems]' \
+	'(-o)-U[don'\''t sort results]' \
+	'(-U)-o[sort order]:order:_lr_order' \
+	'*-t[test expression]:test: ' \
+	'*:files:_files'
