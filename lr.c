@@ -36,7 +36,7 @@
 #include <sys/types.h>
 
 #ifdef __linux__
-#include <attr/xattr.h>
+#include <sys/xattr.h>
 #endif
 
 #include <ctype.h>
