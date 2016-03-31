@@ -594,13 +594,7 @@ parse_strcmp()
 	else
 		return parse_type();
 
-	if (token("==="))
-		op = EXPR_STREQI;
-	else if (token("=="))
-		op = EXPR_STREQ;
-	else if (token("="))
-		op = EXPR_STREQ;
-	else if (token("~~~"))
+	if (token("~~~"))
 		op = EXPR_GLOBI;
 	else if (token("~~"))
 		op = EXPR_GLOB;
@@ -608,6 +602,12 @@ parse_strcmp()
 		op = EXPR_REGEXI;
 	else if (token("=~"))
 		op = EXPR_REGEX;
+	else if (token("==="))
+		op = EXPR_STREQI;
+	else if (token("=="))
+		op = EXPR_STREQ;
+	else if (token("="))
+		op = EXPR_STREQ;
 	else
 		parse_error("invalid string operator at '%.15s'", pos);
 
