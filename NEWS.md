@@ -1,3 +1,7 @@
+## 0.3.2 (2016-05-20)
+
+* Bug: getopt was called in a wrong way from ARM platforms
+
 ## 0.3.1 (2016-03-31)
 
 * Bug: =~ was not recognized (broken since 0.3)
