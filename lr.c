@@ -1843,8 +1843,7 @@ timeflag(char *arg)
 int
 main(int argc, char *argv[])
 {
-	int i;
-	char c;
+	int i, c;
 
 	format = default_format;
 	ordering = default_ordering;
