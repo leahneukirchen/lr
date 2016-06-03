@@ -1627,7 +1627,7 @@ print_format(struct fileinfo *fi)
 
 			color_age_on(t);
 			if (*s == '-') {
-				printf("%3ldd%3ldh%3ldm%3lds",
+				printf("%4ldd%3ldh%3ldm%3lds",
 				    ((now - t) / (60*60*24)),
 				    ((now - t) / (60*60)) % 24,
 				    ((now - t) / 60) % 60,
