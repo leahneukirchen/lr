@@ -48,7 +48,11 @@ Over ls:
 
 	lr [-0|-F|-l [-TA|-TC|-TM]|-S|-f FMT] [-D] [-H|-L] [-1AGQdhsx] [-U|-o ORD] [-t TEST]* PATH...
 
+The special path argument `-` makes `lr` read file names from standard
+input, instead of traversing path.
+
 * `-0`: output filenames seperated by NUL bytes (implies `-Q`).
+  Likewise, read input filenames seperated by NUL bytes.
 * `-F`: output filenames and an indicator of their file type (`*/=>@|`).
 * `-l`: long output ala `ls -l`.
 * `-TA`: with `-l`, output atime.

@@ -1,3 +1,7 @@
+## HEAD
+
+* Feature: argument '-' means read files from standard input
+
 ## 0.3.2 (2016-05-20)
 
 * Bug: getopt was called in a wrong way from ARM platforms

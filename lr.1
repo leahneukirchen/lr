@@ -19,11 +19,22 @@
 is a versatile tool to generate file listings with configurable
 formatting, ordering and filtering.
 .Pp
+The special
+.Ar path
+argument
+.Ic \&-
+makes
+.Nm
+read file names from standard input,
+instead of traversing
+.Ar path .
+.Pp
 The options are as follows:
 .Bl -tag -width Ds
 .It Fl 0
 Output filenames seperated by NUL bytes (implies
 .Fl Q ) .
+Likewise, read input filenames seperated by NUL bytes.
 .It Fl F
 Output filenames and an indicator of their file type (one of
 .Sq Li */=>@| ) .

@@ -81,6 +81,7 @@ static struct expr *expr;
 static void *root = NULL; // tree
 static int prune;
 static size_t prefixl;
+static char input_delim = '\n';
 
 static char default_ordering[] = "n";
 static char default_format[] = "%p\\n";
@@ -1816,9 +1817,43 @@ recurse(char *path, struct history *h)
 }
 
 int
+traverse_file(FILE *file)
+{
+	char *line = 0;
+	size_t linelen = 0;
+	struct stat st;
+	ssize_t rd;
+
+	while (1) {
+		errno = 0;
+		rd = getdelim(&line, &linelen, input_delim, file);
+		if (rd == -1) {
+			if (errno != 0)
+				return -1;
+			break;
+		}
+
+		if (rd > 0 && line[rd-1] == input_delim)  // strip delimiter
+			line[rd-1] = 0;
+
+		if (Lflag ? stat(line, &st) : lstat(line, &st) < 0)
+			continue;
+
+		callback(line, &st, 0, 0, 0);
+	}
+
+	free(line);
+	return 0;
+}
+
+int
 traverse(const char *path)
 {
 	char pathbuf[PATH_MAX + 1];
+
+	if (path[0] == '-' && !path[1])
+		return traverse_file(stdin);
+
 	prefixl = strlen(path);
 	while (path[prefixl-1] == '/')
 		prefixl--;
@@ -1852,7 +1887,7 @@ main(int argc, char *argv[])
 
 	while ((c = getopt(argc, argv, "01ADFGHLQST:Udf:lho:st:x")) != -1)
 		switch(c) {
-		case '0': format = zero_format; Qflag++; break;
+		case '0': format = zero_format; input_delim = 0; Qflag++; break;
 		case '1': expr = chain(parse_expr("depth == 0 || prune"), EXPR_AND, expr); break;
 		case 'A': expr = chain(parse_expr("!(path ~~ \"*/.*\" && prune) && !path == \".\""), EXPR_AND, expr); break;
 		case 'D': Dflag++; break;
