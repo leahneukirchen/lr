@@ -57,6 +57,16 @@
 #include <time.h>
 #include <unistd.h>
 
+#ifdef __has_include
+  #if __has_include(<stdnoreturn.h>)
+    #include <stdnoreturn.h>
+  #else
+    #define noreturn /**/
+  #endif
+#else
+  #define noreturn /**/
+#endif
+
 /* For Solaris. */
 #if !defined(FNM_CASEFOLD) && defined(FNM_IGNORECASE)
 #define FNM_CASEFOLD FNM_IGNORECASE
@@ -203,7 +213,7 @@ struct expr {
 
 static char *pos;
 
-static void
+noreturn static void
 parse_error(const char *msg, ...)
 {
 	va_list ap;
