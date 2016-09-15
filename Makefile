@@ -1,7 +1,7 @@
 ALL=lr
 ZSHCOMP=_lr
 
-CFLAGS=-g -O2 -Wall -Wno-switch -Wextra -Wwrite-strings
+CFLAGS+=-g -O2 -Wall -Wno-switch -Wextra -Wwrite-strings
 
 DESTDIR=
 PREFIX=/usr/local
