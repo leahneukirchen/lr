@@ -1,5 +1,7 @@
 ## HEAD
 
+## 0.4 (2017-04-25)
+
 * Feature: argument '-' means read files from standard input
 
 ## 0.3.2 (2016-05-20)
