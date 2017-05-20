@@ -20,4 +20,8 @@ install: FRC all
 	install -m0644 $(ALL:=.1) $(DESTDIR)$(MANDIR)/man1
 	install -m0644 $(ZSHCOMP) $(DESTDIR)$(ZSHCOMPDIR)
 
+uninstall:
+	rm -f $(DESTDIR)$(BINDIR)/$(ALL)
+	rm -f $(DESTDIR)$(MANDIR)/man1/$(ALL).1
+
 FRC:
