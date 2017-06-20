@@ -72,6 +72,8 @@
 #define FNM_CASEFOLD FNM_IGNORECASE
 #endif
 
+static int Cflag;
+static char *Cflags[64];
 static int Gflag;
 static int Dflag;
 static int Hflag;
@@ -92,6 +94,7 @@ static void *root = NULL; // tree
 static int prune;
 static size_t prefixl;
 static char input_delim = '\n';
+static int current_color;
 
 static char default_ordering[] = "n";
 static char default_format[] = "%p\\n";
@@ -139,6 +142,7 @@ struct fileinfo {
 	struct stat sb;
 	off_t total;
 	char xattr[4];
+	int color;
 };
 
 enum op {
@@ -1488,12 +1492,17 @@ color_age_on(time_t t)
 }
 
 static void
-color_name_on(const char *f, mode_t m)
+color_name_on(int c, const char *f, mode_t m)
 {
 	const char *b;
 
 	if (!Gflag)
 		return;
+
+	if (c != -1) {
+		fg256(c);
+		return;
+	}
 
 	b = basenam(f);
 
@@ -1561,14 +1570,14 @@ print_format(struct fileinfo *fi)
 		}
 		case 'p':
 			if (!sflag) {
-				color_name_on(fi->fpath, fi->sb.st_mode);
+				color_name_on(fi->color, fi->fpath, fi->sb.st_mode);
 				print_shquoted(fi->fpath);
 				fgdefault();
 				break;
 			}
 			/* FALLTHRU */
 		case 'P':
-			color_name_on(fi->fpath, fi->sb.st_mode);
+			color_name_on(fi->color, fi->fpath, fi->sb.st_mode);
 			print_noprefix(fi);
 			fgdefault();
 			break;
@@ -1593,7 +1602,7 @@ print_format(struct fileinfo *fi)
 				} else {
 					*target = 0;
 				}
-				color_name_on(target, st.st_mode);
+				color_name_on(-1, target, st.st_mode);
 				print_shquoted(target + j);
 				fgdefault();
 			}
@@ -1616,7 +1625,7 @@ print_format(struct fileinfo *fi)
 			}
 			break;
 		case 'f':
-			color_name_on(fi->fpath, fi->sb.st_mode);
+			color_name_on(fi->color, fi->fpath, fi->sb.st_mode);
 			print_shquoted(basenam(fi->fpath));
 			fgdefault();
 			break;
@@ -1693,6 +1702,7 @@ callback(const char *fpath, const struct stat *sb, int depth, int entries, off_t
 	fi->depth = depth;
 	fi->entries = entries;
 	fi->total = total;
+	fi->color = current_color;
 	memcpy((char *)&fi->sb, (char *)sb, sizeof (struct stat));
 
 	if (expr && !eval(expr, fi))
@@ -1913,11 +1923,21 @@ main(int argc, char *argv[])
 	argv0 = argv[0];
 	now = time(0);
 
-	while ((c = getopt(argc, argv, "01ADFGHLQST:Udf:lho:st:x")) != -1)
+	while ((c = getopt(argc, argv, "01AC:DFGHLQST:Udf:lho:st:x")) != -1)
 		switch(c) {
 		case '0': format = zero_format; input_delim = 0; Qflag++; break;
 		case '1': expr = chain(parse_expr("depth == 0 || prune"), EXPR_AND, expr); break;
 		case 'A': expr = chain(parse_expr("!(path ~~ \"*/.*\" && prune) && !path == \".\""), EXPR_AND, expr); break;
+		case 'C':
+			if ((unsigned int)Cflag <
+			    sizeof Cflags / sizeof Cflags[0]) {
+				Cflags[Cflag++] = optarg;
+			} else {
+				fprintf(stderr, "%s: too many -C\n", argv0);
+				exit(111);
+			}
+			Gflag += 2;  // force color on
+			break;
 		case 'D': Dflag++; break;
 		case 'F': format = type_format; break;
 		case 'G': Gflag++; break;
@@ -1936,7 +1956,9 @@ main(int argc, char *argv[])
 		case 't': expr = chain(expr, EXPR_AND, parse_expr(optarg)); break;
 		case 'x': xflag++; break;
 		default:
-			fprintf(stderr, "Usage: %s [-0|-F|-l [-TA|-TC|-TM]|-S|-f FMT] [-D] [-H|-L] [-1AGQdhsx] [-U|-o ORD] [-t TEST]* PATH...\n", argv0);
+			fprintf(stderr,
+"Usage: %s [-0|-F|-l [-TA|-TC|-TM]|-S|-f FMT] [-D] [-H|-L] [-1AGQdhsx]\n"
+"          [-U|-o ORD] [-t TEST]* [-C [COLOR:]PATH]* PATH...\n", argv0);
 			exit(2);
 		}
 
@@ -1945,7 +1967,22 @@ main(int argc, char *argv[])
 
 	analyze_format();
 
-	if (optind == argc) {
+	for (i = 0; i < Cflag; i++) {
+		char *r;
+		errno = 0;
+		current_color = strtol(Cflags[i], &r, 10);
+		if (errno == 0 && r != Cflags[i] && *r == ':') {
+			current_color = current_color & 0xff;
+			traverse(r + 1);
+		} else {
+			current_color = 2;
+			traverse(Cflags[i]);
+		}
+	}
+
+	current_color = -1;
+
+	if (!Cflag && optind == argc) {
 		traverse("");
 	} else {
 		for (i = optind; i < argc; i++)

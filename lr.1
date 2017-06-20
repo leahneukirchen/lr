@@ -12,7 +12,9 @@
 .Op Fl H | Fl L
 .Op Fl 1AGQdhsx
 .Op Fl U | Fl o Ar ord
+.br
 .Op Fl t Ar test
+.Op Fl C Oo Ar color Ns Li \&: Oc Ns Ar path
 .Ar path\ ...
 .Sh DESCRIPTION
 .Nm
@@ -122,6 +124,16 @@ see
 Multiple occurences of
 .Fl t
 are regarded as a conjunction.
+.It Fl C Oo Ar color Ns Li \&: Oc Ns Ar path
+Behaves as if
+.Ar path
+was passed like an ordinary argument,
+but overrides the color of the file names to the number
+.Ar color
+which must be between 0 and 255 (default: 2, green).
+.Pp
+Implies
+.Fl GG .
 .El
 .Sh FORMATTING
 .Nm
