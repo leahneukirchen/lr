@@ -1434,7 +1434,9 @@ print_shquoted(const char *s)
 void
 print_noprefix(struct fileinfo *fi)
 {
-	if (strlen(fi->fpath) > fi->prefixl + 1)  /* strip prefix */
+	if (fi->prefixl == 0)
+		print_shquoted(fi->fpath);
+	else if (strlen(fi->fpath) > fi->prefixl + 1)  /* strip prefix */
 		print_shquoted(fi->fpath + fi->prefixl + 1);
 	else if (S_ISDIR(fi->sb.st_mode))  /* turn empty string into "." */
 		printf(".");
@@ -1833,6 +1835,8 @@ traverse_file(FILE *file)
 	size_t linelen = 0;
 	struct stat st;
 	ssize_t rd;
+
+	prefixl = 0;
 
 	while (1) {
 		errno = 0;
