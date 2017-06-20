@@ -1868,6 +1868,15 @@ traverse(const char *path)
 	if (path[0] == '-' && !path[1])
 		return traverse_file(stdin);
 
+	if (path[0] == '@') {
+		FILE *f = fopen(path + 1, "r");
+		if (!f)
+			parse_error("can't open input file '%s'", path + 1);
+		int r = traverse_file(f);
+		fclose(f);
+		return r;
+	}
+
 	prefixl = strlen(path);
 	while (path[prefixl-1] == '/')
 		prefixl--;

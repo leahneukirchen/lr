@@ -1,4 +1,4 @@
-.Dd January 4, 2016
+.Dd June 20, 2017
 .Dt LR 1
 .Os
 .Sh NAME
@@ -28,6 +28,14 @@ makes
 read file names from standard input,
 instead of traversing
 .Ar path .
+Likewise, the special
+.Ar path
+argument
+.Ic \&@ Ns Ar file
+makes
+.Nm
+read file names from
+.Ar file .
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
