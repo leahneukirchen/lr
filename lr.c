@@ -1758,11 +1758,12 @@ recurse(char *path, struct history *h)
 	struct stat st;
 	struct history new;
 	int r, entries;
+	const char *fpath = *path ? path : ".";
 
 	int resolve = Lflag || (Hflag && !h);
 
-	if (resolve ? stat(path, &st) : lstat(path, &st) < 0) {
-		if (resolve && errno == ENOENT && !lstat(path, &st))
+	if (resolve ? stat(fpath, &st) : lstat(fpath, &st) < 0) {
+		if (resolve && errno == ENOENT && !lstat(fpath, &st))
 			;
 		else if (errno != EACCES)
 			return -1;
@@ -1794,7 +1795,7 @@ recurse(char *path, struct history *h)
 	}
 
 	if (S_ISDIR(st.st_mode)) {
-		DIR *d = opendir(path);
+		DIR *d = opendir(fpath);
 		if (d) {
 			struct dirent *de;
 			while ((de = readdir(d))) {
@@ -1808,8 +1809,12 @@ recurse(char *path, struct history *h)
 					closedir(d);
 					return -1;
 				}
-				path[j] = '/';
-				strcpy(path + j + 1, de->d_name);
+				if (j > 0) {
+					path[j] = '/';
+					strcpy(path + j + 1, de->d_name);
+				} else {
+					strcpy(path, de->d_name);
+				}
 				if ((r = recurse(path, &new))) {
 					closedir(d);
 					return r;
@@ -1941,8 +1946,7 @@ main(int argc, char *argv[])
 	analyze_format();
 
 	if (optind == argc) {
-		sflag++;
-		traverse(".");
+		traverse("");
 	} else {
 		for (i = optind; i < argc; i++)
 			traverse(argv[i]);
