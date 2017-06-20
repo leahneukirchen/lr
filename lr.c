@@ -1438,7 +1438,7 @@ print_shquoted(const char *s)
 void
 print_noprefix(struct fileinfo *fi)
 {
-	if (fi->prefixl == 0)
+	if (fi->prefixl == 0 && fi->fpath[0])
 		print_shquoted(fi->fpath);
 	else if (strlen(fi->fpath) > fi->prefixl + 1)  /* strip prefix */
 		print_shquoted(fi->fpath + fi->prefixl + 1);
@@ -1571,7 +1571,10 @@ print_format(struct fileinfo *fi)
 		case 'p':
 			if (!sflag) {
 				color_name_on(fi->color, fi->fpath, fi->sb.st_mode);
-				print_shquoted(fi->fpath);
+				if (!fi->fpath[0] && S_ISDIR(fi->sb.st_mode))
+					print_shquoted(".");
+				else
+					print_shquoted(fi->fpath);
 				fgdefault();
 				break;
 			}
