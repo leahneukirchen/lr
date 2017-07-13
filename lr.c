@@ -95,6 +95,7 @@ static int prune;
 static size_t prefixl;
 static char input_delim = '\n';
 static int current_color;
+static int status;
 
 static char default_ordering[] = "n";
 static char default_format[] = "%p\\n";
@@ -1776,10 +1777,18 @@ recurse(char *path, struct history *h)
 	int resolve = Lflag || (Hflag && !h);
 
 	if (resolve ? stat(fpath, &st) : lstat(fpath, &st) < 0) {
-		if (resolve && errno == ENOENT && !lstat(fpath, &st))
-			;
-		else if (errno != EACCES)
+		if (resolve && errno == ENOENT && !lstat(fpath, &st)) {
+			/* ignore */
+		} else if (!h) {
+			/* warn for toplevel arguments */
+			fprintf(stderr, "lr: cannot %sstat '%s': %s\n",
+			    resolve ? "" : "l",
+			    fpath, strerror(errno));
+			status = 1;
 			return -1;
+		} else if (errno != EACCES) {
+			return -1;
+		}
 	}
 
 	if (xflag && h && st.st_dev != h->dev)
@@ -1925,6 +1934,7 @@ main(int argc, char *argv[])
 	ordering = default_ordering;
 	argv0 = argv[0];
 	now = time(0);
+	status = 0;
 
 	while ((c = getopt(argc, argv, "01AC:DFGHLQST:Udf:lho:st:x")) != -1)
 		switch(c) {
@@ -1995,5 +2005,5 @@ main(int argc, char *argv[])
 	if (!Uflag)
 		twalk(root, print);
 
-	return 0;
+	return status;
 }
