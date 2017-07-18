@@ -45,6 +45,7 @@
 #include <fnmatch.h>
 #include <grp.h>
 #include <limits.h>
+#include <locale.h>
 #include <paths.h>
 #include <pwd.h>
 #include <regex.h>
@@ -1659,6 +1660,7 @@ print_format(struct fileinfo *fi)
 				    ((now - t) / 60) % 60,
 				    (now - t) % 60);
 			} else {
+				setlocale (LC_ALL, "");
 				tfmt[1] = *s;
 				strftime(buf, sizeof buf, tfmt, localtime(&t));
 				printf("%s", buf);
