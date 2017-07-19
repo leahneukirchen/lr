@@ -45,6 +45,7 @@
 #include <fnmatch.h>
 #include <grp.h>
 #include <limits.h>
+#include <locale.h>
 #include <paths.h>
 #include <pwd.h>
 #include <regex.h>
@@ -1935,6 +1936,8 @@ main(int argc, char *argv[])
 	argv0 = argv[0];
 	now = time(0);
 	status = 0;
+
+	setlocale(LC_ALL, "");
 
 	while ((c = getopt(argc, argv, "01AC:DFGHLQST:Udf:lho:st:x")) != -1)
 		switch(c) {
