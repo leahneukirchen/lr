@@ -145,6 +145,7 @@ Default: `n`.
 	             | <modetest>
 	             | prune             -- do not traverse into subdirectories
 	             | print             -- always true value
+	             | color <num>       -- always true value, override 256-color
 
         <timeprop> ::= atime | ctime | mtime
 	
@@ -290,6 +291,12 @@ List directory total sizes, indented:
       4 .git/refs/remotes
         4 .git/refs/remotes/origin
       0 .git/refs/tags
+```
+
+List all files, but print them in red if they match "havoc":
+
+```
+% lr -G -t 'name =~ "havoc" && color 160 || print'
 ```
 
 ## Installation

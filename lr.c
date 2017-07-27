@@ -165,6 +165,7 @@ enum op {
 	EXPR_REGEXI,
 	EXPR_PRUNE,
 	EXPR_PRINT,
+	EXPR_COLOR,
 	EXPR_TYPE,
 	EXPR_ALLSET,
 	EXPR_ANYSET,
@@ -397,6 +398,16 @@ parse_inner()
 	} else if (token("print")) {
 		struct expr *e = mkexpr(EXPR_PRINT);
 		return e;
+	} else if (token("color")) {
+		struct expr *e = mkexpr(EXPR_COLOR);
+		int64_t n;
+		if (parse_num(&n) && n >= 0 && n <= 255) {
+			e->a.num = n;
+			return e;
+		} else {
+			parse_error("invalid 256-color at '%.15s'", pos);
+			return 0;
+		}
 	} else if (token("!")) {
 		struct expr *e = parse_cmp();
 		struct expr *not = mkexpr(EXPR_NOT);
@@ -1140,6 +1151,9 @@ eval(struct expr *e, struct fileinfo *fi)
 		return 1;
 	case EXPR_PRINT:
 		return 1;
+	case EXPR_COLOR:
+		fi->color = e->a.num;
+		return 1;
 	case EXPR_LT:
 	case EXPR_LE:
 	case EXPR_EQ:
@@ -1217,6 +1231,8 @@ eval(struct expr *e, struct fileinfo *fi)
 		case EXPR_REGEXI: return regexec(e->b.regex, s, 0, 0, 0) == 0;
 		}
 	}
+	default:
+		parse_error("invalid operation %d, please file a bug.", e->op);
 	}
 
 	return 0;

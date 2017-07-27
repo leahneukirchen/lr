@@ -7,6 +7,7 @@
 
 * Feature: lr now respects the locale, which mainly influences date format.
 * Feature: new option `-C` to change the color of files.
+* Feature: new action `color <num>` to change the color of files.
 * Feature: new argument `@file` to read file names from a file.
 * Bug: lr now reports errors and sets exit code when toplevel
   arguments can not be stat'ed.
