@@ -90,7 +90,7 @@ _arguments -S : \
 	'(-H)-L[follow all symlinks]' \
 	'-1[don'\''t go below one level of directories]' \
 	'-A[don'\''t list files starting with a dot]' \
-	'-Q[don'\''t shell quote file names]' \
+	'-Q[shell quote file names]' \
 	'-d[don'\''t enter directories]' \
 	'-G[colorize output]' \
 	'-h[print human readable size]' \
