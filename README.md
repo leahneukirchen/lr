@@ -51,14 +51,14 @@ Over ls:
 The special path argument `-` makes `lr` read file names from standard
 input, instead of traversing path.
 
-* `-0`: output filenames seperated by NUL bytes (implies `-Q`).
+* `-0`: output filenames seperated by NUL bytes.
   Likewise, read input filenames seperated by NUL bytes.
 * `-F`: output filenames and an indicator of their file type (`*/=>@|`).
-* `-l`: long output ala `ls -l`.
+* `-l`: long output ala `ls -l` (implies `-Q`).
 * `-TA`: with `-l`, output atime.
 * `-TC`: with `-l`, output ctime.
 * `-TM`: with `-l`, output mtime (default).
-* `-S`: BSD stat(1)-inspired output.
+* `-S`: BSD stat(1)-inspired output (implies `-Q`).
 * `-f FMT`: custom formatting, see below.
 * `-D`: depth first traversal. `prune` does not work, but `entries`
   and `total` are computed on the fly.
@@ -67,7 +67,7 @@ input, instead of traversing path.
 * `-1`: don't go below one level of directories.
 * `-A`: don't list files starting with a dot.
 * `-G`: colorize output to tty.  Use twice to force colorize.
-* `-Q`: don't shell quote file names.
+* `-Q`: shell quote file names (default for output to TTY).
 * `-d`: don't enter directories.
 * `-h`: print human readable size for `-l` (also `%s`).
 * `-s`: strip directory prefix passed on command line.

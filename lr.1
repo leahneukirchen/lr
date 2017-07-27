@@ -1,4 +1,4 @@
-.Dd June 20, 2017
+.Dd July 27, 2017
 .Dt LR 1
 .Os
 .Sh NAME
@@ -48,15 +48,16 @@ read file names from
 The options are as follows:
 .Bl -tag -width Ds
 .It Fl 0
-Output filenames seperated by NUL bytes (implies
-.Fl Q ) .
+Output filenames seperated by NUL bytes.
 Likewise, read input filenames seperated by NUL bytes.
 .It Fl F
 Output filenames and an indicator of their file type (one of
 .Sq Li */=>@| ) .
 .It Fl l
 Long output ala
-.Ic ls -l .
+.Sq Ic ls -l
+(implies
+.Fl Q ) .
 .It Fl TA
 With
 .Fl l ,
@@ -73,7 +74,9 @@ This is the default.
 .It Fl S
 Output inspired by
 BSD
-.Xr stat 1 .
+.Xr stat 1
+(implies
+.Fl Q ) .
 .It Fl f Ar fmt
 Custom formatting, see
 .Sx FORMATTING .
@@ -94,7 +97,7 @@ Don't go below one level of directories.
 .It Fl A
 Don't list files starting with a dot.
 .It Fl Q
-Don't shell quote file names.
+Quote file names (default for output to TTY).
 .It Fl d
 Don't enter directories.
 .It Fl G

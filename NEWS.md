@@ -1,5 +1,10 @@
 ## HEAD
 
+* **Breaking change**: the `-Q` flag changed meaning to *enable* quoting
+  (as it does in GNU ls), since shell quoting is not so useful in many
+  cases using a pipe.  Filenames are quoted by default when printing
+  to TTY.
+
 ## 0.4 (2017-04-25)
 
 * Feature: argument '-' means read files from standard input

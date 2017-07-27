@@ -1419,11 +1419,11 @@ print_human(intmax_t i)
 static void
 print_shquoted(const char *s)
 {
-	if (Qflag || !strpbrk(s, "\001\002\003\004\005\006\007\010"
-	                         "\011\012\013\014\015\016\017\020"
-	                         "\021\022\023\024\025\026\027\030"
-	                         "\031\032\033\034\035\036\037\040"
-	                         "`^#*[]=|\\?${}()'\"<>&;\177")) {
+	if (!Qflag || !strpbrk(s, "\001\002\003\004\005\006\007\010"
+	                          "\011\012\013\014\015\016\017\020"
+	                          "\021\022\023\024\025\026\027\030"
+	                          "\031\032\033\034\035\036\037\040"
+	                          "`^#*[]=|\\?${}()'\"<>&;\177")) {
 		printf("%s", s);
 		return;
 	}
@@ -1941,7 +1941,7 @@ main(int argc, char *argv[])
 
 	while ((c = getopt(argc, argv, "01AC:DFGHLQST:Udf:lho:st:x")) != -1)
 		switch(c) {
-		case '0': format = zero_format; input_delim = 0; Qflag++; break;
+		case '0': format = zero_format; input_delim = 0; Qflag = 0; break;
 		case '1': expr = chain(parse_expr("depth == 0 || prune"), EXPR_AND, expr); break;
 		case 'A': expr = chain(parse_expr("!(path ~~ \"*/.*\" && prune) && !path == \".\""), EXPR_AND, expr); break;
 		case 'C':
@@ -1960,13 +1960,13 @@ main(int argc, char *argv[])
 		case 'H': Hflag++; break;
 		case 'L': Lflag++; break;
 		case 'Q': Qflag++; break;
-		case 'S': format = stat_format; break;
+		case 'S': Qflag++; format = stat_format; break;
 		case 'T': Tflag = timeflag(optarg); break;
 		case 'U': Uflag++; break;
 		case 'd': expr = chain(parse_expr("type == d && prune || print"), EXPR_AND, expr); break;
 		case 'f': format = optarg; break;
 		case 'h': hflag++; break;
-		case 'l': lflag++; format = long_format; break;
+		case 'l': lflag++; Qflag++; format = long_format; break;
 		case 'o': ordering = optarg; break;
 		case 's': sflag++; break;
 		case 't': expr = chain(expr, EXPR_AND, parse_expr(optarg)); break;
@@ -1978,8 +1978,12 @@ main(int argc, char *argv[])
 			exit(2);
 		}
 
-	if (Gflag == 1 && !isatty(1))
-		Gflag = 0;
+	if (isatty(1)) {
+		Qflag = 1;
+	} else {
+		if (Gflag == 1)
+			Gflag = 0;
+	}
 
 	analyze_format();
 
