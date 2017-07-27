@@ -5,9 +5,15 @@
   cases using a pipe.  Filenames are quoted by default when printing
   to TTY.
 
+* Feature: lr now respects the locale, which mainly influences date format.
+* Feature: new option `-C` to change the color of files.
+* Feature: new argument `@file` to read file names from a file.
+* Bug: lr now reports errors and sets exit code when toplevel
+  arguments can not be stat'ed.
+
 ## 0.4 (2017-04-25)
 
-* Feature: argument '-' means read files from standard input
+* Feature: argument `-` means read files from standard input
 
 ## 0.3.2 (2016-05-20)
 
@@ -15,7 +21,7 @@
 
 ## 0.3.1 (2016-03-31)
 
-* Bug: =~ was not recognized (broken since 0.3)
+* Bug: `=~` was not recognized (broken since 0.3)
 * Add emacs contrib (lr.el)
 
 ## 0.3 (2016-02-28)
