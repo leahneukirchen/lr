@@ -175,12 +175,12 @@ Default: `n`.
 	
 	<strprop>  ::= fstype | group | name | path | target | user | xattr
 	
-	<strop>    ::= == | =            -- string equality
-	             | ===               -- case insensitive string equality
-	             | ~~                -- glob (fnmatch)
-	             | ~~~               -- case insensitive glob (fnmatch)
-	             | =~                -- POSIX Extended Regular Expressions
-	             | =~~               -- case insensitive POSIX Extended Regular Expressions
+	<strop>    ::= == | = | !=       -- string (in)equality
+	             | ===    | !===     -- case insensitive string (in)equality
+	             | ~~     | !~~      -- glob (fnmatch)
+	             | ~~~    | !~~~     -- case insensitive glob (fnmatch)
+	             | =~     | !=~ | !~ -- POSIX Extended Regular Expressions
+	             | =~~    | !=~~     -- case insensitive POSIX Extended Regular Expressions
 	
 	<str>      ::= " ([^"] | "")+ "  -- use "" for a single " inside "
 	             | $[A-Za-z0-9_]     -- environment variable
