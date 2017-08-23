@@ -51,10 +51,10 @@ Over ls:
 The special path argument `-` makes `lr` read file names from standard
 input, instead of traversing path.
 
-* `-0`: output filenames seperated by NUL bytes.
-  Likewise, read input filenames seperated by NUL bytes.
+* `-0`: output filenames separated by NUL bytes.
+  Likewise, read input filenames separated by NUL bytes.
 * `-F`: output filenames and an indicator of their file type (`*/=>@|`).
-* `-l`: long output ala `ls -l` (implies `-Q`).
+* `-l`: long output a la `ls -l` (implies `-Q`).
 * `-TA`: with `-l`, output atime.
 * `-TC`: with `-l`, output ctime.
 * `-TM`: with `-l`, output mtime (default).
