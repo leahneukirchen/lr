@@ -51,10 +51,10 @@ Over ls:
 The special path argument `-` makes `lr` read file names from standard
 input, instead of traversing path.
 
-* `-0`: output filenames seperated by NUL bytes.
-  Likewise, read input filenames seperated by NUL bytes.
+* `-0`: output filenames separated by NUL bytes.
+  Likewise, read input filenames separated by NUL bytes.
 * `-F`: output filenames and an indicator of their file type (`*/=>@|`).
-* `-l`: long output ala `ls -l` (implies `-Q`).
+* `-l`: long output a la `ls -l` (implies `-Q`).
 * `-TA`: with `-l`, output atime.
 * `-TC`: with `-l`, output ctime.
 * `-TM`: with `-l`, output mtime (default).
@@ -148,10 +148,10 @@ Default: `n`.
 	             | color <num>       -- always true value, override 256-color
 
         <timeprop> ::= atime | ctime | mtime
-	
+
 	<numprop>  ::= depth | dev | entries | gid | inode
 	             | links | mode | rdev | size | total | uid
-	
+
 	<numop>    ::= <= | < | >= | > | == | = | !=
 
         <dur>      ::= "./path"          -- mtime of relative path
@@ -165,23 +165,23 @@ Default: `n`.
                      | "-[0-9]+m"        -- n minutes before now
                      | "-[0-9]+s"        -- n seconds before now
                      | [0-9]+            -- absolute epoch time
-	
+
 	<num>      ::= [0-9]+ ( c        -- *1
 	                      | b        -- *512
 	                      | k        -- *1024
 	                      | M        -- *1024*1024
 	                      | G        -- *1024*1024*1024
 	                      | T )?     -- *1024*1024*1024*1024
-	
+
 	<strprop>  ::= fstype | group | name | path | target | user | xattr
-	
+
 	<strop>    ::= == | = | !=       -- string (in)equality
 	             | ===    | !===     -- case insensitive string (in)equality
 	             | ~~     | !~~      -- glob (fnmatch)
 	             | ~~~    | !~~~     -- case insensitive glob (fnmatch)
 	             | =~     | !=~ | !~ -- POSIX Extended Regular Expressions
 	             | =~~    | !=~~     -- case insensitive POSIX Extended Regular Expressions
-	
+
 	<str>      ::= " ([^"] | "")+ "  -- use "" for a single " inside "
 	             | $[A-Za-z0-9_]     -- environment variable
 
@@ -192,7 +192,7 @@ Default: `n`.
 	                    | |          -- check if any bit of <octal> set
 	                    ) <octal>
 	             | mode = "<chmod>"  -- check if symbolic mode is satisfied
-	
+
 	<octal> ::= [0-7]+
 
 	<chmod> ::= <clause> (, <clause>)+
