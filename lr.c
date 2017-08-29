@@ -305,7 +305,7 @@ mkexpr(enum op op)
 static void
 ws()
 {
-	while (isspace((unsigned char) *pos))
+	while (isspace((unsigned char)*pos))
 		pos++;
 }
 
@@ -325,12 +325,12 @@ static int64_t
 parse_num(int64_t *r)
 {
 	char *s = pos;
-	if (isdigit((unsigned char) *pos)) {
+	if (isdigit((unsigned char)*pos)) {
 		int64_t n;
 
-		for (n = 0; isdigit((unsigned char) *pos) && n <= INT64_MAX / 10 - 10; pos++)
+		for (n = 0; isdigit((unsigned char)*pos) && n <= INT64_MAX / 10 - 10; pos++)
 			n = 10 * n + (*pos - '0');
-		if (isdigit((unsigned char) *pos))
+		if (isdigit((unsigned char)*pos))
 			parse_error("number too big: %s", s);
 		if (token("c"))      ;
 		else if (token("b")) n *= 512LL;
@@ -495,13 +495,13 @@ parse_string(char **s)
 			buf[len] = 0;
 		pos++;
 		ws();
-		*s = buf ? buf : (char *) "";
+		*s = buf ? buf : (char *)"";
 		return 1;
 	} else if (*pos == '$') {
 		char t;
 		char *e = ++pos;
 
-		while (isalnum((unsigned char) *pos) || *pos == '_')
+		while (isalnum((unsigned char)*pos) || *pos == '_')
 			pos++;
 		if (e == pos)
 			parse_error("invalid environment variable name");
@@ -1125,7 +1125,7 @@ xattr_string(const char *f)
 	return buf;
 #else
 	static char empty[] = "";
-	(void) f;
+	(void)f;
 	return empty;		// No support for xattrs on this platform.
 #endif
 }
