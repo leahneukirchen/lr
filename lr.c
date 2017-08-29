@@ -1630,7 +1630,7 @@ print_format(struct fileinfo *fi)
 				struct stat st;
 				st.st_mode = 0;
 
-				strcpy(target, fi->fpath);
+				snprintf(target, sizeof target, "%s", fi->fpath);
 				while (j && target[j-1] != '/')
 					j--;
 				ssize_t l = readlink(fi->fpath,
