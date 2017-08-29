@@ -1814,6 +1814,7 @@ recurse(char *path, struct history *h)
 	const char *fpath = *path ? path : ".";
 
 	int resolve = Lflag || (Hflag && !h);
+	int root = (path[0] == '/' && path[1] == 0);
 
 	if (resolve ? stat(fpath, &st) : lstat(fpath, &st) < 0) {
 		if (resolve && errno == ENOENT && !lstat(fpath, &st)) {
@@ -1870,7 +1871,7 @@ recurse(char *path, struct history *h)
 					closedir(d);
 					return -1;
 				}
-				if (j > 0) {
+				if (j > 0 || root) {
 					path[j] = '/';
 					strcpy(path + j + 1, de->d_name);
 				} else {
