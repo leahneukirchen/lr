@@ -1691,11 +1691,12 @@ print_format(struct fileinfo *fi)
 
 			color_age_on(t);
 			if (*s == '-') {
+				long diff = now - t;
 				printf("%4ldd%3ldh%3ldm%3lds",
-				    ((now - t) / (60*60*24)),
-				    ((now - t) / (60*60)) % 24,
-				    ((now - t) / 60) % 60,
-				    (now - t) % 60);
+				    ((diff) / (60*60*24)),
+				    ((diff) / (60*60)) % 24,
+				    ((diff) / 60) % 60,
+				    (diff) % 60);
 			} else {
 				tfmt[1] = *s;
 				strftime(buf, sizeof buf, tfmt, localtime(&t));
