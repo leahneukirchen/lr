@@ -1,5 +1,7 @@
 ## HEAD
 
+## 1.0 (2017-08-29)
+
 * **Breaking change**: the `-Q` flag changed meaning to *enable* quoting
   (as it does in GNU ls), since shell quoting is not so useful in many
   cases using a pipe.  Filenames are quoted by default when printing
@@ -9,6 +11,7 @@
 * Feature: new option `-C` to change the color of files.
 * Feature: new action `color <num>` to change the color of files.
 * Feature: new argument `@file` to read file names from a file.
+* Feature: negated string operations `!=`, `!===`, `!~~`, `!~`, `!=~~`.
 * Bug: lr now reports errors and sets exit code when toplevel
   arguments can not be stat'ed.
 
