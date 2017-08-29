@@ -1084,7 +1084,7 @@ fstype(dev_t devid)
 	return result ? (*result)->name : strid(devid);
 }
 
-static char*
+static char *
 xattr_string(const char *f)
 {
 #ifdef __linux__
@@ -1124,7 +1124,9 @@ xattr_string(const char *f)
 
 	return buf;
 #else
-	return "";		// No support for xattrs on this platform.
+	static char empty[] = "";
+	(void) f;
+	return empty;		// No support for xattrs on this platform.
 #endif
 }
 
