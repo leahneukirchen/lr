@@ -243,7 +243,7 @@ test_chmod(char *c, mode_t oldmode)
 		what = 0;
 
 		while (1) {
-			switch(*c) {
+			switch (*c) {
 			case 'u': whom |= 04700; break;
 			case 'g': whom |= 02070; break;
 			case 'o': whom |= 01007; break;
@@ -259,13 +259,13 @@ op:
 		if (!(op == '-' || op == '+' || op == '='))
 			parse_error("invalid mode operator");
 
-		switch(*c) {
+		switch (*c) {
 		case 'u': what = 00111 * ((newmode >> 6) & 0007); c++; break;
 		case 'g': what = 00111 * ((newmode >> 3) & 0007); c++; break;
 		case 'o': what = 00111 * ((newmode     ) & 0007); c++; break;
 		default:
 			while (1) {
-				switch(*c) {
+				switch (*c) {
 				case 'r': what |= 00444; break;
 				case 'w': what |= 00222; break;
 				case 'x': what |= 00111; break;
@@ -510,7 +510,7 @@ parse_string(char **s)
 		*pos = 0;
 		*s = getenv(e);
 		if (!*s)
-			*s = (char *) "";
+			*s = (char *)"";
 		*pos = t;
 		ws();
 		return 1;
@@ -1013,9 +1013,9 @@ scan_filesystems()
 	scanned_filesystems = 1;
 }
 #elif defined(__FreeBSD__) || defined(__OpenBSD__) || (defined(__APPLE__) && defined(__MACH__))
+#include <sys/mount.h>
 #include <sys/param.h>
 #include <sys/ucred.h>
-#include <sys/mount.h>
 void
 scan_filesystems()
 {
@@ -1037,8 +1037,8 @@ scan_filesystems()
 	scanned_filesystems = 1;
 }
 #elif defined(__NetBSD__)
-#include <sys/types.h>
 #include <sys/statvfs.h>
+#include <sys/types.h>
 void
 scan_filesystems()
 {
@@ -1126,7 +1126,7 @@ xattr_string(const char *f)
 #else
 	static char empty[] = "";
 	(void)f;
-	return empty;		// No support for xattrs on this platform.
+	return empty;           // No support for xattrs on this platform.
 #endif
 }
 
@@ -1148,7 +1148,7 @@ count_entries(struct fileinfo *fi)
 		return 0;
 	while ((de = readdir(d))) {
 		if (de->d_name[0] == '.' &&
-		    (!de->d_name[1] || (de->d_name[1]=='.' && !de->d_name[2])))
+		    (!de->d_name[1] || (de->d_name[1] == '.' && !de->d_name[2])))
 			continue;
 		c++;
 	}
@@ -1216,7 +1216,7 @@ eval(struct expr *e, struct fileinfo *fi)
 	}
 	case EXPR_CHMOD:
 		return test_chmod(e->b.string, fi->sb.st_mode & 07777);
-	case EXPR_TYPE:	{
+	case EXPR_TYPE: {
 		switch (e->a.filetype) {
 		case TYPE_BLOCK: return S_ISBLK(fi->sb.st_mode);
 		case TYPE_CHAR: return S_ISCHR(fi->sb.st_mode);
@@ -1234,7 +1234,7 @@ eval(struct expr *e, struct fileinfo *fi)
 	case EXPR_REGEX:
 	case EXPR_REGEXI: {
 		const char *s = "";
-		switch(e->a.prop) {
+		switch (e->a.prop) {
 		case PROP_FSTYPE: s = fstype(fi->sb.st_dev); break;
 		case PROP_GROUP: s = groupname(fi->sb.st_gid); break;
 		case PROP_NAME: s = basenam(fi->fpath); break;
@@ -1293,20 +1293,20 @@ int mystrverscmp(const char *l0, const char *r0)
 
 	/* Find maximal matching prefix and track its maximal digit
 	 * suffix and whether those digits are all zeros. */
-	for (dp=i=0; l[i]==r[i]; i++) {
+	for (dp = i = 0; l[i] == r[i]; i++) {
 		int c = l[i];
 		if (!c) return 0;
-		if (!isdigit(c)) dp=i+1, z=1;
-		else if (c!='0') z=0;
+		if (!isdigit(c)) dp = i+1, z = 1;
+		else if (c != '0') z = 0;
 	}
 
-	if (l[dp]!='0' && r[dp]!='0') {
+	if (l[dp] != '0' && r[dp] != '0') {
 		/* If we're not looking at a digit sequence that began
 		 * with a zero, longest digit string is greater. */
-		for (j=i; isdigit(l[j]); j++)
+		for (j = i; isdigit(l[j]); j++)
 			if (!isdigit(r[j])) return 1;
 		if (isdigit(r[j])) return -1;
-	} else if (z && dp<i && (isdigit(l[i]) || isdigit(r[i]))) {
+	} else if (z && dp < i && (isdigit(l[i]) || isdigit(r[i]))) {
 		/* Otherwise, if common prefix of digit sequence is
 		 * all zeros, digits order less than non-digits. */
 		return (unsigned char)(l[i]-'0') - (unsigned char)(r[i]-'0');
@@ -1415,14 +1415,14 @@ color_size_on(off_t s)
 	if (!Gflag)
 		return;
 
-	if	(s <		  1024LL) c = 46;
-	else if (s <		4*1024LL) c = 82;
-	else if (s <	       16*1024LL) c = 118;
-	else if (s <	       32*1024LL) c = 154;
-	else if (s <	      128*1024LL) c = 190;
-	else if (s <	      512*1024LL) c = 226;
-	else if (s <	     1024*1024LL) c = 220;
-	else if (s <	 700*1024*1024LL) c = 214;
+	if      (s <              1024LL) c = 46;
+	else if (s <            4*1024LL) c = 82;
+	else if (s <           16*1024LL) c = 118;
+	else if (s <           32*1024LL) c = 154;
+	else if (s <          128*1024LL) c = 190;
+	else if (s <          512*1024LL) c = 226;
+	else if (s <         1024*1024LL) c = 220;
+	else if (s <     700*1024*1024LL) c = 214;
 	else if (s <  2*1048*1024*1024LL) c = 208;
 	else if (s < 50*1024*1024*1024LL) c = 202;
 	else				  c = 196;
@@ -1496,7 +1496,7 @@ analyze_format()
 			s++;
 			continue;
 		}
-	       	if (*s != '%')
+		if (*s != '%')
 			continue;
 		switch (*++s) {
 		case 'g': need_group++; break;
@@ -1516,14 +1516,14 @@ color_age_on(time_t t)
 	if (!Gflag)
 		return;
 
-	if	(age <		     0LL) c = 196;
-	else if (age <		    60LL) c = 255;
-	else if (age <		 60*60LL) c = 252;
-	else if (age <	      24*60*60LL) c = 250;
-	else if (age <	    7*24*60*60LL) c = 244;
-	else if (age <	  4*7*24*60*60LL) c = 244;
-	else if (age <	 26*7*24*60*60LL) c = 242;
-	else if (age <	 52*7*24*60*60LL) c = 240;
+	if      (age <               0LL) c = 196;
+	else if (age <              60LL) c = 255;
+	else if (age <           60*60LL) c = 252;
+	else if (age <        24*60*60LL) c = 250;
+	else if (age <      7*24*60*60LL) c = 244;
+	else if (age <    4*7*24*60*60LL) c = 244;
+	else if (age <   26*7*24*60*60LL) c = 242;
+	else if (age <   52*7*24*60*60LL) c = 240;
 	else if (age < 2*52*7*24*60*60LL) c = 238;
 	else				  c = 236;
 
@@ -1575,11 +1575,11 @@ print_format(struct fileinfo *fi)
 			case 'v': putchar('\v'); break;
 			case '0': putchar('\0'); break;
 			// TODO: \NNN
-		       	default: putchar(*s);
-	       		}
+			default: putchar(*s);
+			}
 			continue;
 		}
-	       	if (*s != '%') {
+		if (*s != '%') {
 			putchar(*s);
 			continue;
 		}
@@ -1603,7 +1603,7 @@ print_format(struct fileinfo *fi)
 		case 'i': printf("%*jd", intlen(maxino), (intmax_t)fi->sb.st_ino); break;
 		case 'I': {
 			int i;
-			for (i=0; i<fi->depth; i++)
+			for (i = 0; i < fi->depth; i++)
 				printf(" ");
 			break;
 		}
@@ -1807,7 +1807,7 @@ struct history {
 static int
 recurse(char *path, struct history *h)
 {
-	size_t l = strlen(path), j = l && path[l-1]=='/' ? l - 1 : l;
+	size_t l = strlen(path), j = l && path[l-1] == '/' ? l - 1 : l;
 	struct stat st;
 	struct history new;
 	int r, entries;
@@ -1863,7 +1863,7 @@ recurse(char *path, struct history *h)
 			while ((de = readdir(d))) {
 				if (de->d_name[0] == '.' &&
 				    (!de->d_name[1] ||
-				     (de->d_name[1]=='.' && !de->d_name[2])))
+				    (de->d_name[1] == '.' && !de->d_name[2])))
 					continue;
 				entries++;
 				if (strlen(de->d_name) >= PATH_MAX-l) {
@@ -1979,7 +1979,7 @@ main(int argc, char *argv[])
 	setlocale(LC_ALL, "");
 
 	while ((c = getopt(argc, argv, "01AC:DFGHLQST:Udf:lho:st:x")) != -1)
-		switch(c) {
+		switch (c) {
 		case '0': format = zero_format; input_delim = 0; Qflag = 0; break;
 		case '1': expr = chain(parse_expr("depth == 0 || prune"), EXPR_AND, expr); break;
 		case 'A': expr = chain(parse_expr("!(path ~~ \"*/.*\" && prune) && !path == \".\""), EXPR_AND, expr); break;
