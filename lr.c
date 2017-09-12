@@ -99,6 +99,7 @@ static char input_delim = '\n';
 static int current_color;
 static int status;
 static char *basepath;
+static char host[1024];
 
 static char default_ordering[] = "n";
 static char default_format[] = "%p\\n";
@@ -137,6 +138,14 @@ static int uwid, gwid, fwid;
 
 static time_t now;
 static mode_t default_mask;
+
+// [^a-zA-Z0-9~._/-]
+static char rfc3986[128] = {
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,
+	1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,
+	1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,1
+};
 
 struct fileinfo {
 	char *fpath;
@@ -1561,14 +1570,27 @@ color_name_on(int c, const char *f, mode_t m)
 }
 
 static void
+print_urlquoted(unsigned char *s)
+{
+	for (; *s; s++)
+		if (*s > 127 || rfc3986[*s])
+			printf("%%%02x", *s);
+		else
+			putchar(*s);
+}
+
+static void
 hyperlink_on(char *fpath)
 {
 	// OSC 8 hyperlink format
 	if (Xflag) {
-		if (*fpath == '/')
-			printf("\033]8;;file://%s\007", fpath);
-		else
-			printf("\033]8;;file://%s/%s\007", basepath, fpath);
+		printf("\033]8;;file://%s", host);
+		if (*fpath != '/') {
+			print_urlquoted((unsigned char *)basepath);
+			putchar('/');
+		}
+		print_urlquoted((unsigned char *)fpath);
+		putchar('\007');
 	}
 }
 
@@ -2064,6 +2086,14 @@ main(int argc, char *argv[])
 			    "%s: cannot resolve base path, disabling -X: %s\n",
 			    argv0, strerror(errno));
 			Xflag = 0;
+		}
+
+		if (gethostname(host, sizeof host) == 0) {
+			// termination not posix guaranteed
+			host[sizeof host - 1] = 0;
+		} else {
+			// ignore errors, use no host
+			*host = 0;
 		}
 	}
 
