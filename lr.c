@@ -81,6 +81,7 @@ static int Hflag;
 static int Lflag;
 static int Qflag;
 static int Uflag;
+static int Xflag;
 static int hflag;
 static int lflag;
 static int sflag;
@@ -97,6 +98,7 @@ static size_t prefixl;
 static char input_delim = '\n';
 static int current_color;
 static int status;
+static char *basepath;
 
 static char default_ordering[] = "n";
 static char default_format[] = "%p\\n";
@@ -1558,6 +1560,25 @@ color_name_on(int c, const char *f, mode_t m)
 		fg256(196);
 }
 
+static void
+hyperlink_on(char *fpath)
+{
+	// OSC 8 hyperlink format
+	if (Xflag) {
+		if (*fpath == '/')
+			printf("\033]8;;file://%s\007", fpath);
+		else
+			printf("\033]8;;file://%s/%s\007", basepath, fpath);
+	}
+}
+
+static void
+hyperlink_off()
+{
+	if (Xflag)
+		printf("\033]8;;\007");
+}
+
 // unused format codes: BEHJKLNOQVWXZ achjoqrvwz
 void
 print_format(struct fileinfo *fi)
@@ -1610,17 +1631,21 @@ print_format(struct fileinfo *fi)
 		case 'p':
 			if (!sflag) {
 				color_name_on(fi->color, fi->fpath, fi->sb.st_mode);
+				hyperlink_on(fi->fpath);
 				if (!fi->fpath[0] && S_ISDIR(fi->sb.st_mode))
 					print_shquoted(".");
 				else
 					print_shquoted(fi->fpath);
+				hyperlink_off();
 				fgdefault();
 				break;
 			}
 			/* FALLTHRU */
 		case 'P':
 			color_name_on(fi->color, fi->fpath, fi->sb.st_mode);
+			hyperlink_on(fi->fpath);
 			print_noprefix(fi);
+			hyperlink_off();
 			fgdefault();
 			break;
 		case 'l':
@@ -1645,7 +1670,9 @@ print_format(struct fileinfo *fi)
 					*target = 0;
 				}
 				color_name_on(-1, target, st.st_mode);
+				hyperlink_on(target);
 				print_shquoted(target + j);
+				hyperlink_off();
 				fgdefault();
 			}
 			break;
@@ -1668,7 +1695,9 @@ print_format(struct fileinfo *fi)
 			break;
 		case 'f':
 			color_name_on(fi->color, fi->fpath, fi->sb.st_mode);
+			hyperlink_on(fi->fpath);
 			print_shquoted(basenam(fi->fpath));
+			hyperlink_off();
 			fgdefault();
 			break;
 		case 'A':
@@ -1978,7 +2007,7 @@ main(int argc, char *argv[])
 
 	setlocale(LC_ALL, "");
 
-	while ((c = getopt(argc, argv, "01AC:DFGHLQST:Udf:lho:st:x")) != -1)
+	while ((c = getopt(argc, argv, "01AC:DFGHLQST:UXdf:lho:st:x")) != -1)
 		switch (c) {
 		case '0': format = zero_format; input_delim = 0; Qflag = 0; break;
 		case '1': expr = chain(parse_expr("depth == 0 || prune"), EXPR_AND, expr); break;
@@ -2002,6 +2031,7 @@ main(int argc, char *argv[])
 		case 'S': Qflag++; format = stat_format; break;
 		case 'T': Tflag = timeflag(optarg); break;
 		case 'U': Uflag++; break;
+		case 'X': Xflag++; break;
 		case 'd': expr = chain(parse_expr("type == d && prune || print"), EXPR_AND, expr); break;
 		case 'f': format = optarg; break;
 		case 'h': hflag++; break;
@@ -2022,9 +2052,20 @@ main(int argc, char *argv[])
 	} else {
 		if (Gflag == 1)
 			Gflag = 0;
+		if (Xflag == 1)
+			Xflag = 0;
 	}
 
 	analyze_format();
+	if (Xflag) {
+		basepath = realpath(".", 0);
+		if (!basepath) {
+			fprintf(stderr,
+			    "%s: cannot resolve base path, disabling -X: %s\n",
+			    argv0, strerror(errno));
+			Xflag = 0;
+		}
+	}
 
 	for (i = 0; i < Cflag; i++) {
 		char *r;

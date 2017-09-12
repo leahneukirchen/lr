@@ -10,7 +10,7 @@
 .br
 .Op Fl D
 .Op Fl H | Fl L
-.Op Fl 1AGQdhsx
+.Op Fl 1AGQXdhsx
 .Op Fl U | Fl o Ar ord
 .br
 .Op Fl t Ar test
@@ -103,6 +103,9 @@ Don't enter directories.
 .It Fl G
 Colorize output to TTY.
 Use twice to force colorized output.
+.It Fl X
+Output OSC 8 hyperlinks to TTY.
+Use twice to force hyperlinks.
 .It Fl h
 Print human readable size for
 .Fl l
@@ -200,7 +203,7 @@ Octal file permissions
 ls-style symbolic file permissions
 .It Ic \&%y
 ls-style symbolic file type
-.Sq Li ( bcdfls )
+.Sq ( Li bcdfls )
 .It Ic \&%g
 Group name
 .It Ic \&%G
