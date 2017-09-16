@@ -1868,7 +1868,8 @@ recurse(char *path, struct history *h)
 	int root = (path[0] == '/' && path[1] == 0);
 
 	if (resolve ? stat(fpath, &st) : lstat(fpath, &st) < 0) {
-		if (resolve && errno == ENOENT && !lstat(fpath, &st)) {
+		if (resolve && (errno == ENOENT || errno == ELOOP) &&
+		    !lstat(fpath, &st)) {
 			/* ignore */
 		} else if (!h) {
 			/* warn for toplevel arguments */
