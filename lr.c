@@ -118,6 +118,7 @@ struct idmap {
 	char *name;
 };
 
+static int need_stat;
 static int need_group;
 static int need_user;
 static int need_fstype;
@@ -1515,7 +1516,44 @@ analyze_format()
 		case 'Y': need_fstype++; break;
 		case 'x': need_xattr++; break;
 		}
+		switch (*s) {
+		case 'd':
+		case 'I':
+		case 'p':
+		case 'P':
+		case 'f':
+			/* all good without stat */
+			break;
+		case 'e':
+			if (!Dflag)
+				need_stat++;
+			break;
+		default:
+			need_stat++;
+		}
 	}
+
+	for (s = ordering; *s; s++) {
+		switch (*s) {
+		case 'd':
+		case 'D':
+		case 'n':
+		case 'N':
+		case 'e':
+		case 'E':
+		case 'p':
+		case 'P':
+		case 'v':
+		case 'V':
+			/* all good without stat */
+			break;
+		default:
+			need_stat++;
+		}
+	}
+
+	if (Gflag)
+		need_stat++;
 }
 
 static void
@@ -1818,22 +1856,24 @@ callback(const char *fpath, const struct stat *sb, int depth, int entries, off_t
 	if (depth > maxdepth)
 		maxdepth = depth;
 
-	if (fi->sb.st_nlink > maxnlink)
-		maxnlink = fi->sb.st_nlink;
-	if (fi->sb.st_size > maxsize)
-		maxsize = fi->sb.st_size;
-	if (fi->sb.st_rdev > maxrdev)
-		maxrdev = fi->sb.st_rdev;
-	if (fi->sb.st_dev > maxdev)
-		maxdev = fi->sb.st_dev;
-	if (fi->sb.st_blocks > maxblocks)
-		maxblocks = fi->sb.st_blocks;
-	if (fi->sb.st_uid > maxuid)
-		maxuid = fi->sb.st_uid;
-	if (fi->sb.st_gid > maxuid)
-		maxgid = fi->sb.st_gid;
-	if (fi->sb.st_ino > maxino)
-		maxino = fi->sb.st_ino;
+	if (need_stat) {
+		if (fi->sb.st_nlink > maxnlink)
+			maxnlink = fi->sb.st_nlink;
+		if (fi->sb.st_size > maxsize)
+			maxsize = fi->sb.st_size;
+		if (fi->sb.st_rdev > maxrdev)
+			maxrdev = fi->sb.st_rdev;
+		if (fi->sb.st_dev > maxdev)
+			maxdev = fi->sb.st_dev;
+		if (fi->sb.st_blocks > maxblocks)
+			maxblocks = fi->sb.st_blocks;
+		if (fi->sb.st_uid > maxuid)
+			maxuid = fi->sb.st_uid;
+		if (fi->sb.st_gid > maxuid)
+			maxgid = fi->sb.st_gid;
+		if (fi->sb.st_ino > maxino)
+			maxino = fi->sb.st_ino;
+	}
 
 	/* prefetch user/group/fs name for correct column widths. */
 	if (need_user)
@@ -1856,7 +1896,7 @@ struct history {
 };
 
 static int
-recurse(char *path, struct history *h)
+recurse(char *path, struct history *h, int guessdir)
 {
 	size_t l = strlen(path), j = l && path[l-1] == '/' ? l - 1 : l;
 	struct stat st;
@@ -1867,7 +1907,10 @@ recurse(char *path, struct history *h)
 	int resolve = Lflag || (Hflag && !h);
 	int root = (path[0] == '/' && path[1] == 0);
 
-	if (resolve ? stat(fpath, &st) : lstat(fpath, &st) < 0) {
+	if (need_stat)
+		guessdir = 1;
+
+	if (guessdir && (resolve ? stat(fpath, &st) : lstat(fpath, &st) < 0)) {
 		if (resolve && (errno == ENOENT || errno == ELOOP) &&
 		    !lstat(fpath, &st)) {
 			/* ignore */
@@ -1883,15 +1926,17 @@ recurse(char *path, struct history *h)
 		}
 	}
 
-	if (xflag && h && st.st_dev != h->dev)
+	if (guessdir && xflag && h && st.st_dev != h->dev)
 		return 0;
 
 	new.chain = h;
-	new.dev = st.st_dev;
-	new.ino = st.st_ino;
 	new.level = h ? h->level + 1 : 0;
+	if (guessdir) {
+		new.dev = st.st_dev;
+		new.ino = st.st_ino;
+		new.total = st.st_blocks / 2;
+	}
 	entries = 0;
-	new.total = st.st_blocks / 2;
 
 	if (!Dflag) {
 		prune = 0;
@@ -1902,13 +1947,14 @@ recurse(char *path, struct history *h)
 			return r;
 	}
 
-	for (; h; h = h->chain) {
-		if (h->dev == st.st_dev && h->ino == st.st_ino)
-			return 0;
-		h->total += st.st_blocks / 2;
-	}
+	if (guessdir)
+		for (; h; h = h->chain) {
+			if (h->dev == st.st_dev && h->ino == st.st_ino)
+				return 0;
+			h->total += st.st_blocks / 2;
+		}
 
-	if (S_ISDIR(st.st_mode)) {
+	if (guessdir && S_ISDIR(st.st_mode)) {
 		DIR *d = opendir(fpath);
 		if (d) {
 			struct dirent *de;
@@ -1929,13 +1975,16 @@ recurse(char *path, struct history *h)
 				} else {
 					strcpy(path, de->d_name);
 				}
-				if ((r = recurse(path, &new))) {
+				int guesssubdir = de->d_type == DT_DIR ||
+				    (de->d_type == DT_LNK && resolve) ||
+				    de->d_type == DT_UNKNOWN;
+				if ((r = recurse(path, &new, guesssubdir))) {
 					closedir(d);
 					return r;
 				}
 			}
 			closedir(d);
-		} else if (errno != EACCES) {
+		} else if (errno != EACCES && errno != ENOTDIR) {
 			return -1;
 		}
 	}
@@ -2005,7 +2054,7 @@ traverse(const char *path)
 	}
 	memcpy(pathbuf, path, prefixl + 1);
 	pathbuf[prefixl + 1] = 0;
-	return recurse(pathbuf, 0);
+	return recurse(pathbuf, 0, 1);
 }
 
 static char
@@ -2061,7 +2110,9 @@ main(int argc, char *argv[])
 		case 'l': lflag++; Qflag++; format = long_format; break;
 		case 'o': ordering = optarg; break;
 		case 's': sflag++; break;
-		case 't': expr = chain(expr, EXPR_AND, parse_expr(optarg)); break;
+		case 't':
+			need_stat++;  // overapproximation
+			expr = chain(expr, EXPR_AND, parse_expr(optarg)); break;
 		case 'x': xflag++; break;
 		default:
 			fprintf(stderr,
