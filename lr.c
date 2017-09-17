@@ -1975,9 +1975,13 @@ recurse(char *path, struct history *h, int guessdir)
 				} else {
 					strcpy(path, de->d_name);
 				}
+#if defined(DT_DIR) && defined(DT_UNKNOWN)
 				int guesssubdir = de->d_type == DT_DIR ||
 				    (de->d_type == DT_LNK && resolve) ||
 				    de->d_type == DT_UNKNOWN;
+#else
+				int guesssubdir = 1;
+#endif
 				if ((r = recurse(path, &new, guesssubdir))) {
 					closedir(d);
 					return r;
