@@ -3,6 +3,7 @@
 * Feature: lr is substantially faster as files only are stat(2)ed if
   the output requires it.
 * Feature: new option `-X` to print OSC 8 hyperlinks.
+* Feature: new option `-e` for the common case of filtering file names.
 * Bug: lr doesn't fail on symlinks refering to themselves anymore.
 
 ## 1.0 (2017-08-29)

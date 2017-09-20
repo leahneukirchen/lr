@@ -13,6 +13,7 @@
 .Op Fl 1AGQXdhsx
 .Op Fl U | Fl o Ar ord
 .br
+.Op Fl e Ar regex
 .Op Fl t Ar test
 .Op Fl C Oo Ar color Ns Li \&: Oc Ns Ar path
 .Ar path\ ...
@@ -122,6 +123,9 @@ Sort according to
 .Ar ord ,
 see
 .Sx SORT ORDER .
+.It Fl e Ar regex
+Only show files where basename matches the POSIX ERE
+.Ar regex .
 .It Fl t Ar test
 Only show files matching the expression
 .Ar test ,
@@ -129,6 +133,8 @@ see
 .Sx TESTS .
 Multiple occurrences of
 .Fl t
+and
+.Fl e
 are regarded as a conjunction.
 .It Fl C Oo Ar color Ns Li \&: Oc Ns Ar path
 Behaves as if

@@ -612,6 +612,38 @@ parse_dur(int64_t *n)
 }
 
 static struct expr *
+mkstrexpr(enum prop prop, enum op op, char *s, int negate)
+{
+	int r = 0;
+	struct expr *e = mkexpr(op);
+	e->a.prop = prop;
+	if (op == EXPR_REGEX) {
+		e->b.regex = malloc(sizeof (regex_t));
+		r = regcomp(e->b.regex, s, REG_EXTENDED | REG_NOSUB);
+	} else if (op == EXPR_REGEXI) {
+		e->b.regex = malloc(sizeof (regex_t));
+		r = regcomp(e->b.regex, s, REG_EXTENDED | REG_NOSUB | REG_ICASE);
+	} else {
+		e->b.string = s;
+	}
+
+	if (r != 0) {
+		char msg[256];
+		regerror(r, e->b.regex, msg, sizeof msg);
+		parse_error("invalid regex '%s': %s", s, msg);
+		exit(2);
+	}
+
+	if (negate) {
+		struct expr *not = mkexpr(EXPR_NOT);
+		not->a.expr = e;
+		return not;
+	}
+
+	return e;
+}
+
+static struct expr *
 parse_strcmp()
 {
 	enum prop prop;
@@ -665,35 +697,8 @@ parse_strcmp()
 		parse_error("invalid string operator at '%.15s'", pos);
 
 	char *s;
-	if (parse_string(&s)) {
-		int r = 0;
-		struct expr *e = mkexpr(op);
-		e->a.prop = prop;
-		if (op == EXPR_REGEX) {
-			e->b.regex = malloc(sizeof (regex_t));
-			r = regcomp(e->b.regex, s, REG_EXTENDED | REG_NOSUB);
-		} else if (op == EXPR_REGEXI) {
-			e->b.regex = malloc(sizeof (regex_t));
-			r = regcomp(e->b.regex, s, REG_EXTENDED | REG_NOSUB | REG_ICASE);
-		} else {
-			e->b.string = s;
-		}
-
-		if (r != 0) {
-			char msg[256];
-			regerror(r, e->b.regex, msg, sizeof msg);
-			parse_error("invalid regex '%s': %s", s, msg);
-			exit(2);
-		}
-
-		if (negate) {
-			struct expr *not = mkexpr(EXPR_NOT);
-			not->a.expr = e;
-			return not;
-		}
-
-		return e;
-	}
+	if (parse_string(&s))
+		return mkstrexpr(prop, op, s, negate);
 
 	parse_error("invalid string at '%.15s'", pos);
 	return 0;
@@ -2083,11 +2088,11 @@ main(int argc, char *argv[])
 
 	setlocale(LC_ALL, "");
 
-	while ((c = getopt(argc, argv, "01AC:DFGHLQST:UXdf:lho:st:x")) != -1)
+	while ((c = getopt(argc, argv, "01AC:DFGHLQST:UXde:f:lho:st:x")) != -1)
 		switch (c) {
 		case '0': format = zero_format; input_delim = 0; Qflag = 0; break;
 		case '1': expr = chain(parse_expr("depth == 0 || prune"), EXPR_AND, expr); break;
-		case 'A': expr = chain(parse_expr("!(path ~~ \"*/.*\" && prune) && !path == \".\""), EXPR_AND, expr); break;
+		case 'A': expr = chain(expr, EXPR_AND, parse_expr("!(path ~~ \"*/.*\" && prune) && path != \".\"")); break;
 		case 'C':
 			if ((unsigned int)Cflag <
 			    sizeof Cflags / sizeof Cflags[0]) {
@@ -2109,6 +2114,8 @@ main(int argc, char *argv[])
 		case 'U': Uflag++; break;
 		case 'X': Xflag++; break;
 		case 'd': expr = chain(parse_expr("type == d && prune || print"), EXPR_AND, expr); break;
+		case 'e': expr = chain(expr, EXPR_AND,
+		    mkstrexpr(PROP_NAME, EXPR_REGEX, optarg, 0)); break;
 		case 'f': format = optarg; break;
 		case 'h': hflag++; break;
 		case 'l': lflag++; Qflag++; format = long_format; break;
@@ -2121,7 +2128,7 @@ main(int argc, char *argv[])
 		default:
 			fprintf(stderr,
 "Usage: %s [-0|-F|-l [-TA|-TC|-TM]|-S|-f FMT] [-D] [-H|-L] [-1AGQdhsx]\n"
-"          [-U|-o ORD] [-t TEST]* [-C [COLOR:]PATH]* PATH...\n", argv0);
+"          [-U|-o ORD] [-e REGEX]* [-t TEST]* [-C [COLOR:]PATH]* PATH...\n", argv0);
 			exit(2);
 		}
 
