@@ -1,5 +1,10 @@
 ## HEAD
 
+* Feature: lr is substantially faster as files only are stat(2)ed if
+  the output requires it.
+* Feature: new option `-X` to print OSC 8 hyperlinks.
+* Bug: lr doesn't fail on symlinks refering to themselves anymore.
+
 ## 1.0 (2017-08-29)
 
 * **Breaking change**: the `-Q` flag changed meaning to *enable* quoting
