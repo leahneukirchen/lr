@@ -4,9 +4,9 @@
 best features of `ls(1)`, `find(1)`, `stat(1)` and `du(1)`.
 
 `lr` has been tested on Linux 4.1, FreeBSD 10.2, OpenBSD 5.7,
-NetBSD 5.2.3, Mac OS X 10.10, OmniOS 5.11 and Cygwin 1.7.32.
+NetBSD 5.2.3, DragonFlyBSD 5.0, Mac OS X 10.10, OmniOS 5.11 and Cygwin 1.7.32.
 It will likely work on other Unix-like systems with C99, but you'll
-need to port scan_filesystems for fstype to work.
+need to port `scan_filesystems` for `fstype` to work.
 
 ## Screenshot
 
