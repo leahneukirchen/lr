@@ -985,6 +985,8 @@ scan_filesystems()
 	 * this will fail if we are not allowed to read the mountpoint, but then
 	 * we should not have to look up this st_dev value... */
 	mtab = setmntent(_PATH_MOUNTED, "r");
+	if (!mtab && errno == ENOENT)
+		mtab = setmntent("/proc/mounts", "r");
 	if (!mtab)
 		return;
 
