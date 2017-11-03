@@ -1177,6 +1177,9 @@ count_entries(struct fileinfo *fi)
 int
 eval(struct expr *e, struct fileinfo *fi)
 {
+	long v = 0;
+	const char *s = "";
+
 	switch (e->op) {
 	case EXPR_OR:
 		return eval(e->a.expr, fi) || eval(e->b.expr, fi);
@@ -1199,8 +1202,7 @@ eval(struct expr *e, struct fileinfo *fi)
 	case EXPR_GE:
 	case EXPR_GT:
 	case EXPR_ALLSET:
-	case EXPR_ANYSET: {
-		long v = 0;
+	case EXPR_ANYSET:
 		switch (e->a.prop) {
 		case PROP_ATIME: v = fi->sb.st_atime; break;
 		case PROP_CTIME: v = fi->sb.st_ctime; break;
@@ -1216,10 +1218,8 @@ eval(struct expr *e, struct fileinfo *fi)
 		case PROP_SIZE: v = fi->sb.st_size; break;
 		case PROP_TOTAL: v = fi->total; break;
 		case PROP_UID: v = fi->sb.st_uid; break;
-		default:
-			parse_error("unknown property");
+		default: parse_error("unknown property");
 		}
-
 		switch (e->op) {
 		case EXPR_LT: return v < e->b.num;
 		case EXPR_LE: return v <= e->b.num;
@@ -1229,11 +1229,11 @@ eval(struct expr *e, struct fileinfo *fi)
 		case EXPR_GT: return v > e->b.num;
 		case EXPR_ALLSET: return (v & e->b.num) == e->b.num;
 		case EXPR_ANYSET: return (v & e->b.num) > 0;
+		default: parse_error("invalid operator");
 		}
-	}
 	case EXPR_CHMOD:
 		return test_chmod(e->b.string, fi->sb.st_mode & 07777);
-	case EXPR_TYPE: {
+	case EXPR_TYPE:
 		switch (e->a.filetype) {
 		case TYPE_BLOCK: return S_ISBLK(fi->sb.st_mode);
 		case TYPE_CHAR: return S_ISCHR(fi->sb.st_mode);
@@ -1242,15 +1242,14 @@ eval(struct expr *e, struct fileinfo *fi)
 		case TYPE_REGULAR: return S_ISREG(fi->sb.st_mode);
 		case TYPE_SOCKET: return S_ISSOCK(fi->sb.st_mode);
 		case TYPE_SYMLINK: return S_ISLNK(fi->sb.st_mode);
+		default: parse_error("invalid file type");
 		}
-	}
 	case EXPR_STREQ:
 	case EXPR_STREQI:
 	case EXPR_GLOB:
 	case EXPR_GLOBI:
 	case EXPR_REGEX:
-	case EXPR_REGEXI: {
-		const char *s = "";
+	case EXPR_REGEXI:
 		switch (e->a.prop) {
 		case PROP_FSTYPE: s = fstype(fi->sb.st_dev); break;
 		case PROP_GROUP: s = groupname(fi->sb.st_gid); break;
@@ -1259,6 +1258,7 @@ eval(struct expr *e, struct fileinfo *fi)
 		case PROP_TARGET: s = readlin(fi->fpath, ""); break;
 		case PROP_USER: s = username(fi->sb.st_uid); break;
 		case PROP_XATTR: s = xattr_string(fi->fpath); break;
+		default: parse_error("unknown property");
 		}
 		switch (e->op) {
 		case EXPR_STREQ: return strcmp(e->b.string, s) == 0;
@@ -1267,8 +1267,8 @@ eval(struct expr *e, struct fileinfo *fi)
 		case EXPR_GLOBI: return fnmatch(e->b.string, s, FNM_CASEFOLD) == 0;
 		case EXPR_REGEX:
 		case EXPR_REGEXI: return regexec(e->b.regex, s, 0, 0, 0) == 0;
+		default: parse_error("invalid operator");
 		}
-	}
 	default:
 		parse_error("invalid operation %d, please file a bug.", e->op);
 	}
