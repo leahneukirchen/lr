@@ -93,10 +93,13 @@ _arguments -S : \
 	'-Q[shell quote file names]' \
 	'-d[don'\''t enter directories]' \
 	'-G[colorize output]' \
+	'-X[print OSC 8 hyperlinks]' \
 	'-h[print human readable size]' \
 	'-s[strip directory prefix passed on command line]' \
 	'-x[don'\''t enter other filesystems]' \
 	'(-o)-U[don'\''t sort results]' \
 	'(-U)-o[sort order]:order:_lr_order' \
+	'*-e[only show files where basename matches regexp]:pattern: ' \
 	'*-t[test expression]:test: ' \
+	'*-C[colorize path]:path:_files' \
 	'*:files:_files'
