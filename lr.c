@@ -897,8 +897,8 @@ static const char *
 readlin(const char *p, const char *alt)
 {
 	static char b[PATH_MAX];
-	int r = readlink(p, b, sizeof b - 1);
-	if (r < 0)
+	ssize_t r = readlink(p, b, sizeof b - 1);
+	if (r < 0 || (size_t)r >= sizeof b - 1)
 		return alt;
 	b[r] = 0;
 	return b;
