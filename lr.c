@@ -73,6 +73,11 @@
 #define FNM_CASEFOLD FNM_IGNORECASE
 #endif
 
+/* For Hurd. */
+#if !defined(PATH_MAX)
+#define PATH_MAX 4096
+#endif
+
 static int Cflag;
 static char *Cflags[64];
 static int Gflag;
