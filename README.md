@@ -140,6 +140,7 @@ Default: `n`.
 
 	<expr>     ::= <expr> || <expr>  -- disjunction
 	             | <expr> && <expr>  -- conjunction
+	             | <expr> ? <expr> : <expr>  -- ternary operator
 	             | ! <expr>          -- negation
 	             | ( <expr )
 	             | <timeprop> <numop> <dur>

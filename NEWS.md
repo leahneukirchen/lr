@@ -1,6 +1,7 @@
 ## HEAD
 
 * Feature: new option `-B` for breadth first traversal.
+* Feature: new syntax `? :` for ternary operator.
 
 ## 1.1 (2017-10-29)
 
