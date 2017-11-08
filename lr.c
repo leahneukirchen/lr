@@ -1837,6 +1837,14 @@ print(const void *nodep, const VISIT which, const int depth)
 		print_format(*(struct fileinfo **)nodep);
 }
 
+void
+free_fi(struct fileinfo *fi)
+{
+	if (fi)
+		free(fi->fpath);
+	free(fi);
+}
+
 int
 callback(const char *fpath, const struct stat *sb, int depth, ino_t entries, off_t total)
 {
@@ -1849,8 +1857,10 @@ callback(const char *fpath, const struct stat *sb, int depth, ino_t entries, off
 	fi->color = current_color;
 	memcpy((char *)&fi->sb, (char *)sb, sizeof (struct stat));
 
-	if (expr && !eval(expr, fi))
+	if (expr && !eval(expr, fi)) {
+		free_fi(fi);
 		return 0;
+	}
 
 	if (need_xattr) {
 		strncpy(fi->xattr, xattr_string(fi->fpath), sizeof fi->xattr);
@@ -1859,11 +1869,13 @@ callback(const char *fpath, const struct stat *sb, int depth, ino_t entries, off
 	} else
 		memset(fi->xattr, 0, sizeof fi->xattr);
 
-	if (Uflag)
+	if (Uflag) {
 		print(&fi, postorder, depth);
-	else
+		free_fi(fi);
+	} else {
 		// add to the tree, note that this will elimnate duplicate files
 		tsearch(fi, &root, order);
+	}
 
 	if (depth > maxdepth)
 		maxdepth = depth;
