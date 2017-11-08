@@ -20,6 +20,7 @@ Over find:
 * can sort
 * compute directory sizes
 * can strip leading `./`
+* can do breadth first search
 
 Over ls:
 * sorts over all files, not per directory
@@ -46,7 +47,7 @@ Over ls:
 
 ## Usage:
 
-	lr [-0|-F|-l [-TA|-TC|-TM]|-S|-f FMT] [-D] [-H|-L] [-1AGQXdhsx] [-U|-o ORD] [-e REGEX]* [-t TEST]* PATH...
+	lr [-0|-F|-l [-TA|-TC|-TM]|-S|-f FMT] [-B|-D] [-H|-L] [-1AGQXdhsx] [-U|-o ORD] [-e REGEX]* [-t TEST]* PATH...
 
 The special path argument `-` makes `lr` read file names from standard
 input, instead of traversing path.
@@ -60,6 +61,7 @@ input, instead of traversing path.
 * `-TM`: with `-l`, output mtime (default).
 * `-S`: BSD stat(1)-inspired output (implies `-Q`).
 * `-f FMT`: custom formatting, see below.
+* `-B`: breadth first traversal.
 * `-D`: depth first traversal. `prune` does not work, but `entries`
   and `total` are computed on the fly.
 * `-H`: only follow symlinks on command line.

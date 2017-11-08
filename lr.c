@@ -78,6 +78,7 @@
 #define PATH_MAX 4096
 #endif
 
+static int Bflag;
 static int Cflag;
 static char *Cflags[64];
 static int Gflag;
@@ -97,7 +98,8 @@ static char *argv0;
 static char *format;
 static char *ordering;
 static struct expr *expr;
-static void *root = NULL; // tree
+static void *root; // tree
+static void *new_root; // tree
 static int prune;
 static size_t prefixl;
 static char input_delim = '\n';
@@ -139,6 +141,7 @@ static off_t maxsize;
 static blkcnt_t maxblocks;
 static unsigned int maxxattr;
 
+static int bflag_depth;
 static int maxdepth;
 static int uwid, gwid, fwid;
 
@@ -1829,7 +1832,7 @@ print_format(struct fileinfo *fi)
 }
 
 void
-print(const void *nodep, const VISIT which, const int depth)
+tree_print(const void *nodep, const VISIT which, const int depth)
 {
 	(void)depth;
 
@@ -1837,7 +1840,7 @@ print(const void *nodep, const VISIT which, const int depth)
 		print_format(*(struct fileinfo **)nodep);
 }
 
-void
+static void
 free_fi(struct fileinfo *fi)
 {
 	if (fi)
@@ -1851,7 +1854,7 @@ callback(const char *fpath, const struct stat *sb, int depth, ino_t entries, off
 	struct fileinfo *fi = malloc(sizeof (struct fileinfo));
 	fi->fpath = strdup(fpath);
 	fi->prefixl = prefixl;
-	fi->depth = depth;
+	fi->depth = Bflag ? (depth > 0 ? bflag_depth + 1 : 0) : depth;
 	fi->entries = entries;
 	fi->total = total;
 	fi->color = current_color;
@@ -1870,8 +1873,10 @@ callback(const char *fpath, const struct stat *sb, int depth, ino_t entries, off
 		memset(fi->xattr, 0, sizeof fi->xattr);
 
 	if (Uflag) {
-		print(&fi, postorder, depth);
+		print_format(fi);
 		free_fi(fi);
+	} else if (Bflag) {
+		tsearch(fi, depth > 0 ? &new_root : &root, order);
 	} else {
 		// add to the tree, note that this will elimnate duplicate files
 		tsearch(fi, &root, order);
@@ -1931,6 +1936,9 @@ recurse(char *path, struct history *h, int guessdir)
 
 	int resolve = Lflag || (Hflag && !h);
 	int root = (path[0] == '/' && path[1] == 0);
+
+	if (Bflag && h && h->chain)
+		return 0;
 
 	if (need_stat)
 		guessdir = 1;
@@ -2025,6 +2033,30 @@ recurse(char *path, struct history *h, int guessdir)
 	return 0;
 }
 
+void
+tree_recurse(const void *nodep, const VISIT which, const int depth)
+{
+	struct fileinfo *fi = *((struct fileinfo **)nodep);
+
+	(void)depth;
+
+	if (which == postorder || which == leaf) {
+		if (S_ISDIR(fi->sb.st_mode)) {
+			char path[PATH_MAX];
+
+			strcpy(path, fi->fpath);
+			bflag_depth = fi->depth;
+			recurse(path, 0, 0);
+		}
+	}
+}
+
+void
+tree_free(void *nodep)
+{
+	free_fi(nodep);
+}
+
 int
 traverse_file(FILE *file)
 {
@@ -2108,11 +2140,12 @@ main(int argc, char *argv[])
 
 	setlocale(LC_ALL, "");
 
-	while ((c = getopt(argc, argv, "01AC:DFGHLQST:UXde:f:lho:st:x")) != -1)
+	while ((c = getopt(argc, argv, "01ABC:DFGHLQST:UXde:f:lho:st:x")) != -1)
 		switch (c) {
 		case '0': format = zero_format; input_delim = 0; Qflag = 0; break;
 		case '1': expr = chain(parse_expr("depth == 0 || prune"), EXPR_AND, expr); break;
 		case 'A': expr = chain(expr, EXPR_AND, parse_expr("!(path ~~ \"*/.*\" && prune) && path != \".\"")); break;
+		case 'B': Bflag++; Dflag = 0; Uflag = 0; need_stat++; break;
 		case 'C':
 			if ((unsigned int)Cflag <
 			    sizeof Cflags / sizeof Cflags[0]) {
@@ -2123,7 +2156,7 @@ main(int argc, char *argv[])
 			}
 			Gflag += 2;  // force color on
 			break;
-		case 'D': Dflag++; break;
+		case 'D': Dflag++; Bflag = 0; break;
 		case 'F': format = type_format; break;
 		case 'G': Gflag++; break;
 		case 'H': Hflag++; break;
@@ -2131,7 +2164,7 @@ main(int argc, char *argv[])
 		case 'Q': Qflag++; break;
 		case 'S': Qflag++; format = stat_format; break;
 		case 'T': Tflag = timeflag(optarg); break;
-		case 'U': Uflag++; break;
+		case 'U': Uflag++; Bflag = 0; break;
 		case 'X': Xflag++; break;
 		case 'd': expr = chain(parse_expr("type == d && prune || print"), EXPR_AND, expr); break;
 		case 'e': expr = chain(expr, EXPR_AND,
@@ -2147,7 +2180,7 @@ main(int argc, char *argv[])
 		case 'x': xflag++; break;
 		default:
 			fprintf(stderr,
-"Usage: %s [-0|-F|-l [-TA|-TC|-TM]|-S|-f FMT] [-D] [-H|-L] [-1AGQdhsx]\n"
+"Usage: %s [-0|-F|-l [-TA|-TC|-TM]|-S|-f FMT] [-B|-D] [-H|-L] [-1AGQdhsx]\n"
 "          [-U|-o ORD] [-e REGEX]* [-t TEST]* [-C [COLOR:]PATH]* PATH...\n", argv0);
 			exit(2);
 		}
@@ -2202,8 +2235,19 @@ main(int argc, char *argv[])
 			traverse(argv[i]);
 	}
 
-	if (!Uflag)
-		twalk(root, print);
+	if (Bflag) {
+		while (root) {
+			twalk(root, tree_print);
+			twalk(root, tree_recurse);
+			tdestroy(root, tree_free);
+
+			root = new_root;
+			new_root = 0;
+		}
+	} else if (!Uflag) {
+		twalk(root, tree_print);
+		// no need to destroy here, we are done
+	}
 
 	return status;
 }

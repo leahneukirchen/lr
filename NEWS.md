@@ -1,3 +1,7 @@
+## HEAD
+
+* Feature: new option `-B` for breadth first traversal.
+
 ## 1.1 (2017-10-29)
 
 * Feature: lr is substantially faster as files only are stat(2)ed if

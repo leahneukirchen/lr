@@ -8,7 +8,7 @@
 .Nm
 .Op Fl 0 | Fl F | Fl l Oo Fl TA | Fl TC | Fl TM Oc | Fl S | Fl f Ar fmt
 .br
-.Op Fl D
+.Op Fl B | Fl D
 .Op Fl H | Fl L
 .Op Fl 1AGQXdhsx
 .Op Fl U | Fl o Ar ord
@@ -81,6 +81,11 @@ BSD
 .It Fl f Ar fmt
 Custom formatting, see
 .Sx FORMATTING .
+.It Fl B
+Use breadth first traversal.
+For each depth of the directory tree,
+files are sorted and printed,
+then the next depth is looked at.
 .It Fl D
 Use depth first traversal.
 .Ic prune
