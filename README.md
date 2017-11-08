@@ -304,6 +304,12 @@ List all files, but print them in red if they match "havoc":
 % lr -G -t 'name =~ "havoc" && color 160 || print'
 ```
 
+Do not enter `.git` or `.hg` directories:
+
+```
+% lr -t 'name = ".git" || name = ".hg" ? prune : print' .
+```
+
 ## Installation
 
 Use `make all` to build, `make install` to install relative to `PREFIX`

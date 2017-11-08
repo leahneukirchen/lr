@@ -1,5 +1,8 @@
 ## HEAD
 
+* **Breaking change**: `prune` now evaluates to a false value.
+  The common find(1) idiom is now best written as `name = "x" ? prune : print`.
+
 * Feature: new option `-B` for breadth first traversal.
 * Feature: new syntax `? :` for ternary operator.
 

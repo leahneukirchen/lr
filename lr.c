@@ -1227,7 +1227,7 @@ eval(struct expr *e, struct fileinfo *fi)
 		return !eval(e->a.expr, fi);
 	case EXPR_PRUNE:
 		prune = 1;
-		return 1;
+		return 0;
 	case EXPR_PRINT:
 		return 1;
 	case EXPR_COLOR:
