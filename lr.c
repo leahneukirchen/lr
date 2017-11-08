@@ -1838,7 +1838,7 @@ print(const void *nodep, const VISIT which, const int depth)
 }
 
 int
-callback(const char *fpath, const struct stat *sb, int depth, int entries, off_t total)
+callback(const char *fpath, const struct stat *sb, int depth, ino_t entries, off_t total)
 {
 	struct fileinfo *fi = malloc(sizeof (struct fileinfo));
 	fi->fpath = strdup(fpath);
@@ -1913,7 +1913,8 @@ recurse(char *path, struct history *h, int guessdir)
 	size_t l = strlen(path), j = l && path[l-1] == '/' ? l - 1 : l;
 	struct stat st;
 	struct history new;
-	int r, entries;
+	int r;
+	ino_t entries;
 	const char *fpath = *path ? path : ".";
 
 	int resolve = Lflag || (Hflag && !h);
