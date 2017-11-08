@@ -2080,9 +2080,13 @@ tree_recurse(const void *nodep, const VISIT which, const int depth)
 }
 
 void
-tree_free(void *nodep)
+tree_free()
 {
-	free_fi(nodep);
+	while (root) {
+		struct fileinfo *fi = *(struct fileinfo **)root;
+		tdelete(fi, &root, order);
+		free_fi(fi);
+	}
 }
 
 int
@@ -2267,7 +2271,7 @@ main(int argc, char *argv[])
 		while (root) {
 			twalk(root, tree_print);
 			twalk(root, tree_recurse);
-			tdestroy(root, tree_free);
+			tree_free();
 
 			root = new_root;
 			new_root = 0;
