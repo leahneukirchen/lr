@@ -49,7 +49,6 @@
 #include <paths.h>
 #include <pwd.h>
 #include <regex.h>
-#include <search.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -78,6 +77,9 @@
 #define PATH_MAX 4096
 #endif
 
+struct fitree;
+struct idtree;
+
 static int Bflag;
 static int Cflag;
 static char *Cflags[64];
@@ -98,8 +100,6 @@ static char *argv0;
 static char *format;
 static char *ordering;
 static struct expr *expr;
-static void *root; // tree
-static void *new_root; // tree
 static int prune;
 static size_t prefixl;
 static char input_delim = '\n';
@@ -115,15 +115,13 @@ static char long_format[] = "%M%x %n %u %g %s %\324F %\324R %p%F%l\n";
 static char zero_format[] = "%p\\0";
 static char stat_format[] = "%D %i %M %n %u %g %R %s \"%Ab %Ad %AT %AY\" \"%Tb %Td %TT %TY\" \"%Cb %Cd %CT %CY\" %b %p\n";
 
-static void *users;
-static void *groups;
-static void *filesystems;
-static int scanned_filesystems;
+static struct fitree *root;
+static struct fitree *new_root;
 
-struct idmap {
-	long id;
-	char *name;
-};
+static struct idtree *users;
+static struct idtree *groups;
+static struct idtree *filesystems;
+static int scanned_filesystems;
 
 static int need_stat;
 static int need_group;
@@ -936,19 +934,86 @@ readlin(const char *p, const char *alt)
 	return b;
 }
 
-int
-idorder(const void *a, const void *b)
-{
-	struct idmap *ia = (struct idmap *)a;
-	struct idmap *ib = (struct idmap *)b;
+//// AA-tree implementation, adapted from https://github.com/ccxvii/minilibs
+struct idtree {
+	long id;
+	char *name;
+	struct idtree *left, *right;
+	int level;
+};
 
-	if (ia->id == ib->id)
-		return 0;
-	else if (ia->id < ib->id)
-		return -1;
-	else
-		return 1;
+static struct idtree idtree_sentinel = { 0, 0, &idtree_sentinel, &idtree_sentinel, 0 };
+
+static struct idtree *
+idtree_make(long id, char *name)
+{
+	struct idtree *node = malloc(sizeof (struct idtree));
+	node->id = id;
+	node->name = name;
+	node->left = node->right = &idtree_sentinel;
+	node->level = 1;
+	return node;
 }
+
+char *
+idtree_lookup(struct idtree *node, long id)
+{
+	if (node) {
+		while (node != &idtree_sentinel) {
+			if (id == node->id)
+				return node->name;
+			else if (id < node->id)
+				node = node->left;
+			else
+				node = node->right;
+		}
+	}
+
+	return 0;
+}
+
+static struct idtree *
+idtree_skew(struct idtree *node)
+{
+	if (node->left->level == node->level) {
+		struct idtree *save = node;
+		node = node->left;
+		save->left = node->right;
+		node->right = save;
+	}
+	return node;
+}
+
+static struct idtree *
+idtree_split(struct idtree *node)
+{
+	if (node->right->right->level == node->level) {
+		struct idtree *save = node;
+		node = node->right;
+		save->right = node->left;
+		node->left = save;
+		node->level++;
+	}
+	return node;
+}
+
+struct idtree *
+idtree_insert(struct idtree *node, long id, char *name)
+{
+	if (node && node != &idtree_sentinel) {
+		if (id == node->id)
+			return node;
+		else if (id < node->id)
+			node->left = idtree_insert(node->left, id, name);
+		else
+			node->right = idtree_insert(node->right, id, name);
+		node = idtree_skew(node);
+		node = idtree_split(node);
+		return node;
+	}
+	return idtree_make(id, name);
+}
+////
 
 static char *
 strid(long id)
@@ -961,47 +1026,41 @@ strid(long id)
 static char *
 groupname(gid_t gid)
 {
-	struct idmap key, **result;
-	key.id = gid;
-	key.name = 0;
+	char *name = idtree_lookup(groups, gid);
 
-	if (!(result = tfind(&key, &groups, idorder))) {
-		struct group *g = getgrgid(gid);
-		if (g) {
-			struct idmap *newkey = malloc(sizeof (struct idmap));
-			newkey->id = gid;
-			newkey->name = strdup(g->gr_name);
-			if ((int)strlen(g->gr_name) > gwid)
-				gwid = strlen(g->gr_name);
-			tsearch(newkey, &groups, idorder);
-			return newkey->name;
-		}
+	if (name)
+		return name;
+
+	struct group *g = getgrgid(gid);
+	if (g) {
+		if ((int)strlen(g->gr_name) > gwid)
+			gwid = strlen(g->gr_name);
+		char *name = strdup(g->gr_name);
+		groups = idtree_insert(groups, gid, name);
+		return name;
 	}
 
-	return result ? (*result)->name : strid(gid);
+	return strid(gid);
 }
 
 static char *
 username(uid_t uid)
 {
-	struct idmap key, **result;
-	key.id = uid;
-	key.name = 0;
+	char *name = idtree_lookup(users, uid);
 
-	if (!(result = tfind(&key, &users, idorder))) {
-		struct passwd *p = getpwuid(uid);
-		if (p) {
-			struct idmap *newkey = malloc(sizeof (struct idmap));
-			newkey->id = uid;
-			newkey->name = strdup(p->pw_name);
-			if ((int)strlen(p->pw_name) > uwid)
-				uwid = strlen(p->pw_name);
-			tsearch(newkey, &users, idorder);
-			return newkey->name;
-		}
+	if (name)
+		return name;
+	
+	struct passwd *p = getpwuid(uid);
+	if (p) {
+		if ((int)strlen(p->pw_name) > uwid)
+			uwid = strlen(p->pw_name);
+		char *name = strdup(p->pw_name);
+		users = idtree_insert(users, uid, name);
+		return name;
 	}
-
-	return result ? (*result)->name : strid(uid);
+	
+	return strid(uid);
 }
 
 #if defined(__linux__) || defined(__CYGWIN__)
@@ -1025,11 +1084,8 @@ scan_filesystems()
 	while ((mnt = getmntent(mtab))) {
 		if (stat(mnt->mnt_dir, &st) < 0)
 			continue;
-
-		struct idmap *newkey = malloc(sizeof (struct idmap));
-		newkey->id = st.st_dev;
-		newkey->name = strdup(mnt->mnt_type);
-		tsearch(newkey, &filesystems, idorder);
+		filesystems = idtree_insert(filesystems,
+		    st.st_dev, strdup(mnt->mnt_type));
 	};
 
 	endmntent(mtab);
@@ -1052,11 +1108,8 @@ scan_filesystems()
 	while (getmntent(mtab, &mnt) == 0) {
 		if (stat(mnt.mnt_mountp, &st) < 0)
 			continue;
-
-		struct idmap *newkey = malloc(sizeof (struct idmap));
-		newkey->id = st.st_dev;
-		newkey->name = strdup(mnt.mnt_fstype);
-		tsearch(newkey, &filesystems, idorder);
+		filesystems = idtree_insert(filesystems,
+		    st.st_dev, strdup(mnt->mnt_fstype));
 	};
 
 	fclose(mtab);
@@ -1077,11 +1130,8 @@ scan_filesystems()
 	while (i-- > 0) {
 		if (stat(mnt->f_mntonname, &st) < 0)
 			continue;
-
-		struct idmap *newkey = malloc(sizeof (struct idmap));
-		newkey->id = st.st_dev;
-		newkey->name = strdup(mnt->f_fstypename);
-		tsearch(newkey, &filesystems, idorder);
+		filesystems = idtree_insert(filesystems,
+		    st.st_dev, strdup(mnt->f_fstypename));
 		mnt++;
 	};
 
@@ -1100,11 +1150,8 @@ scan_filesystems()
 	while (i-- > 0) {
 		if (stat(mnt->f_mntonname, &st) < 0)
 			continue;
-
-		struct idmap *newkey = malloc(sizeof (struct idmap));
-		newkey->id = st.st_dev;
-		newkey->name = strdup(mnt->f_fstypename);
-		tsearch(newkey, &filesystems, idorder);
+		filesystems = idtree_insert(filesystems,
+		    st.st_dev, strdup(mnt->f_fstypename));
 		mnt++;
 	};
 
@@ -1121,18 +1168,17 @@ scan_filesystems()
 static char *
 fstype(dev_t devid)
 {
-	struct idmap key, **result;
-	key.id = devid;
-	key.name = 0;
-
 	if (!scanned_filesystems)
 		scan_filesystems();
-	result = tfind(&key, &filesystems, idorder);
 
-	if (result && (int)strlen((*result)->name) > fwid)
-		fwid = strlen((*result)->name);
+	char *name = idtree_lookup(filesystems, devid);
+	if (name) {
+		if ((int)strlen(name) > fwid)
+			fwid = strlen(name);
+		return name;
+	}
 
-	return result ? (*result)->name : strid(devid);
+	return strid(devid);
 }
 
 static char *
@@ -1415,6 +1461,98 @@ order(const void *a, const void *b)
 
 	return strcmp(fa->fpath, fb->fpath);
 }
+
+static void
+free_fi(struct fileinfo *fi)
+{
+	if (fi)
+		free(fi->fpath);
+	free(fi);
+}
+
+//// AA-tree implementation, adapted from https://github.com/ccxvii/minilibs
+struct fitree {
+	struct fileinfo *fi;
+	struct fitree *left, *right;
+	int level;
+};
+
+static struct fitree fitree_sentinel = { 0, &fitree_sentinel, &fitree_sentinel, 0 };
+
+static struct fitree *
+fitree_make(struct fileinfo *fi)
+{
+	struct fitree *node = malloc(sizeof (struct fitree));
+	node->fi = fi;
+	node->left = node->right = &fitree_sentinel;
+	node->level = 1;
+	return node;
+}
+
+static struct fitree *
+fitree_skew(struct fitree *node)
+{
+	if (node->left->level == node->level) {
+		struct fitree *save = node;
+		node = node->left;
+		save->left = node->right;
+		node->right = save;
+	}
+	return node;
+}
+
+static struct fitree *
+fitree_split(struct fitree *node)
+{
+	if (node->right->right->level == node->level) {
+		struct fitree *save = node;
+		node = node->right;
+		save->right = node->left;
+		node->left = save;
+		node->level++;
+	}
+	return node;
+}
+
+struct fitree *
+fitree_insert(struct fitree *node, struct fileinfo *fi)
+{
+	if (node && node != &fitree_sentinel) {
+		int c = order(fi, node->fi);
+		if (c == 0)
+			return node;
+		if (c < 0)
+			node->left = fitree_insert(node->left, fi);
+		else
+			node->right = fitree_insert(node->right, fi);
+		node = fitree_skew(node);
+		node = fitree_split(node);
+		return node;
+	}
+	return fitree_make(fi);
+}
+
+void
+fitree_walk(struct fitree *node, void (*visit)(struct fileinfo *))
+{
+	if (node->left != &fitree_sentinel)
+		fitree_walk(node->left, visit);
+	visit(node->fi);
+	if (node->right != &fitree_sentinel)
+		fitree_walk(node->right, visit);
+}
+
+void
+fitree_free(struct fitree *node)
+{
+	if (node && node != &fitree_sentinel) {
+		fitree_free(node->left);
+		fitree_free(node->right);
+		free_fi(node->fi);
+		free(node);
+	}
+}
+////
 
 static int
 intlen(intmax_t i)
@@ -1859,22 +1997,7 @@ print_format(struct fileinfo *fi)
 	}
 }
 
-void
-tree_print(const void *nodep, const VISIT which, const int depth)
-{
-	(void)depth;
-
-	if (which == postorder || which == leaf)
-		print_format(*(struct fileinfo **)nodep);
-}
-
-static void
-free_fi(struct fileinfo *fi)
-{
-	if (fi)
-		free(fi->fpath);
-	free(fi);
-}
+static int initial;
 
 int
 callback(const char *fpath, const struct stat *sb, int depth, ino_t entries, off_t total)
@@ -1904,10 +2027,16 @@ callback(const char *fpath, const struct stat *sb, int depth, ino_t entries, off
 		print_format(fi);
 		free_fi(fi);
 	} else if (Bflag) {
-		tsearch(fi, depth > 0 ? &new_root : &root, order);
+		if (initial) {
+			if (fi->depth == 0)
+				root = fitree_insert(root, fi);
+		} else {
+			if (fi->depth == bflag_depth + 1)
+				new_root = fitree_insert(new_root, fi);
+		}
 	} else {
-		// add to the tree, note that this will elimnate duplicate files
-		tsearch(fi, &root, order);
+		// add to the tree, note that this will eliminate duplicate files
+		root = fitree_insert(root, fi);
 	}
 
 	if (depth > maxdepth)
@@ -2062,30 +2191,14 @@ recurse(char *path, struct history *h, int guessdir)
 }
 
 void
-tree_recurse(const void *nodep, const VISIT which, const int depth)
+tree_recurse(struct fileinfo *fi)
 {
-	struct fileinfo *fi = *((struct fileinfo **)nodep);
+	if (S_ISDIR(fi->sb.st_mode)) {
+		char path[PATH_MAX];
 
-	(void)depth;
-
-	if (which == postorder || which == leaf) {
-		if (S_ISDIR(fi->sb.st_mode)) {
-			char path[PATH_MAX];
-
-			strcpy(path, fi->fpath);
-			bflag_depth = fi->depth;
-			recurse(path, 0, 0);
-		}
-	}
-}
-
-void
-tree_free()
-{
-	while (root) {
-		struct fileinfo *fi = *(struct fileinfo **)root;
-		tdelete(fi, &root, order);
-		free_fi(fi);
+		strcpy(path, fi->fpath);
+		bflag_depth = fi->depth;
+		recurse(path, 0, 0);
 	}
 }
 
@@ -2260,24 +2373,26 @@ main(int argc, char *argv[])
 
 	current_color = -1;
 
+	initial = 1;
 	if (!Cflag && optind == argc) {
 		traverse("");
 	} else {
 		for (i = optind; i < argc; i++)
 			traverse(argv[i]);
 	}
+	initial = 0;
 
 	if (Bflag) {
 		while (root) {
-			twalk(root, tree_print);
-			twalk(root, tree_recurse);
-			tree_free();
+			fitree_walk(root, print_format);
+			fitree_walk(root, tree_recurse);
+			fitree_free(root);
 
 			root = new_root;
 			new_root = 0;
 		}
 	} else if (!Uflag) {
-		twalk(root, tree_print);
+		fitree_walk(root, print_format);
 		// no need to destroy here, we are done
 	}
 
