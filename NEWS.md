@@ -5,6 +5,7 @@
 
 * Feature: new option `-B` for breadth first traversal.
 * Feature: new syntax `? :` for ternary operator.
+* Significant speed-up as tsearch is not used anymore.
 
 ## 1.1 (2017-10-29)
 
