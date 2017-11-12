@@ -1273,7 +1273,7 @@ eval(struct expr *e, struct fileinfo *fi)
 		return !eval(e->a.expr, fi);
 	case EXPR_PRUNE:
 		prune = 1;
-		return 0;
+		return 1;
 	case EXPR_PRINT:
 		return 1;
 	case EXPR_COLOR:
@@ -2290,7 +2290,7 @@ main(int argc, char *argv[])
 	while ((c = getopt(argc, argv, "01ABC:DFGHLQST:UXde:f:lho:st:x")) != -1)
 		switch (c) {
 		case '0': format = zero_format; input_delim = 0; Qflag = 0; break;
-		case '1': expr = chain(parse_expr("depth > 0 && prune || print"), EXPR_AND, expr); break;
+		case '1': expr = chain(parse_expr("depth > 0 ? prune : print"), EXPR_AND, expr); break;
 		case 'A': expr = chain(expr, EXPR_AND, parse_expr("name =~ \"^\\.\" && path != \".\" ? prune : print")); break;
 		case 'B': Bflag++; Dflag = 0; Uflag = 0; need_stat++; break;
 		case 'C':
