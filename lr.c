@@ -1535,6 +1535,8 @@ fitree_insert(struct fitree *node, struct fileinfo *fi)
 void
 fitree_walk(struct fitree *node, void (*visit)(struct fileinfo *))
 {
+	if (!node)
+		return;
 	if (node->left != &fitree_sentinel)
 		fitree_walk(node->left, visit);
 	visit(node->fi);
