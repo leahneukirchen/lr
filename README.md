@@ -150,6 +150,7 @@ Default: `n`.
 	             | <modetest>
 	             | prune             -- do not traverse into subdirectories
 	             | print             -- always true value
+	             | skip              -- always true value
 	             | color <num>       -- always true value, override 256-color
 
         <timeprop> ::= atime | ctime | mtime

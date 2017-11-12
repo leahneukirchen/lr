@@ -417,6 +417,11 @@ parse_inner()
 	} else if (token("print")) {
 		struct expr *e = mkexpr(EXPR_PRINT);
 		return e;
+	} else if (token("skip")) {
+		struct expr *e = mkexpr(EXPR_PRINT);
+		struct expr *not = mkexpr(EXPR_NOT);
+		not->a.expr = e;
+		return not;
 	} else if (token("color")) {
 		struct expr *e = mkexpr(EXPR_COLOR);
 		int64_t n;

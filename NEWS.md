@@ -2,6 +2,9 @@
 
 * Feature: new option `-B` for breadth first traversal.
 * Feature: new syntax `? :` for ternary operator.
+* Feature: new action `skip` which is always false.
+  The common find(1) idiom `-name x -prune -o -print`
+  is now best written as `name = "x" ? prune && skip : print`.
 * Significant speed-up as tsearch is not used anymore.
 
 ## 1.1 (2017-10-29)
