@@ -2259,7 +2259,7 @@ traverse(const char *path)
 	}
 
 	prefixl = strlen(path);
-	while (path[prefixl-1] == '/')
+	while (prefixl && path[prefixl-1] == '/')
 		prefixl--;
 	if (prefixl > PATH_MAX) {
 		errno = ENAMETOOLONG;
