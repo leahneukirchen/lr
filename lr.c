@@ -2033,13 +2033,15 @@ callback(const char *fpath, const struct stat *sb, int depth, ino_t entries, off
 	if (Uflag) {
 		print_format(fi);
 		free_fi(fi);
+		return 0;
 	} else if (Bflag) {
-		if (initial) {
-			if (fi->depth == 0)
-				root = fitree_insert(root, fi);
+		if (initial && fi->depth == 0) {
+			root = fitree_insert(root, fi);
+		} else if (!initial && fi->depth == bflag_depth + 1) {
+			new_root = fitree_insert(new_root, fi);
 		} else {
-			if (fi->depth == bflag_depth + 1)
-				new_root = fitree_insert(new_root, fi);
+			free_fi(fi);
+			return 0;
 		}
 	} else {
 		// add to the tree, note that this will eliminate duplicate files
