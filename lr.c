@@ -2347,6 +2347,16 @@ main(int argc, char *argv[])
 	}
 
 	analyze_format();
+	if (Uflag) {
+		maxnlink = 99;
+		maxsize = 4*1024*1024;
+		maxblocks = maxsize / 512;
+		maxrdev = maxdev = 255;
+		maxuid = maxgid = 65536;
+		maxino = 9999999;
+		maxdepth = 99;
+		uwid = gwid = fwid = 8;
+	}
 	if (Xflag) {
 		basepath = realpath(".", 0);
 		if (!basepath) {
