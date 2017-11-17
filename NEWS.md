@@ -1,4 +1,4 @@
-## HEAD
+## 1.2 (2017-11-17)
 
 * Feature: new option `-B` for breadth first traversal.
 * Feature: new syntax `? :` for ternary operator.
@@ -6,6 +6,8 @@
   The common find(1) idiom `-name x -prune -o -print`
   is now best written as `name = "x" ? prune && skip : print`.
 * Significant speed-up as tsearch is not used anymore.
+* Lower memory usage for -U.
+* Default widths for -U.
 
 ## 1.1 (2017-10-29)
 
