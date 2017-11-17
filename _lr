@@ -85,7 +85,8 @@ _arguments -S : \
 	'(-0 -F -l -f)-S[stat(1)-like output]' \
 	'(-0 -F -l -S)-f[output with custom format]:format:_lr_format' \
 	$timeopt \
-	'-D[use depth-first traversal]' \
+	'(-D)-B[use breadth-first traversal]' \
+	'(-B)-D[use depth-first traversal]' \
 	'(-L)-H[only follow symlinks on command line]' \
 	'(-H)-L[follow all symlinks]' \
 	'-1[don'\''t go below one level of directories]' \
