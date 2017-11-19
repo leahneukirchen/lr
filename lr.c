@@ -1831,6 +1831,7 @@ hyperlink_off()
 void
 print_format(struct fileinfo *fi)
 {
+	int c, v;
 	char *s;
 	for (s = format; *s; s++) {
 		if (*s == '\\') {
@@ -1842,8 +1843,32 @@ print_format(struct fileinfo *fi)
 			case 'r': putchar('\r'); break;
 			case 't': putchar('\t'); break;
 			case 'v': putchar('\v'); break;
-			case '0': putchar('\0'); break;
-			// TODO: \NNN
+			case '0': case '1': case '2': case '3':
+			case '4': case '5': case '6': case '7':
+				for (c = 3, v = 0;
+				     c > 0 && *s >= '0' && *s <= '7';
+				     s++, c--) {
+					v = (v << 3) + ((*s) - '0');
+				}
+				s--;
+				putchar(v & 0xff);
+				break;
+			case 'x':
+				s++;
+				for (c = 2, v = 0;
+				     c > 0 && isxdigit((unsigned char)*s);
+				     s++, c--) {
+					v <<= 4;
+					if (*s >= 'A' && *s <= 'F')
+						v += *s - 'A' + 10;
+					else if (*s >= 'a' && *s <= 'f')
+						v += *s - 'a' + 10;
+					else
+						v += *s - '0';
+				}
+				s--;
+				putchar(v);
+				break;
 			default: putchar(*s);
 			}
 			continue;
