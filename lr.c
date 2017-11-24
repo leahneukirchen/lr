@@ -1632,6 +1632,23 @@ color_size_on(off_t s)
 }
 
 static void
+print_comma(int len, intmax_t i)
+{
+	char buf[64];
+	char *s = buf + sizeof buf;
+
+	*--s = 0;
+	while (1) {
+		*--s = (i % 10) + '0'; if ((i /= 10) <= 0) break;
+		*--s = (i % 10) + '0'; if ((i /= 10) <= 0) break;
+		*--s = (i % 10) + '0'; if ((i /= 10) <= 0) break;
+		*--s = ',';
+	}
+
+	printf("%*.*s", len+len/3, len+len/3, s);
+}
+
+static void
 print_human(intmax_t i)
 {
 	double d = i;
@@ -1956,8 +1973,12 @@ print_format(struct fileinfo *fi)
 		case 's':
 			if (!hflag) {
 				color_size_on(fi->sb.st_size);
-				printf("%*jd", intlen(maxsize),
-				    (intmax_t)fi->sb.st_size);
+				if (Gflag)
+					print_comma(intlen(maxsize),
+					    (intmax_t)fi->sb.st_size);
+				else
+					printf("%*jd", intlen(maxsize),
+					    (intmax_t)fi->sb.st_size);
 				fgdefault();
 				break;
 			}

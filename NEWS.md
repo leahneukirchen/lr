@@ -2,6 +2,7 @@
 
 * Feature: new option `-P` to quote filenames with `$'...'` syntax.
 * Feature: invalid UTF-8 filenames are quoted now.
+* Feature: colorized file size output now uses groups of three digits.
 
 ## 1.2 (2017-11-17)
 
