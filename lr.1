@@ -10,7 +10,7 @@
 .br
 .Op Fl B | Fl D
 .Op Fl H | Fl L
-.Op Fl 1AGQXdhsx
+.Op Fl 1AGPQXdhsx
 .Op Fl U | Fl o Ar ord
 .br
 .Op Fl e Ar regex
@@ -102,6 +102,12 @@ Follow all symlinks.
 Don't go below one level of directories.
 .It Fl A
 Don't list files starting with a dot.
+.It Fl P
+Quote file names using
+Austin Group #249 syntax
+.Li \&$' Ns No ... Ns Li \&'
+(implies
+.Fl Q ) .
 .It Fl Q
 Quote file names (default for output to TTY).
 .It Fl d

@@ -88,6 +88,7 @@ static int Dflag;
 static int Hflag;
 static int Lflag;
 static int Qflag;
+static int Pflag;
 static int Uflag;
 static int Xflag;
 static int hflag;
@@ -1055,7 +1056,7 @@ username(uid_t uid)
 
 	if (name)
 		return name;
-	
+
 	struct passwd *p = getpwuid(uid);
 	if (p) {
 		if ((int)strlen(p->pw_name) > uwid)
@@ -1064,7 +1065,7 @@ username(uid_t uid)
 		users = idtree_insert(users, uid, name);
 		return name;
 	}
-	
+
 	return strid(uid);
 }
 
@@ -1653,25 +1654,98 @@ print_human(intmax_t i)
 
 }
 
+// Decode one UTF-8 codepoint into cp, return number of bytes to next one.
+// On invalid UTF-8, return -1, and do not change cp.
+// Invalid codepoints are not checked.
+//
+// This code is meant to be inlined, if cp is unused it can be optimized away.
+static int
+u8decode(const char *cs, uint32_t *cp)
+{
+	const uint8_t *s = (uint8_t *)cs;
+
+	if (*s == 0)   { *cp = 0; return 0; }
+	if (*s < 0x80) { *cp = *s; return 1; }
+	if (*s < 0xc2) { return -1; }  //cont+overlong
+	if (*s < 0xe0) { *cp = *s & 0x1f; goto u2; }
+	if (*s < 0xf0) {
+		if (*s == 0xe0 && (s[1] & 0xe0) == 0x80) return -1; //overlong
+		if (*s == 0xed && (s[1] & 0xe0) == 0xa0) return -1; //surrogate
+		*cp = *s & 0x0f; goto u3;
+	}
+	if (*s < 0xf5) {
+		if (*s == 0xf0 && (s[1] & 0xf0) == 0x80) return -1; //overlong
+		if (*s == 0xf4 && (s[1] > 0x8f)) return -1; //too high
+		*cp = *s & 0x07; goto u4;
+	}
+	return -1;
+
+u4:	if ((*++s & 0xc0) != 0x80) return -1;  *cp = (*cp << 6) | (*s & 0x3f);
+u3:	if ((*++s & 0xc0) != 0x80) return -1;  *cp = (*cp << 6) | (*s & 0x3f);
+u2:	if ((*++s & 0xc0) != 0x80) return -1;  *cp = (*cp << 6) | (*s & 0x3f);
+	return s - (uint8_t *)cs + 1;
+}
+
 static void
 print_shquoted(const char *s)
 {
-	if (!Qflag || !strpbrk(s, "\001\002\003\004\005\006\007\010"
-	                          "\011\012\013\014\015\016\017\020"
-	                          "\021\022\023\024\025\026\027\030"
-	                          "\031\032\033\034\035\036\037\040"
-	                          "`^#*[]=|\\?${}()'\"<>&;\177")) {
+	uint32_t ignored;
+	int l;
+
+	const char *t;
+	int esc = 0;
+	for (t = s; *t; ) {
+		if ((unsigned char)*t <= 32 ||
+		    strchr("`^#*[]=|\\?${}()'\"<>&;\177", *t)) {
+			esc = 1;
+			break;
+		} else {
+			if ((l = u8decode(t, &ignored)) < 0) {
+				esc = 1;
+				break;
+			}
+			t += l;
+		}
+	}
+
+	if (!esc) {
 		printf("%s", s);
 		return;
 	}
 
-	putchar('\'');
-	for (; *s; s++)
-		if (*s == '\'')
-			printf("'\\''");
-		else
-			putchar(*s);
-	putchar('\'');
+	if (Pflag) {
+		printf("$'");
+		for (; *s; s++)
+			switch (*s) {
+			case '\a': printf("\\a"); break;
+			case '\b': printf("\\b"); break;
+			case '\e': printf("\\e"); break;
+			case '\f': printf("\\f"); break;
+			case '\n': printf("\\n"); break;
+			case '\r': printf("\\r"); break;
+			case '\t': printf("\\t"); break;
+			case '\v': printf("\\v"); break;
+			case '\\': printf("\\\\"); break;
+			case '\'': printf("\\\'"); break;
+			default:
+				if ((unsigned char)*s < 32 ||
+				    (l = u8decode(s, &ignored)) < 0) {
+					printf("\\%03o", (unsigned char)*s);
+				} else {
+					printf("%.*s", l, s);
+					s += l-1;
+				}
+			}
+		putchar('\'');
+	} else {
+		putchar('\'');
+		for (; *s; s++)
+			if (*s == '\'')
+				printf("'\\''");
+			else
+				putchar(*s);
+		putchar('\'');
+	}
 }
 
 void
@@ -2319,9 +2393,9 @@ main(int argc, char *argv[])
 
 	setlocale(LC_ALL, "");
 
-	while ((c = getopt(argc, argv, "01ABC:DFGHLQST:UXde:f:lho:st:x")) != -1)
+	while ((c = getopt(argc, argv, "01ABC:DFGHLQPST:UXde:f:lho:st:x")) != -1)
 		switch (c) {
-		case '0': format = zero_format; input_delim = 0; Qflag = 0; break;
+		case '0': format = zero_format; input_delim = 0; Qflag = Pflag = 0; break;
 		case '1': expr = chain(parse_expr("depth > 0 ? prune : print"), EXPR_AND, expr); break;
 		case 'A': expr = chain(expr, EXPR_AND, parse_expr("name =~ \"^\\.\" && path != \".\" ? prune : print")); break;
 		case 'B': Bflag++; Dflag = 0; Uflag = 0; need_stat++; break;
@@ -2341,6 +2415,7 @@ main(int argc, char *argv[])
 		case 'H': Hflag++; break;
 		case 'L': Lflag++; break;
 		case 'Q': Qflag++; break;
+		case 'P': Pflag++; Qflag++; break;
 		case 'S': Qflag++; format = stat_format; break;
 		case 'T': Tflag = timeflag(optarg); break;
 		case 'U': Uflag++; Bflag = 0; break;
@@ -2359,7 +2434,7 @@ main(int argc, char *argv[])
 		case 'x': xflag++; break;
 		default:
 			fprintf(stderr,
-"Usage: %s [-0|-F|-l [-TA|-TC|-TM]|-S|-f FMT] [-B|-D] [-H|-L] [-1AGQdhsx]\n"
+"Usage: %s [-0|-F|-l [-TA|-TC|-TM]|-S|-f FMT] [-B|-D] [-H|-L] [-1AGPQdhsx]\n"
 "          [-U|-o ORD] [-e REGEX]* [-t TEST]* [-C [COLOR:]PATH]* PATH...\n", argv0);
 			exit(2);
 		}

@@ -1,3 +1,8 @@
+## HEAD
+
+* Feature: new option `-P` to quote filenames with `$'...'` syntax.
+* Feature: invalid UTF-8 filenames are quoted now.
+
 ## 1.2 (2017-11-17)
 
 * Feature: new option `-B` for breadth first traversal.

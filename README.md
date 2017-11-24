@@ -47,7 +47,7 @@ Over ls:
 
 ## Usage:
 
-	lr [-0|-F|-l [-TA|-TC|-TM]|-S|-f FMT] [-B|-D] [-H|-L] [-1AGQXdhsx] [-U|-o ORD] [-e REGEX]* [-t TEST]* PATH...
+	lr [-0|-F|-l [-TA|-TC|-TM]|-S|-f FMT] [-B|-D] [-H|-L] [-1AGPQXdhsx] [-U|-o ORD] [-e REGEX]* [-t TEST]* PATH...
 
 The special path argument `-` makes `lr` read file names from standard
 input, instead of traversing path.
@@ -70,6 +70,7 @@ input, instead of traversing path.
 * `-A`: don't list files starting with a dot.
 * `-G`: colorize output to tty.  Use twice to force colorize.
 * `-X`: print OSC 8 hyperlinks to tty.  Use twice to force.
+* `-P`: quote file names using `$'...'` syntax.
 * `-Q`: shell quote file names (default for output to TTY).
 * `-d`: don't enter directories.
 * `-h`: print human readable size for `-l` (also `%s`).
