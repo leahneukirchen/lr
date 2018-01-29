@@ -2468,6 +2468,8 @@ main(int argc, char *argv[])
 		if (Xflag == 1)
 			Xflag = 0;
 	}
+	if (getenv("NO_COLOR"))
+		Gflag = 0;
 
 	analyze_format();
 	if (Uflag) {
