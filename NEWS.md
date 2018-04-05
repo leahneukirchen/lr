@@ -1,8 +1,11 @@
 ## HEAD
 
+## 1.3 (2018-04-05)
+
 * Feature: new option `-P` to quote filenames with `$'...'` syntax.
 * Feature: invalid UTF-8 filenames are quoted now.
 * Feature: colorized file size output now uses groups of three digits.
+* Feature: support $NO_COLOR: http://no-color.org/
 
 ## 1.2 (2017-11-17)
 
