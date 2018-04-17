@@ -1725,7 +1725,7 @@ print_shquoted(const char *s)
 		}
 	}
 
-	if (!esc) {
+	if (!Qflag || !esc) {
 		printf("%s", s);
 		return;
 	}
