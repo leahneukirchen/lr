@@ -1,5 +1,9 @@
 ## HEAD
 
+## 1.4 (2018-04-17)
+
+* Regression: `-Q` was always on, even when not printing to TTY.
+
 ## 1.3 (2018-04-05)
 
 * Feature: new option `-P` to quote filenames with `$'...'` syntax.
