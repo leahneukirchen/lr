@@ -2144,7 +2144,7 @@ callback(const char *fpath, const struct stat *sb, int depth, ino_t entries, off
 	}
 
 	if (need_xattr) {
-		strncpy(fi->xattr, xattr_string(fi->fpath), sizeof fi->xattr);
+		strncpy(fi->xattr, xattr_string(fi->fpath), sizeof fi->xattr - 1);
 		if (strlen(fi->xattr) > maxxattr)
 			maxxattr = strlen(fi->xattr);
 	} else
