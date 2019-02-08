@@ -1,7 +1,7 @@
 /* lr - a better recursive ls/find */
 
 /*
- * Copyright (C) 2015-2018 Leah Neukirchen <purl.org/net/chneukirchen>
+ * Copyright (C) 2015-2019 Leah Neukirchen <purl.org/net/chneukirchen>
  * Parts of code derived from musl libc, which is
  * Copyright (C) 2005-2014 Rich Felker, et al.
  *
