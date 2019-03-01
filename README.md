@@ -211,7 +211,7 @@ Default: `n`.
 The following features won't be implemented:
 
 * `-exec`: use `-0` and `xargs`
-  (or even better [xe](https://github.com/chneukirchen/xe)).
+  (or even better [xe](https://github.com/leahneukirchen/xe)).
 * columns: use `column`, `git-column` (supports colors), Plan 9 `mc`.
   (e.g. `lr -1AGFs | git column --mode=dense --padding=2`)
 
@@ -320,6 +320,6 @@ You can also just copy the binary into your `PATH`.
 
 ## Copyright
 
-Copyright (C) 2015-2017 Leah Neukirchen <purl.org/net/chneukirchen>
+Copyright (C) 2015-2019 Leah Neukirchen <purl.org/net/chneukirchen>
 
 Licensed under the terms of the MIT license, see lr.c.
