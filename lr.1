@@ -51,12 +51,58 @@ The options are as follows:
 .It Fl 0
 Output filenames separated by NUL bytes.
 Likewise, read input filenames separated by NUL bytes.
+.It Fl 1
+Don't go below one level of directories.
+.It Fl A
+Don't list files starting with a dot.
+.It Fl B
+Use breadth first traversal.
+For each depth of the directory tree,
+files are sorted and printed,
+then the next depth is looked at.
+.It Fl C Oo Ar color Ns Li \&: Oc Ns Ar path
+Behaves as if
+.Ar path
+was passed like an ordinary argument,
+but overrides the color of the file names to the number
+.Ar color
+which must be between 0 and 255 (default: 2, green).
+.Pp
+Implies
+.Fl GG .
+.It Fl D
+Use depth first traversal.
+.Ic prune
+will not work, but
+.Ic entries
+and
+.Ic total
+are computed on the fly.
 .It Fl F
 Output filenames and an indicator of their file type (one of
 .Sq Li */=>@| ) .
-.It Fl l
-Long output a la
-.Sq Ic ls -l
+.It Fl G
+Colorize output to TTY.
+Use twice to force colorized output.
+If the environment variable
+.Ev NO_COLOR
+is set, colors are never used.
+.It Fl H
+Only follow symlinks on command line (default: don't follow symlinks).
+.It Fl L
+Follow all symlinks.
+.It Fl P
+Quote file names using
+Austin Group #249 syntax
+.Li \&$' Ns No ... Ns Li \&'
+(implies
+.Fl Q ) .
+.It Fl Q
+Quote file names (default for output to TTY).
+.It Fl S
+Output inspired by
+BSD
+.Xr stat 1
 (implies
 .Fl Q ) .
 .It Fl TA
@@ -72,74 +118,36 @@ With
 .Fl l ,
 print mtime.
 This is the default.
-.It Fl S
-Output inspired by
-BSD
-.Xr stat 1
-(implies
-.Fl Q ) .
-.It Fl f Ar fmt
-Custom formatting, see
-.Sx FORMATTING .
-.It Fl B
-Use breadth first traversal.
-For each depth of the directory tree,
-files are sorted and printed,
-then the next depth is looked at.
-.It Fl D
-Use depth first traversal.
-.Ic prune
-will not work, but
-.Ic entries
-and
-.Ic total
-are computed on the fly.
-.It Fl H
-Only follow symlinks on command line (default: don't follow symlinks).
-.It Fl L
-Follow all symlinks.
-.It Fl 1
-Don't go below one level of directories.
-.It Fl A
-Don't list files starting with a dot.
-.It Fl P
-Quote file names using
-Austin Group #249 syntax
-.Li \&$' Ns No ... Ns Li \&'
-(implies
-.Fl Q ) .
-.It Fl Q
-Quote file names (default for output to TTY).
-.It Fl d
-Don't enter directories.
-.It Fl G
-Colorize output to TTY.
-Use twice to force colorized output.
-If the environment variable
-.Ev NO_COLOR
-is set, colors are never used.
+.It Fl U
+Don't sort results.
 .It Fl X
 Output OSC 8 hyperlinks to TTY.
 Use twice to force hyperlinks.
+.It Fl d
+Don't enter directories.
+.It Fl e Ar regex
+Only show files where basename matches the POSIX ERE
+.Ar regex .
+.It Fl f Ar fmt
+Custom formatting, see
+.Sx FORMATTING .
 .It Fl h
 Print human readable size for
 .Fl l
 (also
 .Ic %s ) .
-.It Fl s
-Strip directory prefix passed on command line.
-.It Fl x
-Don't enter other filesystems.
-.It Fl U
-Don't sort results.
+.It Fl l
+Long output a la
+.Sq Ic ls -l
+(implies
+.Fl Q ) .
 .It Fl o Ar ord
 Sort according to
 .Ar ord ,
 see
 .Sx SORT ORDER .
-.It Fl e Ar regex
-Only show files where basename matches the POSIX ERE
-.Ar regex .
+.It Fl s
+Strip directory prefix passed on command line.
 .It Fl t Ar test
 Only show files matching the expression
 .Ar test ,
@@ -150,16 +158,8 @@ Multiple occurrences of
 and
 .Fl e
 are regarded as a conjunction.
-.It Fl C Oo Ar color Ns Li \&: Oc Ns Ar path
-Behaves as if
-.Ar path
-was passed like an ordinary argument,
-but overrides the color of the file names to the number
-.Ar color
-which must be between 0 and 255 (default: 2, green).
-.Pp
-Implies
-.Fl GG .
+.It Fl x
+Don't enter other filesystems.
 .El
 .Sh FORMATTING
 .Nm
