@@ -2147,7 +2147,7 @@ callback(const char *fpath, const struct stat *sb, int depth, ino_t entries, off
 
 	prune = 0;
 	if (expr && !eval(expr, fi)) {
-		if (Bflag && !prune) {
+		if (Bflag && S_ISDIR(fi->sb.st_mode) && !prune) {
 			fi->color = COLOR_HIDDEN;
 		} else {
 			free_fi(fi);
