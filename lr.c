@@ -97,6 +97,9 @@ static int sflag;
 static int xflag;
 static char Tflag = 'T';
 
+#define COLOR_DEFAULT -1
+#define COLOR_HIDDEN -2
+
 static char *argv0;
 static char *format;
 static char *ordering;
@@ -1866,7 +1869,7 @@ color_name_on(int c, const char *f, mode_t m)
 	if (!Gflag)
 		return;
 
-	if (c != -1) {
+	if (c != COLOR_DEFAULT) {
 		fg256(c);
 		return;
 	}
@@ -1924,6 +1927,10 @@ print_format(struct fileinfo *fi)
 {
 	int c, v;
 	char *s;
+
+	if (fi->color == COLOR_HIDDEN)
+		return;
+
 	for (s = format; *s; s++) {
 		if (*s == '\\') {
 			switch (*++s) {
@@ -2138,9 +2145,14 @@ callback(const char *fpath, const struct stat *sb, int depth, ino_t entries, off
 	fi->color = current_color;
 	memcpy((char *)&fi->sb, (char *)sb, sizeof (struct stat));
 
+	prune = 0;
 	if (expr && !eval(expr, fi)) {
-		free_fi(fi);
-		return 0;
+		if (Bflag && !prune) {
+			fi->color = COLOR_HIDDEN;
+		} else {
+			free_fi(fi);
+			return 0;
+		}
 	}
 
 	if (need_xattr) {
@@ -2258,7 +2270,6 @@ recurse(char *path, struct history *h, int guessdir)
 	entries = 0;
 
 	if (!Dflag) {
-		prune = 0;
 		r = callback(path, &st, new.level, 0, 0);
 		if (prune)
 			return 0;
@@ -2513,7 +2524,7 @@ main(int argc, char *argv[])
 		}
 	}
 
-	current_color = -1;
+	current_color = COLOR_DEFAULT;
 
 	initial = 1;
 	if (!Cflag && optind == argc) {
