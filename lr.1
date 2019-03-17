@@ -66,7 +66,10 @@ Behaves as if
 was passed like an ordinary argument,
 but overrides the color of the file names to the number
 .Ar color
-which must be between 0 and 255 (default: 2, green).
+which must be between 0 and 255
+.Po
+default: 2, green
+.Pc .
 .Pp
 Implies
 .Fl GG .
@@ -91,23 +94,33 @@ If the environment variable
 .Ev NO_COLOR
 is set, colors are never used.
 .It Fl H
-Only follow symlinks on command line (default: don't follow symlinks).
+Only follow symlinks on command line
+.Po
+default: don't follow symlinks
+.Pc .
 .It Fl L
 Follow all symlinks.
 .It Fl P
 Quote file names using
 Austin Group #249 syntax
 .Li \&$' Ns No ... Ns Li \&'
-(implies
-.Fl Q ) .
+.Po
+implies
+.Fl Q
+.Pc .
 .It Fl Q
-Quote file names (default for output to TTY).
+Quote file names
+.Po
+default for output to TTY
+.Pc .
 .It Fl S
 Output inspired by
 BSD
 .Xr stat 1
-(implies
-.Fl Q ) .
+.Po
+implies
+.Fl Q
+.Pc .
 .It Fl TA
 With
 .Fl l ,
@@ -137,13 +150,17 @@ Custom formatting, see
 .It Fl h
 Print human readable size for
 .Fl l
-(also
-.Ic %s ) .
+.Po
+also
+.Ic %s
+.Pc .
 .It Fl l
 Long output a la
 .Sq Ic ls -l
-(implies
-.Fl Q ) .
+.Po
+implies
+.Fl Q
+.Pc .
 .It Fl o Ar ord
 Sort according to
 .Ar ord ,
@@ -190,20 +207,26 @@ File size in 1024-byte blocks
 Path depth
 .It Ic \&%D
 Device number
-.Va ( stat.st_dev )
+.Po
+.Va stat.st_dev
+.Pc
 .It Ic \&%R
 Device ID for special files
-.Va ( stat.st_rdev )
+.Po
+.Va stat.st_rdev
+.Pc
 .It Ic \&%i
 Inode number
 .It Ic \&%I
 One space character for every depth level
 .It Ic \&%p
 Full path
-.Ic ( \&%P
+.Po
+.Ic \&%P
 if
 .Fl s
-is used)
+is used
+.Pc
 .It Ic \&%P
 Full path without command line argument prefix
 .It Ic \&%l
@@ -217,8 +240,11 @@ one of
 .Sq Li */=>@\&|
 .Pc
 .It Ic \&%f
-File basename (everything after last
-.Li / )
+File basename
+.Po
+everything after last
+.Li /
+.Pc
 .It Ic \&%A- , %C- , %T-
 relative age for atime/ctime/mtime.
 .It Ic \&%A Ns Ar x , Ic \&%C Ns Ar x , Ic \&%T Ns Ar x
@@ -233,7 +259,9 @@ Octal file permissions
 ls-style symbolic file permissions
 .It Ic \&%y
 ls-style symbolic file type
-.Sq ( Li bcdfls )
+.Po
+.Sq Li bcdfls
+.Pc
 .It Ic \&%g
 Group name
 .It Ic \&%G
@@ -245,8 +273,11 @@ Numeric uid
 .It Ic \&%e
 Number of entries in directories
 .It Ic \&%t
-Total size used by accepted files in directories (only with
-.Fl D )
+Total size used by accepted files in directories
+.Po
+only with
+.Fl D
+.Pc
 .It Ic \&%Y
 Type of the filesystem the file resides on
 .It Ic \&%x
@@ -288,16 +319,21 @@ file size
 file type.
 This sorts all directories before other files.
 .It Ic v
-File name as version numbers (sorts
+File name as version numbers
+.Po
+sorts
 .Sq 2
 before
-.Sq 10 ) .
+.Sq 10
+.Pc .
 .El
 .Pp
 E.g.\&
 .Sq Ic Sn
 sorts first by size, smallest last, and then by name
-(in case sizes are equal).
+.Po
+in case sizes are equal
+.Pc .
 .Sh TESTS
 .Nm
 tests are given by the following EBNF:
