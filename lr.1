@@ -1,4 +1,4 @@
-.Dd July 27, 2017
+.Dd December 5, 2019
 .Dt LR 1
 .Os
 .Sh NAME
@@ -45,6 +45,16 @@ makes
 .Nm
 read file names from
 .Ar file .
+.Pp
+By default,
+.Nm
+traverses directories before their entries.
+When
+.Fl D
+is used, the subdirectories (and files) are traversed first.
+When
+.Fl B
+is used, each level of depth is traversed before moving deeper.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
