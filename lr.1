@@ -11,7 +11,7 @@
 .Op Fl B | Fl D
 .Op Fl H | Fl L
 .Op Fl 1AGPQXdhsx
-.Op Fl U | Fl o Ar ord
+.Op Fl U | Fl W | Fl o Ar ord
 .br
 .Op Fl e Ar regex
 .Op Fl t Ar test
@@ -145,7 +145,14 @@ With
 print mtime.
 This is the default.
 .It Fl U
-Don't sort results.
+Don't sort results, print during traversal.
+.It Fl W
+Sort results by name and print during traversal.
+.Po
+This is subtly different from sorting by file name with
+.Fl on
+as it prints directories directly before their contents.
+.Pc
 .It Fl X
 Output OSC 8 hyperlinks to TTY.
 Use twice to force hyperlinks.

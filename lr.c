@@ -90,6 +90,7 @@ static int Lflag;
 static int Qflag;
 static int Pflag;
 static int Uflag;
+static int Wflag;
 static int Xflag;
 static int hflag;
 static int lflag;
@@ -2168,7 +2169,7 @@ callback(const char *fpath, const struct stat *sb, int depth, ino_t entries, off
 	} else
 		memset(fi->xattr, 0, sizeof fi->xattr);
 
-	if (Uflag) {
+	if (Uflag || Wflag) {
 		print_format(fi);
 		free_fi(fi);
 		return 0;
@@ -2228,6 +2229,14 @@ struct history {
 	off_t total;
 };
 
+int cmpstr(void const *a, void const *b) {
+    char const **aa = (char const **)a;
+    char const **bb = (char const **)b;
+
+    return strcmp(*aa, *bb);
+}
+
+// NB: path is expected to have MAXPATHLEN space used in recursive calls.
 static int
 recurse(char *path, struct history *h, int guessdir)
 {
@@ -2237,6 +2246,8 @@ recurse(char *path, struct history *h, int guessdir)
 	int r;
 	ino_t entries;
 	const char *fpath = *path ? path : ".";
+	char **names = 0;
+	size_t len = 0;
 
 	int resolve = Lflag || (Hflag && !h);
 	int root = (path[0] == '/' && path[1] == 0);
@@ -2319,7 +2330,19 @@ recurse(char *path, struct history *h, int guessdir)
 #else
 				int guesssubdir = 1;
 #endif
-				if ((r = recurse(path, &new, guesssubdir))) {
+				if (Wflag) {
+					// store paths in names for later sorting
+					if (entries >= len) {
+						len = 2 * len + 1;
+						if (len > SIZE_MAX/sizeof (char *))
+							break;
+						char **tmp = realloc(names, len * sizeof *names);
+						if (!tmp)
+							break;
+						names = tmp;
+					}
+					names[entries-1] = strdup(path);
+				} else if ((r = recurse(path, &new, guesssubdir))) {
 					closedir(d);
 					return r;
 				}
@@ -2328,6 +2351,20 @@ recurse(char *path, struct history *h, int guessdir)
 		} else if (errno != EACCES && errno != ENOTDIR) {
 			return -1;
 		}
+	}
+
+	if (Wflag && names) {
+		qsort(names, entries, sizeof (char *), cmpstr);
+
+		for (size_t i = 0; i < entries; i++) {
+			strcpy(path, names[i]);
+			recurse(path, &new, 1);
+		}
+
+		// ensure cleanup in reverse allocation order
+		for (size_t i = 0; i < entries; i++)
+			free(names[entries-i-1]);
+		free(names);
 	}
 
 	path[l] = 0;
@@ -2432,7 +2469,7 @@ main(int argc, char *argv[])
 
 	setlocale(LC_ALL, "");
 
-	while ((c = getopt(argc, argv, "01ABC:DFGHLQPST:UXde:f:lho:st:x")) != -1)
+	while ((c = getopt(argc, argv, "01ABC:DFGHLQPST:UWXde:f:lho:st:x")) != -1)
 		switch (c) {
 		case '0': format = zero_format; input_delim = 0; Qflag = Pflag = 0; break;
 		case '1': expr = chain(parse_expr("depth > 0 ? prune : print"), EXPR_AND, expr); break;
@@ -2457,7 +2494,8 @@ main(int argc, char *argv[])
 		case 'P': Pflag++; Qflag++; break;
 		case 'S': Qflag++; format = stat_format; break;
 		case 'T': Tflag = timeflag(optarg); break;
-		case 'U': Uflag++; Bflag = 0; break;
+		case 'W': Wflag++; Bflag = Uflag = 0; break;
+		case 'U': Uflag++; Bflag = Wflag = 0; break;
 		case 'X': Xflag++; break;
 		case 'd': expr = chain(parse_expr("type == d && prune || print"), EXPR_AND, expr); break;
 		case 'e': expr = chain(expr, EXPR_AND,
@@ -2465,7 +2503,7 @@ main(int argc, char *argv[])
 		case 'f': format = optarg; break;
 		case 'h': hflag++; break;
 		case 'l': lflag++; Qflag++; format = long_format; break;
-		case 'o': ordering = optarg; break;
+		case 'o': Uflag = Wflag = 0; ordering = optarg; break;
 		case 's': sflag++; break;
 		case 't':
 			need_stat++;  // overapproximation
@@ -2474,7 +2512,7 @@ main(int argc, char *argv[])
 		default:
 			fprintf(stderr,
 "Usage: %s [-0|-F|-l [-TA|-TC|-TM]|-S|-f FMT] [-B|-D] [-H|-L] [-1AGPQdhsx]\n"
-"          [-U|-o ORD] [-e REGEX]* [-t TEST]* [-C [COLOR:]PATH]* PATH...\n", argv0);
+"          [-U|-W|-o ORD] [-e REGEX]* [-t TEST]* [-C [COLOR:]PATH]* PATH...\n", argv0);
 			exit(2);
 		}
 
@@ -2490,7 +2528,7 @@ main(int argc, char *argv[])
 		Gflag = 0;
 
 	analyze_format();
-	if (Uflag) {
+	if (Uflag || Wflag) {
 		maxnlink = 99;
 		maxsize = 4*1024*1024;
 		maxblocks = maxsize / 512;

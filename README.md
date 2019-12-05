@@ -47,7 +47,7 @@ Over ls:
 
 ## Usage:
 
-	lr [-0|-F|-l [-TA|-TC|-TM]|-S|-f FMT] [-B|-D] [-H|-L] [-1AGPQXdhsx] [-U|-o ORD] [-e REGEX]* [-t TEST]* PATH...
+	lr [-0|-F|-l [-TA|-TC|-TM]|-S|-f FMT] [-B|-D] [-H|-L] [-1AGPQXdhsx] [-U|-W|-o ORD] [-e REGEX]* [-t TEST]* PATH...
 
 The special path argument `-` makes `lr` read file names from standard
 input, instead of traversing path.
@@ -76,7 +76,8 @@ input, instead of traversing path.
 * `-h`: print human readable size for `-l` (also `%s`).
 * `-s`: strip directory prefix passed on command line.
 * `-x`: don't enter other filesystems.
-* `-U`: don't sort results.
+* `-U`: don't sort results, print during traversal.
+* `-W`: sort results by name and print during traversal.
 * `-o ORD`: sort according to the string `ORD`, see below.
 * `-e REGEX`: only show files where basename matches `REGEX`.
 * `-t TEST`: only show files matching all `TEST`s, see below.
