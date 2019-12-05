@@ -2262,6 +2262,7 @@ recurse(char *path, struct history *h, int guessdir)
 
 	new.chain = h;
 	new.level = h ? h->level + 1 : 0;
+	new.total = 0;
 	if (guessdir) {
 		new.dev = st.st_dev;
 		new.ino = st.st_ino;
