@@ -1714,6 +1714,12 @@ print_shquoted(const char *s)
 
 	const char *t;
 	int esc = 0;
+
+	if (!Qflag) {
+		printf("%s", s);
+		return;
+	}
+
 	for (t = s; *t; ) {
 		if ((unsigned char)*t <= 32 ||
 		    strchr("`^#*[]=|\\?${}()'\"<>&;\177", *t)) {
@@ -1728,7 +1734,7 @@ print_shquoted(const char *s)
 		}
 	}
 
-	if (!Qflag || !esc) {
+	if (!esc) {
 		printf("%s", s);
 		return;
 	}
