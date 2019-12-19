@@ -2230,11 +2230,16 @@ struct history {
 	off_t total;
 };
 
-int cmpstr(void const *a, void const *b) {
-    char const **aa = (char const **)a;
-    char const **bb = (char const **)b;
+struct names {
+	char *path;
+	int guessdir;
+};
 
-    return strcmp(*aa, *bb);
+int cmpstr(void const *a, void const *b) {
+    struct names *aa = (struct names *)a;
+    struct names *bb = (struct names *)b;
+
+    return strcmp(aa->path, bb->path);
 }
 
 /* NB: path is expected to have MAXPATHLEN space used in recursive calls. */
@@ -2247,7 +2252,7 @@ recurse(char *path, struct history *h, int guessdir)
 	int r;
 	ino_t entries;
 	const char *fpath = *path ? path : ".";
-	char **names = 0;
+	struct names *names = 0, *tmp;
 	size_t len = 0;
 
 	int resolve = Lflag || (Hflag && !h);
@@ -2335,14 +2340,15 @@ recurse(char *path, struct history *h, int guessdir)
 					/* store paths in names for later sorting */
 					if (entries >= len) {
 						len = 2 * len + 1;
-						if (len > SIZE_MAX/sizeof (char *))
+						if (len > SIZE_MAX/sizeof *names)
 							break;
-						char **tmp = realloc(names, len * sizeof *names);
+						tmp = realloc(names, len * sizeof *names);
 						if (!tmp)
 							break;
 						names = tmp;
 					}
-					names[entries-1] = strdup(path);
+					names[entries-1].path = strdup(path);
+					names[entries-1].guessdir = guesssubdir;
 				} else if ((r = recurse(path, &new, guesssubdir))) {
 					closedir(d);
 					return r;
@@ -2357,16 +2363,16 @@ recurse(char *path, struct history *h, int guessdir)
 	if (Wflag && names) {
 		size_t i;
 
-		qsort(names, entries, sizeof (char *), cmpstr);
+		qsort(names, entries, sizeof *names, cmpstr);
 
 		for (i = 0; i < entries; i++) {
-			strcpy(path, names[i]);
-			recurse(path, &new, 1);
+			strcpy(path, names[i].path);
+			recurse(path, &new, names[i].guessdir);
 		}
 
 		/* ensure cleanup in reverse allocation order */
 		for (i = 0; i < entries; i++)
-			free(names[entries-i-1]);
+			free(names[entries-i-1].path);
 		free(names);
 	}
 
