@@ -2355,15 +2355,17 @@ recurse(char *path, struct history *h, int guessdir)
 	}
 
 	if (Wflag && names) {
+		size_t i;
+
 		qsort(names, entries, sizeof (char *), cmpstr);
 
-		for (size_t i = 0; i < entries; i++) {
+		for (i = 0; i < entries; i++) {
 			strcpy(path, names[i]);
 			recurse(path, &new, 1);
 		}
 
-		// ensure cleanup in reverse allocation order
-		for (size_t i = 0; i < entries; i++)
+		/* ensure cleanup in reverse allocation order */
+		for (i = 0; i < entries; i++)
 			free(names[entries-i-1]);
 		free(names);
 	}
