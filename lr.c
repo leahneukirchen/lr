@@ -151,7 +151,7 @@ static int uwid, gwid, fwid;
 static time_t now;
 static mode_t default_mask;
 
-// [^a-zA-Z0-9~._/-]
+/* [^a-zA-Z0-9~._/-] */
 static char rfc3986[128] = {
 	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 	1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,
@@ -944,7 +944,7 @@ readlin(const char *p, const char *alt)
 	return b;
 }
 
-//// AA-tree implementation, adapted from https://github.com/ccxvii/minilibs
+/* AA-tree implementation, adapted from https://github.com/ccxvii/minilibs */
 struct idtree {
 	long id;
 	char *name;
@@ -1023,7 +1023,7 @@ idtree_insert(struct idtree *node, long id, char *name)
 	}
 	return idtree_make(id, name);
 }
-////
+/**/
 
 static char *
 strid(long id)
@@ -1208,7 +1208,7 @@ xattr_string(const char *f)
 		r = sizeof xattr;
 		xattr[r-1] = 0;
 	}
-	// ignoring ENOTSUP or r == 0
+	/* ignoring ENOTSUP or r == 0 */
 
 	for (i = 0; i < r; i += strlen(xattr+i) + 1)
 		if (strcmp(xattr+i, "security.capability") == 0)
@@ -1233,7 +1233,7 @@ xattr_string(const char *f)
 #else
 	static char empty[] = "";
 	(void)f;
-	return empty;           // No support for xattrs on this platform.
+	return empty;           /* No support for xattrs on this platform. */
 #endif
 }
 
@@ -1394,7 +1394,7 @@ dircmp(char *a, char *b)
 	return *a - *b;
 }
 
-// taken straight from musl@a593414
+/* taken straight from musl@a593414 */
 int mystrverscmp(const char *l0, const char *r0)
 {
 	const unsigned char *l = (const void *)l0;
@@ -1440,7 +1440,7 @@ order(const void *a, const void *b)
 
 	for (s = ordering; *s; s++) {
 		switch (*s) {
-		// XXX use nanosecond timestamps
+		/* XXX use nanosecond timestamps */
 		case 'c': CMP(fa->sb.st_ctime, fb->sb.st_ctime);
 		case 'C': CMP(fb->sb.st_ctime, fa->sb.st_ctime);
 		case 'a': CMP(fa->sb.st_atime, fb->sb.st_atime);
@@ -1480,7 +1480,7 @@ free_fi(struct fileinfo *fi)
 	free(fi);
 }
 
-//// AA-tree implementation, adapted from https://github.com/ccxvii/minilibs
+/* AA-tree implementation, adapted from https://github.com/ccxvii/minilibs */
 struct fitree {
 	struct fileinfo *fi;
 	struct fitree *left, *right;
@@ -1564,7 +1564,7 @@ fitree_free(struct fitree *node)
 		free(node);
 	}
 }
-////
+/**/
 
 static int
 intlen(intmax_t i)
@@ -1675,11 +1675,12 @@ print_human(intmax_t i)
 
 }
 
-// Decode one UTF-8 codepoint into cp, return number of bytes to next one.
-// On invalid UTF-8, return -1, and do not change cp.
-// Invalid codepoints are not checked.
-//
-// This code is meant to be inlined, if cp is unused it can be optimized away.
+/* Decode one UTF-8 codepoint into cp, return number of bytes to next one.
+ * On invalid UTF-8, return -1, and do not change cp.
+ * Invalid codepoints are not checked.
+ *
+ * This code is meant to be inlined, if cp is unused it can be optimized away.
+ */
 static int
 u8decode(const char *cs, uint32_t *cp)
 {
@@ -1687,16 +1688,16 @@ u8decode(const char *cs, uint32_t *cp)
 
 	if (*s == 0)   { *cp = 0; return 0; }
 	if (*s < 0x80) { *cp = *s; return 1; }
-	if (*s < 0xc2) { return -1; }  //cont+overlong
+	if (*s < 0xc2) { return -1; }  /*cont+overlong*/
 	if (*s < 0xe0) { *cp = *s & 0x1f; goto u2; }
 	if (*s < 0xf0) {
-		if (*s == 0xe0 && (s[1] & 0xe0) == 0x80) return -1; //overlong
-		if (*s == 0xed && (s[1] & 0xe0) == 0xa0) return -1; //surrogate
+		if (*s == 0xe0 && (s[1] & 0xe0) == 0x80) return -1; /*overlong*/
+		if (*s == 0xed && (s[1] & 0xe0) == 0xa0) return -1; /*surrogate*/
 		*cp = *s & 0x0f; goto u3;
 	}
 	if (*s < 0xf5) {
-		if (*s == 0xf0 && (s[1] & 0xf0) == 0x80) return -1; //overlong
-		if (*s == 0xf4 && (s[1] > 0x8f)) return -1; //too high
+		if (*s == 0xf0 && (s[1] & 0xf0) == 0x80) return -1; /*overlong*/
+		if (*s == 0xf4 && (s[1] > 0x8f)) return -1; /*too high*/
 		*cp = *s & 0x07; goto u4;
 	}
 	return -1;
@@ -1909,7 +1910,7 @@ print_urlquoted(unsigned char *s)
 static void
 hyperlink_on(char *fpath)
 {
-	// OSC 8 hyperlink format
+	/* OSC 8 hyperlink format */
 	if (Xflag) {
 		printf("\033]8;;file://%s", host);
 		if (*fpath != '/') {
@@ -1928,7 +1929,7 @@ hyperlink_off()
 		printf("\033]8;;\007");
 }
 
-// unused format codes: BEHJKLNOQVWXZ achjoqrvwz
+/* unused format codes: BEHJKLNOQVWXZ achjoqrvwz */
 void
 print_format(struct fileinfo *fi)
 {
@@ -2183,7 +2184,7 @@ callback(const char *fpath, const struct stat *sb, int depth, ino_t entries, off
 			return 0;
 		}
 	} else {
-		// add to the tree, note that this will eliminate duplicate files
+		/* add to the tree, note that this will eliminate duplicate files */
 		root = fitree_insert(root, fi);
 	}
 
@@ -2220,7 +2221,7 @@ callback(const char *fpath, const struct stat *sb, int depth, ino_t entries, off
 	return 0;
 }
 
-// lifted from musl nftw.
+/* lifted from musl nftw. */
 struct history {
 	struct history *chain;
 	dev_t dev;
@@ -2236,7 +2237,7 @@ int cmpstr(void const *a, void const *b) {
     return strcmp(*aa, *bb);
 }
 
-// NB: path is expected to have MAXPATHLEN space used in recursive calls.
+/* NB: path is expected to have MAXPATHLEN space used in recursive calls. */
 static int
 recurse(char *path, struct history *h, int guessdir)
 {
@@ -2331,7 +2332,7 @@ recurse(char *path, struct history *h, int guessdir)
 				int guesssubdir = 1;
 #endif
 				if (Wflag) {
-					// store paths in names for later sorting
+					/* store paths in names for later sorting */
 					if (entries >= len) {
 						len = 2 * len + 1;
 						if (len > SIZE_MAX/sizeof (char *))
@@ -2405,7 +2406,7 @@ traverse_file(FILE *file)
 			break;
 		}
 
-		if (rd > 0 && line[rd-1] == input_delim)  // strip delimiter
+		if (rd > 0 && line[rd-1] == input_delim)  /* strip delimiter */
 			line[rd-1] = 0;
 
 		if (Lflag ? stat(line, &st) : lstat(line, &st) < 0)
@@ -2483,7 +2484,7 @@ main(int argc, char *argv[])
 				fprintf(stderr, "%s: too many -C\n", argv0);
 				exit(111);
 			}
-			Gflag += 2;  // force color on
+			Gflag += 2;  /* force color on */
 			break;
 		case 'D': Dflag++; Bflag = 0; break;
 		case 'F': format = type_format; break;
@@ -2506,7 +2507,7 @@ main(int argc, char *argv[])
 		case 'o': Uflag = Wflag = 0; ordering = optarg; break;
 		case 's': sflag++; break;
 		case 't':
-			need_stat++;  // overapproximation
+			need_stat++;  /* overapproximation */
 			expr = chain(expr, EXPR_AND, parse_expr(optarg)); break;
 		case 'x': xflag++; break;
 		default:
@@ -2548,10 +2549,10 @@ main(int argc, char *argv[])
 		}
 
 		if (gethostname(host, sizeof host) == 0) {
-			// termination not posix guaranteed
+			/* termination not posix guaranteed */
 			host[sizeof host - 1] = 0;
 		} else {
-			// ignore errors, use no host
+			/* ignore errors, use no host */
 			*host = 0;
 		}
 	}
@@ -2591,7 +2592,7 @@ main(int argc, char *argv[])
 		}
 	} else if (!Uflag) {
 		fitree_walk(root, print_format);
-		// no need to destroy here, we are done
+		/* no need to destroy here, we are done */
 	}
 
 	return status;
