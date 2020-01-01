@@ -321,6 +321,6 @@ You can also just copy the binary into your `PATH`.
 
 ## Copyright
 
-Copyright (C) 2015-2019 Leah Neukirchen <purl.org/net/chneukirchen>
+Copyright (C) 2015-2020 Leah Neukirchen <purl.org/net/chneukirchen>
 
 Licensed under the terms of the MIT license, see lr.c.
