@@ -1,3 +1,9 @@
+## 1.5 (2020-01-01)
+
+* Feature: add -W to sort results by name and print during traversal.
+* Bug: Make -B keep traversing even if file is not printed.
+* Small speed tweaks.
+
 ## 1.4.1 (2019-02-08)
 
 * Bugfix release
