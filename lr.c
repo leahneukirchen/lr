@@ -2482,7 +2482,7 @@ main(int argc, char *argv[])
 		switch (c) {
 		case '0': format = zero_format; input_delim = 0; Qflag = Pflag = 0; break;
 		case '1': expr = chain(parse_expr("depth > 0 ? prune : print"), EXPR_AND, expr); break;
-		case 'A': expr = chain(expr, EXPR_AND, parse_expr("name =~ \"^\\.\" && path != \".\" ? prune : print")); break;
+		case 'A': expr = chain(expr, EXPR_AND, parse_expr("name =~ \"^\\.\" && path != \".\" ? (prune && skip) : print")); break;
 		case 'B': Bflag++; Dflag = 0; Uflag = 0; need_stat++; break;
 		case 'C':
 			if ((unsigned int)Cflag <
