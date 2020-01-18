@@ -1,3 +1,7 @@
+## 1.5.1 (2020-01-18)
+
+* Bug: `-A` did not stop traversing hidden directories.
+
 ## 1.5 (2020-01-01)
 
 * Feature: add -W to sort results by name and print during traversal.
