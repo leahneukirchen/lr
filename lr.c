@@ -1250,7 +1250,7 @@ count_entries(struct fileinfo *fi)
 	if (!S_ISDIR(fi->sb.st_mode))
 		return 0;
 
-	d = opendir(fi->fpath);
+	d = opendir(fi->fpath[0] ? fi->fpath : ".");
 	if (!d)
 		return 0;
 	while ((de = readdir(d))) {
