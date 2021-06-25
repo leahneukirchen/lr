@@ -1782,7 +1782,8 @@ print_noprefix(struct fileinfo *fi)
 	if (fi->prefixl == 0 && fi->fpath[0])
 		print_shquoted(fi->fpath);
 	else if (strlen(fi->fpath) > fi->prefixl + 1)  /* strip prefix */
-		print_shquoted(fi->fpath + fi->prefixl + 1);
+		print_shquoted(fi->fpath + fi->prefixl +
+		    (fi->fpath[fi->prefixl] == '/'));
 	else if (S_ISDIR(fi->sb.st_mode))  /* turn empty string into "." */
 		printf(".");
 	else  /* turn empty string into basename */
