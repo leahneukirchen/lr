@@ -128,6 +128,7 @@ Default: `n`.
 * `c`: ctime.
 * `d`: path depth.
 * `e`: file extension.
+* `f`: file basename.
 * `i`: inode number.
 * `m`: mtime.
 * `n`: file name.

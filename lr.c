@@ -1459,6 +1459,8 @@ order(const void *a, const void *b)
 		              "ZZZZAZZZZZZZZZZZ"[(fa->sb.st_mode >> 12) & 0x0f]);
 		case 'n': STRCMP(fa->fpath, fb->fpath);
 		case 'N': STRCMP(fb->fpath, fa->fpath);
+		case 'f': STRCMP(basenam(fa->fpath), basenam(fb->fpath));
+		case 'F': STRCMP(basenam(fb->fpath), basenam(fa->fpath));
 		case 'e': STRCMP(extnam(fa->fpath), extnam(fb->fpath));
 		case 'E': STRCMP(extnam(fb->fpath), extnam(fa->fpath));
 		case 'p': DIRCMP(fa->fpath, fb->fpath);
