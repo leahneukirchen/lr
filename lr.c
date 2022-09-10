@@ -2267,7 +2267,7 @@ recurse(char *path, struct history *h, int guessdir)
 	if (need_stat)
 		guessdir = 1;
 
-	if (guessdir && (resolve ? stat(fpath, &st) : lstat(fpath, &st) < 0)) {
+	if (guessdir && (resolve ? stat(fpath, &st) : lstat(fpath, &st)) < 0) {
 		if (resolve && (errno == ENOENT || errno == ELOOP) &&
 		    !lstat(fpath, &st)) {
 			/* ignore */
