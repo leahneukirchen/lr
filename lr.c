@@ -2250,7 +2250,7 @@ static int
 recurse(char *path, struct history *h, int guessdir)
 {
 	size_t l = strlen(path), j = l && path[l-1] == '/' ? l - 1 : l;
-	struct stat st;
+	struct stat st = { 0 };
 	struct history new;
 	int r;
 	ino_t entries;
