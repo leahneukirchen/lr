@@ -1634,7 +1634,7 @@ color_size_on(off_t s)
 	else if (s <          512*1024LL) c = 226;
 	else if (s <         1024*1024LL) c = 220;
 	else if (s <     700*1024*1024LL) c = 214;
-	else if (s <  2*1048*1024*1024LL) c = 208;
+	else if (s <  2*1024*1024*1024LL) c = 208;
 	else if (s < 50*1024*1024*1024LL) c = 202;
 	else				  c = 196;
 
