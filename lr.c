@@ -1655,7 +1655,7 @@ print_comma(int len, intmax_t i)
 		*--s = ',';
 	}
 
-	printf("%*.*s", len+len/3, len+len/3, s);
+	printf("%*s", len+len/3, s);
 }
 
 static void
