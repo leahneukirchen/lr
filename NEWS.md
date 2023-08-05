@@ -1,16 +1,22 @@
+## 1.6 (2023-08-05)
+
+* Feature: add -of to sort by file basename.
+* Bugfix: default to _FILE_OFFSET_BITS=64.
+* Small bugfixes.
+
 ## 1.5.1 (2020-01-18)
 
-* Bug: `-A` did not stop traversing hidden directories.
+* Bugfix: `-A` did not stop traversing hidden directories.
 
 ## 1.5 (2020-01-01)
 
 * Feature: add -W to sort results by name and print during traversal.
-* Bug: Make -B keep traversing even if file is not printed.
+* Bugfix: Make -B keep traversing even if file is not printed.
 * Small speed tweaks.
 
 ## 1.4.1 (2019-02-08)
 
-* Bugfix release
+* Bugfix release.
 
 ## 1.4 (2018-04-17)
 
@@ -41,7 +47,7 @@
 * Feature: new option `-X` to print OSC 8 hyperlinks.
 * Feature: new option `-e` for the common case of filtering file names.
 * Feature: support for DragonFlyBSD.
-* Bug: lr doesn't fail on symlinks refering to themselves anymore.
+* Bugfix: lr doesn't fail on symlinks refering to themselves anymore.
 
 ## 1.0 (2017-08-29)
 
@@ -55,7 +61,7 @@
 * Feature: new action `color <num>` to change the color of files.
 * Feature: new argument `@file` to read file names from a file.
 * Feature: negated string operations `!=`, `!===`, `!~~`, `!~`, `!=~~`.
-* Bug: lr now reports errors and sets exit code when toplevel
+* Bugfix: lr now reports errors and sets exit code when toplevel
   arguments can not be stat'ed.
 
 ## 0.4 (2017-04-25)
@@ -64,11 +70,11 @@
 
 ## 0.3.2 (2016-05-20)
 
-* Bug: getopt was called in a wrong way from ARM platforms
+* Bugfix: getopt was called in a wrong way from ARM platforms
 
 ## 0.3.1 (2016-03-31)
 
-* Bug: `=~` was not recognized (broken since 0.3)
+* Bugfix: `=~` was not recognized (broken since 0.3)
 * Add emacs contrib (lr.el)
 
 ## 0.3 (2016-02-28)
