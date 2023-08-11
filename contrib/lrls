@@ -1,8 +1,50 @@
 #!/bin/sh
 # lrls - lr with GNU ls style output
+#
+# Usage (Bash, Zsh):
+#
+#     # Clear any system-level aliases:
+#     unalias ls la ll 2>/dev/null
+#     alias ls='lslr -A'
+#     alias la='lslr'
+#     alias ll='lslr -lh'
 
-color=
-[ -t 1 ] && color=-GG
+use_strip=1
+check_depth=1
 
-lr $color -A1s  -t '!type == d || depth > 0' "$@" |git column --mode=dense --pad=2
+if [ -t 1 ]; then
+    use_color=1
+    use_column=1
+fi
 
+while getopts :01ABC:DFGHLQPST:UWXde:f:lho:st:x opt; do
+    case $opt in
+    # If we're not entering directories:
+    # - Avoid depth check so directory names aren't skipped entirely.
+    # - Avoid strip so directory names aren't replaced with dots.
+    d)  unset check_depth
+        unset use_strip
+        ;;
+    # Avoid git column for long lr output.
+    l)  unset use_column
+        ;;
+    esac
+done
+
+# If more than one path is given as an arg, strip can produce ambiguous output
+# for multi-segment paths (and has no effect on single-segment paths).
+if [ "$#" -gt "$OPTIND" ]; then
+    unset use_strip
+fi
+
+lr -1 \
+    ${use_color:+-GG} \
+    ${use_strip:+-s} \
+    ${check_depth:+-t '!type == d || depth > 0'} \
+    "$@" | {
+        if [ -n "$use_column" ]; then
+            git column --mode=dense --pad=2
+        else
+            cat
+        fi;
+    }
