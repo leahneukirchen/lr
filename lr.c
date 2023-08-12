@@ -2502,7 +2502,7 @@ main(int argc, char *argv[])
 			Gflag += 2;  /* force color on */
 			break;
 		case 'D': Dflag++; Bflag = 0; break;
-		case 'F': format = type_format; break;
+		case 'F': if (!lflag) format = type_format; break;
 		case 'G': Gflag++; break;
 		case 'H': Hflag++; break;
 		case 'L': Lflag++; break;
