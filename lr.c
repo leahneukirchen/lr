@@ -914,6 +914,7 @@ static struct expr *
 parse_expr(const char *s)
 {
 	pos = (char *)s;
+	ws();
 	struct expr *e = parse_cond();
 	if (*pos)
 		parse_error("trailing garbage at '%.15s'", pos);
