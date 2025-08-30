@@ -1,4 +1,4 @@
-.Dd August 26, 2022
+.Dd August 30, 2025
 .Dt LR 1
 .Os
 .Sh NAME
@@ -13,6 +13,7 @@
 .Op Fl 1AGPQXdhsx
 .Op Fl U | Fl W | Fl o Ar ord
 .br
+.Op Fl q
 .Op Fl e Ar regex
 .Op Fl t Ar test
 .Op Fl C Oo Ar color Ns Li \&: Oc Ns Ar path
@@ -183,6 +184,8 @@ Sort according to
 .Ar ord ,
 see
 .Sx SORT ORDER .
+.It Fl q
+Silently ignore "Permission denied" errors.
 .It Fl s
 Strip directory prefix passed on command line.
 .It Fl t Ar test

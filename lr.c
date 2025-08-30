@@ -1,7 +1,7 @@
 /* lr - a better recursive ls/find */
 
 /*
- * Copyright (C) 2015-2023 Leah Neukirchen <purl.org/net/chneukirchen>
+ * Copyright (C) 2015-2025 Leah Neukirchen <purl.org/net/chneukirchen>
  * Parts of code derived from musl libc, which is
  * Copyright (C) 2005-2014 Rich Felker, et al.
  *
@@ -99,6 +99,7 @@ static int Xflag;
 static int hflag;
 static int lflag;
 static int sflag;
+static int qflag;
 static int xflag;
 static char Tflag = 'T';
 
@@ -2283,8 +2284,15 @@ recurse(char *path, struct history *h, int guessdir)
 			    fpath, strerror(errno));
 			status = 1;
 			return -1;
-		} else if (errno != EACCES) {
-			return -1;
+		} else {
+			if (!qflag) {
+				fprintf(stderr, "lr: cannot %sstat '%s': %s\n",
+				    resolve ? "" : "l",
+				    fpath, strerror(errno));
+				status = 1;
+			}
+			if (errno != EACCES)
+				return -1;
 		}
 	}
 
@@ -2363,7 +2371,12 @@ recurse(char *path, struct history *h, int guessdir)
 				}
 			}
 			closedir(d);
-		} else if (errno != EACCES && errno != ENOTDIR) {
+		} else if (qflag && (errno == EACCES || errno == ENOTDIR)) {
+			return -1;
+		} else {
+			fprintf(stderr, "lr: cannot open directory '%s': %s\n",
+			    fpath, strerror(errno));
+			status = 1;
 			return -1;
 		}
 	}
@@ -2486,7 +2499,7 @@ main(int argc, char *argv[])
 
 	setlocale(LC_ALL, "");
 
-	while ((c = getopt(argc, argv, "01ABC:DFGHLQPST:UWXde:f:lho:st:x")) != -1)
+	while ((c = getopt(argc, argv, "01ABC:DFGHLQPST:UWXde:f:lho:st:qx")) != -1)
 		switch (c) {
 		case '0': format = zero_format; input_delim = 0; Qflag = Pflag = 0; break;
 		case '1': expr = chain(parse_expr("depth > 0 ? prune : print"), EXPR_AND, expr); break;
@@ -2525,6 +2538,7 @@ main(int argc, char *argv[])
 		case 't':
 			need_stat++;  /* overapproximation */
 			expr = chain(expr, EXPR_AND, parse_expr(optarg)); break;
+		case 'q': qflag++; break;
 		case 'x': xflag++; break;
 		default:
 			fprintf(stderr,

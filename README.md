@@ -47,7 +47,7 @@ Over ls:
 
 ## Usage:
 
-	lr [-0|-F|-l [-TA|-TC|-TM]|-S|-f FMT] [-B|-D] [-H|-L] [-1AGPQXdhsx] [-U|-W|-o ORD] [-e REGEX]* [-t TEST]* PATH...
+	lr [-0|-F|-l [-TA|-TC|-TM]|-S|-f FMT] [-B|-D] [-H|-L] [-1AGPQXdhsx] [-U|-W|-o ORD] [-q] [-e REGEX]* [-t TEST]* PATH...
 
 The special path argument `-` makes `lr` read file names from standard
 input, instead of traversing path.
@@ -74,6 +74,7 @@ input, instead of traversing path.
 * `-Q`: shell quote file names (default for output to TTY).
 * `-d`: don't enter directories.
 * `-h`: print human readable size for `-l` (also `%s`).
+* `-q`: silently ignore "Permission denied" errors.
 * `-s`: strip directory prefix passed on command line.
 * `-x`: don't enter other filesystems.
 * `-U`: don't sort results, print during traversal.
