@@ -2530,7 +2530,7 @@ main(int argc, char *argv[])
 
 	setlocale(LC_ALL, "");
 
-	while ((c = getopt(argc, argv, "01ABC:DFGHLQPST:UWXde:f:lho:st:qx")) != -1)
+	while ((c = getopt(argc, argv, "01ABC:DFGHLPQST:UWXde:f:hlo:qst:x")) != -1)
 		switch (c) {
 		case '0': format = zero_format; input_delim = 0; Qflag = Pflag = 0; break;
 		case '1': expr = chain(parse_expr("depth > 0 ? prune : print"), EXPR_AND, expr); break;
