@@ -81,6 +81,8 @@
 #define PATH_MAX 4096
 #endif
 
+#define INVALID_MODE 0170000
+
 struct fitree;
 struct idtree;
 
@@ -1586,6 +1588,11 @@ intlen(intmax_t i)
 static void
 print_mode(int mode)
 {
+	if (mode == INVALID_MODE) {
+		printf("-?????????");
+		return;
+	}
+
 	putchar("0pcCd?bB-?l?s???"[(mode >> 12) & 0x0f]);
 	putchar(mode & 00400 ? 'r' : '-');
 	putchar(mode & 00200 ? 'w' : '-');
@@ -1944,6 +1951,7 @@ print_format(struct fileinfo *fi)
 {
 	int c, v;
 	char *s;
+	int invalid = (fi->sb.st_mode == INVALID_MODE);
 
 	if (fi->color == COLOR_HIDDEN)
 		return;
@@ -2068,7 +2076,12 @@ print_format(struct fileinfo *fi)
 				fgdefault();
 			}
 			break;
-		case 'n': printf("%*jd", intlen(maxnlink), (intmax_t)fi->sb.st_nlink); break;
+		case 'n':
+			if (invalid)
+				printf("?");
+			else
+				printf("%*jd", intlen(maxnlink), (intmax_t)fi->sb.st_nlink);
+			break;
 		case 'F':
 			if (S_ISDIR(fi->sb.st_mode)) {
 				putchar('/');
@@ -2105,36 +2118,49 @@ print_format(struct fileinfo *fi)
 			time_t t = (*s == 'A' ? fi->sb.st_atime :
 			    *s == 'C' ? fi->sb.st_ctime :
 			    fi->sb.st_mtime);
-
 			s++;
 			if (!*s)
 				break;
 
 			color_age_on(t);
 			if (*s == '-') {
-				long diff = now - t;
-				printf("%4ldd%3ldh%3ldm%3lds",
-				    diff / (60*60*24),
-				    (diff / (60*60)) % 24,
-				    (diff / 60) % 60,
-				    diff % 60);
+				if (invalid) {
+					printf("  ??d ??h ??m ??s");
+				} else {
+					long diff = now - t;
+					printf("%4ldd%3ldh%3ldm%3lds",
+					    diff / (60*60*24),
+					    (diff / (60*60)) % 24,
+					    (diff / 60) % 60,
+					    diff % 60);
+				}
 			} else {
 				tfmt[1] = *s;
 				strftime(buf, sizeof buf, tfmt, localtime(&t));
+				if (invalid) {
+					for (char *t = buf; *t; t++)
+						if (!strchr(" :-", *t))
+							*t = '?';
+				}
 				printf("%s", buf);
 			}
 			fgdefault();
 			break;
 		}
-		case 'm': printf("%04o", (unsigned int)fi->sb.st_mode & 07777); break;
+		case 'm':
+			if (invalid)
+				printf("????");
+			else
+				printf("%04o", (unsigned int)fi->sb.st_mode & 07777);
+			break;
 		case 'M': print_mode(fi->sb.st_mode); break;
 		case 'y':
 			putchar("0pcCd?bBf?l?s???"[(fi->sb.st_mode >> 12) & 0x0f]);
 			break;
 
-		case 'g': printf("%*s", -gwid, groupname(fi->sb.st_gid)); break;
+		case 'g': printf("%*s", -gwid, invalid ? "?" : groupname(fi->sb.st_gid)); break;
 		case 'G': printf("%*ld", intlen(maxgid), (long)fi->sb.st_gid); break;
-		case 'u': printf("%*s", -uwid, username(fi->sb.st_uid)); break;
+		case 'u': printf("%*s", -uwid, invalid ? "?" : username(fi->sb.st_uid)); break;
 		case 'U': printf("%*ld", intlen(maxuid), (long)fi->sb.st_uid); break;
 
 		case 'e': printf("%ld", (long)count_entries(fi)); break;
@@ -2293,6 +2319,7 @@ recurse(char *path, struct history *h, int guessdir)
 			}
 			if (errno != EACCES)
 				return -1;
+			st.st_mode = INVALID_MODE;
 		}
 	}
 
