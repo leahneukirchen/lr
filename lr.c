@@ -2319,8 +2319,12 @@ recurse(char *path, struct history *h, int guessdir)
 
 	if (guessdir)
 		for (; h; h = h->chain) {
-			if (h->dev == st.st_dev && h->ino == st.st_ino)
+			if (h->dev == st.st_dev && h->ino == st.st_ino) {
+				if (!qflag)
+					fprintf(stderr, "lr: file system loop detected: '%s'\n",
+					    fpath);
 				return 0;
+			}
 			h->total += st.st_blocks / 2;
 		}
 
