@@ -1,6 +1,18 @@
+## 2.0 (2025-08-31)
+
+* Breaking change: lr now prints errors on "Permission denied" and
+  in the end returns with exit status 1.
+* Feature: new option `-q` to silently ignore "Permission denied" errors
+  (restores behavior of lr 1.6 and earlier).
+* Feature: print file system loop errors.
+* Feature: when getting file information fails (e.g. due to lack of
+  permissions), print "?" for unknown fields.
+* Updated zsh completion.
+* Small bugfixes.
+
 ## 1.6 (2023-08-05)
 
-* Feature: add -of to sort by file basename.
+* Feature: add `-of` to sort by file basename.
 * Bugfix: default to _FILE_OFFSET_BITS=64.
 * Small bugfixes.
 
@@ -10,8 +22,8 @@
 
 ## 1.5 (2020-01-01)
 
-* Feature: add -W to sort results by name and print during traversal.
-* Bugfix: Make -B keep traversing even if file is not printed.
+* Feature: add `-W` to sort results by name and print during traversal.
+* Bugfix: Make `-B` keep traversing even if file is not printed.
 * Small speed tweaks.
 
 ## 1.4.1 (2019-02-08)
