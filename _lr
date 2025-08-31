@@ -50,6 +50,7 @@ _lr_order() {
 		'c:ctime'
 		'd:path depth'
 		'e:file extension'
+		'f:file basename'
 		'i:inode number'
 		'm:mtime'
 		'n:file name'
@@ -91,15 +92,18 @@ _arguments -S : \
 	'(-H)-L[follow all symlinks]' \
 	'-1[don'\''t go below one level of directories]' \
 	'-A[don'\''t list files starting with a dot]' \
-	'-Q[shell quote file names]' \
+	'(-Q)-P[shell quote file names using dollar single-quotes]' \
+	'(-P)-Q[shell quote file names using single quotes]' \
 	'-d[don'\''t enter directories]' \
 	'-G[colorize output]' \
 	'-X[print OSC 8 hyperlinks]' \
 	'-h[print human readable size]' \
 	'-s[strip directory prefix passed on command line]' \
 	'-x[don'\''t enter other filesystems]' \
-	'(-o)-U[don'\''t sort results]' \
-	'(-U)-o[sort order]:order:_lr_order' \
+	'(-o -W)-U[don'\''t sort results]' \
+	'(-U -W)-o[sort order]:order:_lr_order' \
+	'(-o -U)-W[sort by name and print during traversal]' \
+	'-q[silently ignore "Permission denied" errors]' \
 	'*-e[only show files where basename matches regexp]:pattern: ' \
 	'*-t[test expression]:test: ' \
 	'*-C[colorize path]:path:_files' \
