@@ -1276,7 +1276,7 @@ int
 eval(struct expr *e, struct fileinfo *fi)
 {
 	long v = 0;
-	const char *s = "";
+	const char *s;
 
 	switch (e->op) {
 	case EXPR_OR:
