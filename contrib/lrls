@@ -17,7 +17,7 @@ if [ -t 1 ]; then
     use_column=1
 fi
 
-while getopts :01ABC:DFGHLQPST:UWXde:f:lho:st:x opt; do
+while getopts :01ABC:DFGHLPQST:UWXde:f:hlo:qst:x opt; do
     case $opt in
     # If we're not entering directories:
     # - Avoid depth check so directory names aren't skipped entirely.
