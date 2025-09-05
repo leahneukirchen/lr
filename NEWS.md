@@ -1,3 +1,7 @@
+## 2.0.1 (2025-09-05)
+
+* Important bugfix: continue after a "Permission denied" error.
+
 ## 2.0 (2025-08-31)
 
 * Breaking change: lr now prints errors on "Permission denied" and
