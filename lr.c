@@ -2403,12 +2403,11 @@ recurse(char *path, struct history *h, int guessdir)
 			}
 			closedir(d);
 		} else if (qflag && (errno == EACCES || errno == ENOTDIR)) {
-			return -1;
+			;
 		} else {
 			fprintf(stderr, "lr: cannot open directory '%s': %s\n",
 			    fpath, strerror(errno));
 			status = 1;
-			return -1;
 		}
 	}
 
