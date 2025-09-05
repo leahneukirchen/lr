@@ -5,9 +5,9 @@
 #
 #     # Clear any system-level aliases:
 #     unalias ls la ll 2>/dev/null
-#     alias ls='lslr -A'
-#     alias la='lslr'
-#     alias ll='lslr -lh'
+#     alias ls='lrls -A'
+#     alias la='lrls'
+#     alias ll='lrls -lh'
 
 use_strip=1
 check_depth=1
